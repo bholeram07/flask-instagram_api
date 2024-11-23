@@ -1,7 +1,8 @@
 from flask import Blueprint, jsonify, request
 from models.user import db, User 
-from schemas.user_schema import SignupSchema
+from schemas.user_schema import SignupSchema,LoginSchema
 from marshmallow import ValidationError
+from flask_jwt_extended import create_access_token,get_jwt_identity,jwt_required
 from datetime import timedelta
 
 api = Blueprint('api', __name__)
@@ -29,3 +30,48 @@ def create_user():
     user_dict.pop('password', None) 
     return jsonify({"data" : user_dict}),201
 
+@api.route('/login',methods=['POST'])
+def login_user():
+    login_schema = LoginSchema()
+    data = request.json  
+    try:
+        user_data = login_schema.load(data)
+    except ValidationError as err:
+        return jsonify({"error" : err.messages})
+    user = User.query.filter_by(email=data['email']).first()
+    if not user:
+        return jsonify({"error" : "This email is not registered"})
+    if not user.check_password(user_data['password']):
+        return jsonify({"error": "Invalid password"}), 401
+       
+    access_token = create_access_token(identity=user.id, expires_delta=timedelta(hours=1))
+    return jsonify({"data":{
+        "access_token": access_token
+    }}), 200
+
+
+@api.route('/update-password',methods=['POST'])
+@jwt_required()
+def update_password():
+    user_id = get_jwt_identity()
+    data = request.json
+    if not user_id:
+        return jsonify({"error":"Unauthorized"}),403
+    
+    if not data or 'current_password' not in data or 'new_password not in data':
+        return jsonify({"error":"Invalid data"}),400
+    
+    current_password = data['current_password']
+    new_password = data['new_password']
+    
+    user = User.query.get("user_id")
+    if not user:
+        return jsonify({"error":"User Not found"}),404
+    
+    if not user.check_password(data['current_password']):
+        return jsonify({"error" :"Incorrect Current Password"}),401
+        
+    password = user._set_password(data['new_password'])
+    user._password = password
+    user.save()
+    return jsonify({"detail" : "Password Update Successfully"}),200    
