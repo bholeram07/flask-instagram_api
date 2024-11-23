@@ -1,0 +1,66 @@
+# Python files
+*.py[cod]
+__pycache__/
+*$py.class
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Flask specific
+instance/
+instance/*
+!instance/config.py  # Keep this file if your config is here
+.webassets-cache
+
+# Database files
+*.sqlite3
+*.db
+*.db-journal
+
+# Logs and local configurations
+*.log
+*.env  # Environment variables
+*.ini  # Config files
+*.cfg  # Config files
+.env.bak
+
+# Pytest and test-related
+.pytest_cache/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+
+# Byte-compiled files and C extensions
+*.pyc
+*.pyo
+*.so
+
+# Sphinx documentation
+docs/_build/
+/pgdata
+secret_key.py
+config.py
+
+# PyInstaller
+*.spec
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Operating system files
+.DS_Store
+Thumbs.db
