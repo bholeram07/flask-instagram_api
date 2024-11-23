@@ -1,0 +1,68 @@
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pyc
+
+# Environment variables file
+.env
+
+# Flask instance folder
+instance/
+
+# Flask config files
+*.cfg
+
+# Database files (if you use SQLite)
+*.db
+
+# Virtual environment
+venv/
+env/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Distribution / Packaging
+*.egg
+*.egg-info
+dist/
+build/
+.eggs/
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# VS Code
+.vscode/
+
+# MacOS specific
+.DS_Store
+
+# Windows specific
+Thumbs.db
+
+# PyCharm specific
+.idea/
+./pgdata
+pgdata/
+.docker-compose.yml/
+docker/docker-compose.yml
+docker/volumes/
+docker/*.tar
+
+
+# Ignore Docker logs
+docker/logs/
+
+# Ignore the Docker build context if there are any
+docker/build/
+
+# Ignore any other Docker-related files you don't want to track
+docker/*.bak
