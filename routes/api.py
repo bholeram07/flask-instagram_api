@@ -57,21 +57,18 @@ def update_password():
     data = request.json
     if not user_id:
         return jsonify({"error":"Unauthorized"}),403
-    
-    if not data or 'current_password' not in data or 'new_password not in data':
+    if not 'current_password' in data or  not 'new_password' in data:
         return jsonify({"error":"Invalid data"}),400
-    
     current_password = data['current_password']
     new_password = data['new_password']
     
-    user = User.query.get("user_id")
+    user = User.query.get(user_id)
     if not user:
         return jsonify({"error":"User Not found"}),404
     
     if not user.check_password(data['current_password']):
         return jsonify({"error" :"Incorrect Current Password"}),401
         
-    password = user._set_password(data['new_password'])
-    user._password = password
-    user.save()
+    user.set_password(data['new_password'])
+    db.session.commit()
     return jsonify({"detail" : "Password Update Successfully"}),200    

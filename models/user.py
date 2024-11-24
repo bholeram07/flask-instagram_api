@@ -11,19 +11,20 @@ class User(db.Model):
         _password = db.Column(db.String(255),nullable = False)
         created_at = db.Column(db.DateTime, server_default=db.func.now())
         updated_at = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now())
+        
         @property
         def password(self):
-            raise AttributeError("Password is not readable")
+            raise AttributeError("Password is not readable")  # Prevent direct access
 
         @password.setter
-        def _set_password(self, plaintext_password):
-            if plaintext_password:
-                self._password = generate_password_hash(plaintext_password)
-            else :
-                raise ValueError("Password can not be empty")
-        def check_password(self, plaintext_password):
-            return check_password_hash(self._password, plaintext_password)
-  
+        def password(self, raw_password):
+            self._password = generate_password_hash(raw_password)
+
+        def check_password(self, raw_password):
+            return check_password_hash(self._password, raw_password)
+
+        def set_password(self, raw_password):
+            self.password = raw_password  
         def to_dict(self):
             """Convert user object to a dictionary for JSON serialization."""
             return {
