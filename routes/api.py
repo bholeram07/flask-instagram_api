@@ -117,6 +117,9 @@ def update_password():
 
     if not user.check_password(data["current_password"]):
         return jsonify({"error": "Incorrect Current Password"}), 401
+    if current_password == new_password:
+        return jsonify({"error":"current password and old password not be same"})
+    
     
     jti = get_jwt()["jti"]
     blacklisted_token = TokenBlocklist(jti=jti)
@@ -131,5 +134,10 @@ def update_password():
 @jwt_required()
 def logout():
     jti = get_jwt()["jti"]
-    add_to_blocklist(jti)
+    if TokenBlocklist.query.filter_by(jti=jti).first():
+        return jsonify({"detail": "Token already blacklisted."}), 200
+
+    blacklisted_token = TokenBlocklist(jti=jti)
+    db.session.add(blacklisted_token)
+    db.session.commit()
     return jsonify({"detail": "Successfully logged out."}), 200
