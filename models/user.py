@@ -3,12 +3,14 @@ from sqlalchemy.dialects.postgresql import UUID
 import uuid
 from werkzeug.security import generate_password_hash,check_password_hash
 from flask_jwt_extended import create_access_token
+import datetime
 
 class User(db.Model):
         id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
         username = db.Column(db.String(80), nullable=False, unique=True)
         email = db.Column(db.String(120), nullable=False, unique=True)
         _password = db.Column(db.String(255),nullable = False)
+        password_changed_at = db.Column(db.DateTime, nullable=True, default=datetime.datetime.utcnow)
         created_at = db.Column(db.DateTime, server_default=db.func.now())
         updated_at = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now())
         
@@ -30,6 +32,11 @@ class User(db.Model):
             return {
                 'id': self.id,
                 'username': self.username,
+               
                 'email': self.email
             }
+class TokenBlocklist(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    jti = db.Column(db.String(36), nullable=False, index=True)
+    created_at = db.Column(db.DateTime, nullable=False)
         
