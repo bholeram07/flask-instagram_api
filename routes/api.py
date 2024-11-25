@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
-from models.user import db, User
+from models.user import db, User,TokenBlocklist
 import datetime
-
+from utils.jwt_utils import add_to_blocklist
 from schemas.user_schema import SignupSchema, LoginSchema
 from marshmallow import ValidationError
 from flask_jwt_extended import (
@@ -12,13 +12,12 @@ from flask_jwt_extended import (
     create_refresh_token,
 )
 from datetime import timedelta
-from blacklist import blacklisted_tokens
 from flask_restful import Resource, Api
 
 
 api = Blueprint("api", __name__)
 
-
+# blacklisted_tokens = set()
 @api.route("/signup", methods=["POST"])
 def create_user():
     user_schema = SignupSchema()
@@ -73,10 +72,10 @@ def login_user():
         return jsonify({"error": "This email is not registered"})
     if not user.check_password(data["password"]):
         return jsonify({"error": "Incorrect password"}), 401
-
+   
     access_token = create_access_token(
-        identity=user.id, expires_delta=timedelta(hours=1)
-    )
+            identity=user.id,  # Only pass the user ID (or other serializable info)
+        )
     refresh_token = create_refresh_token(
         identity=user.id, expires_delta=timedelta(days=1)
     )
@@ -102,7 +101,7 @@ def login_user():
 def update_password():
     user_id = get_jwt_identity()
     data = request.json
-
+    
     if not user_id:
         return jsonify({"error": "Unauthorized"}), 403
 
@@ -118,9 +117,13 @@ def update_password():
 
     if not user.check_password(data["current_password"]):
         return jsonify({"error": "Incorrect Current Password"}), 401
+    
+    jti = get_jwt()["jti"]
+    blacklisted_token = TokenBlocklist(jti=jti)
+    db.session.add(blacklisted_token)
 
-    user.set_password(data["new_password"])
     db.session.commit()
+   
     return jsonify({"detail": "Password Update Successfully"}), 200
 
 
@@ -128,5 +131,5 @@ def update_password():
 @jwt_required()
 def logout():
     jti = get_jwt()["jti"]
-    blacklisted_tokens.add(jti)
+    add_to_blocklist(jti)
     return jsonify({"detail": "Successfully logged out."}), 200

@@ -66,3 +66,5 @@ docker/build/
 
 # Ignore any other Docker-related files you don't want to track
 docker/*.bak
+secret_key.py
+docker-compose.yml
