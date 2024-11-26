@@ -2,10 +2,14 @@ from flask import Flask,jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from config import Config
-from models import user
-from models.user import TokenBlocklist
-from routes.api import api 
-from models import db
+from flask_sqlalchemy import SQLAlchemy
+
+# Create a single instance of SQLAlchemy
+db = SQLAlchemy()
+from app.models.user import User
+from app.models.user import TokenBlocklist
+from app.routes.api import api 
+from app.models import db
 from flask_jwt_extended import JWTManager
 from dotenv import load_dotenv
 from flask_mail import Mail
