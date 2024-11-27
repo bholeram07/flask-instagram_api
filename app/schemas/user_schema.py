@@ -32,10 +32,7 @@ class ProfileSchema(Schema):
     username = fields.Str(required= False)
     profile_image = fields.Str(required= False)
     bio = fields.Str(required=False)
-    
 
-    
-    
 class LoginSchema(Schema):
     email = fields.Email(required=True)
     password = fields.Str(required=True)
