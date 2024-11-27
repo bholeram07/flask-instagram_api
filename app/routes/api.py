@@ -94,11 +94,15 @@ def user_profile(user_id=None):
         user = User.query.get_or_404(current_user_id)
         data = request.json
         try:
-            profile_data = profile_schema.dump(user)
+            updated_data = profile_schema.dump(user)
+            updated_data['username'] = data.get('username')
+            updated_data['bio'] = data.get('bio')
+            updated_data['profile_image']= data.get('profile_image')
+            db.session.commit()
         except ValidationError as e:
             first_error = next(iter(e.messages.values()))[0]
             return jsonify({"error": first_error}), 400
-        return jsonify({"data": profile_data})
+        return jsonify({"data": updated_data}),202
             
 @api.route("/login", methods=["POST"])
 def login_user():
@@ -142,7 +146,7 @@ def login_user():
         200,
     )
 
-@api.route("/update-password", methods=["POST"])
+@api.route("/update-password", methods=["PUT"])
 @jwt_required()
 def update_password():
     user_id = get_jwt_identity()
