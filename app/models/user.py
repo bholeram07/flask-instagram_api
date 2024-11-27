@@ -8,9 +8,13 @@ import datetime
 class User(db.Model):
         id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
         username = db.Column(db.String(80), nullable=False, unique=True)
+        first_name = db.Column(db.String(15),nullable = True)
+        last_name = db.Column(db.String(20),nullable=True)
+        bio = db.Column(db.String(120),nullable = True)
+        profile_image = db.Column(db.LargeBinary,nullable =True)
         email = db.Column(db.String(120), nullable=False, unique=True)
         _password = db.Column(db.String(255),nullable = False)
-        password_changed_at = db.Column(db.DateTime, nullable=True, default=datetime.datetime.utcnow)
+        
         created_at = db.Column(db.DateTime, server_default=db.func.now())
         updated_at = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now())
         

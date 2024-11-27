@@ -2,9 +2,10 @@ from flask import Blueprint, jsonify, request
 from app.models.user import db, User, TokenBlocklist
 import datetime
 from app.utils.jwt_utils import add_to_blocklist
-from app.utils.send_mails import send_mail
 from flask import app
-from app.schemas.user_schema import SignupSchema, LoginSchema
+
+
+from app.schemas.user_schema import SignupSchema, LoginSchema,UpdatePasswordSchema,ResetPasswordSchema,ProfileSchema
 from marshmallow import ValidationError
 from flask_jwt_extended import (
     create_access_token,
@@ -15,22 +16,33 @@ from flask_jwt_extended import (
 )
 from datetime import timedelta
 from flask_restful import Resource, Api
+from app.utils.tasks import send_mail
 
 api = Blueprint("api", __name__)
 
 @api.route("/signup", methods=["POST"])
 def create_user():
     user_schema = SignupSchema()
-    try:
+    if request.is_json:
         data = request.get_json()
-    except:
-        return jsonify({"error": "Invalid JSON format, please send a valid JSON."}), 400
+        file = None  # No file in JSON requests
+    else:
+        data = request.form  # Use form-data for non-JSON requests
+        file = request.files.get("image")
 
     if "email" not in data or "username" not in data or "password" not in data:
         return jsonify({"error": "Invalid data"}), 400
     new_user = User(
         username=data["username"], email=data["email"], password=data["password"]
     )
+    file = request.files.get("image") 
+    image_path = None
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        image_path = os.path.join(UPLOAD_FOLDER, filename)
+        file.save(image_path)
+        
+        
     existing_user = User.query.filter(
         (User.email == data["email"]) | (User.username == data["username"])
     ).first()
@@ -50,10 +62,11 @@ def create_user():
     db.session.commit()
     user_dict = user_schema.dump(new_user)
     user_dict.pop("password", None)
-    send_mail(data['email'])
+    # send_mail(data['email'])
     return jsonify({"data": user_dict}), 201
 
 
+            
 @api.route("/login", methods=["POST"])
 def login_user():
     login_schema = LoginSchema()
@@ -96,11 +109,11 @@ def login_user():
         200,
     )
 
-
 @api.route("/update-password", methods=["POST"])
 @jwt_required()
 def update_password():
     user_id = get_jwt_identity()
+    update_password_schema = UpdatePasswordSchema()
     data = request.json
 
     if not user_id:
@@ -108,7 +121,7 @@ def update_password():
 
     if not "current_password" in data or not "new_password" in data:
         return jsonify({"error": "Invalid data"}), 400
-
+    
     current_password = data["current_password"]
     new_password = data["new_password"]
 
@@ -118,9 +131,16 @@ def update_password():
 
     if not user.check_password(data["current_password"]):
         return jsonify({"error": "Incorrect Current Password"}), 401
+    try:
+        user_data = update_password_schema.load(data)
+    except ValidationError as e:
+        first_error = next(iter(e.messages.values()))[0]
+        return jsonify({"error": first_error}), 400
+    
     if current_password == new_password:
         return jsonify({"error": "current password and old password not be same"})
-
+    
+    user.set_password(data['new_password'])
     jti = get_jwt()["jti"]
     blacklisted_token = TokenBlocklist(jti=jti)
     db.session.add(blacklisted_token)
@@ -141,3 +161,40 @@ def logout():
     db.session.add(blacklisted_token)
     db.session.commit()
     return jsonify({"detail": "Successfully logged out."}), 204
+
+
+@api.route('/reset-password/',methods = ["POST"])
+def send_mail_reset_password():
+    data = request.json
+    if not "email" in data:
+        return jsonify({"error" : "Invalid data"}),400
+    user = User.query.get(email = data['email'])
+    if not user:
+        return jsonify({"error":"Not registered"}),400
+    user_id = user.id
+    link = 'http://127.0.0.1:5000/reset-password/user_id'
+    print(link)
+    send_mail.delay(data['email'])
+    return jsonify({"detail": "link sent successfully please check your mail"}),200
+
+
+@api.route('/reset-password/<uuid:user_id>/',methods = ["POST"])
+def reset_password(user_id):
+    user = User.query.get(user_id)
+    data = request.json
+    
+    if not ("password" in data and "confirm_password" in data):
+        return jsonify({"error":"Invalid data"}),400
+    
+    
+    if  user.check_password(data["password"]):
+        return jsonify({"error": "new password must be defrent from existing password"}), 401
+    
+    if data["password"]!=data["confirm_password"]:
+        return jsonify({"error" : "password and confirm password must be same"}),400
+    
+    user.set_password(data['password'])
+    db.session.commit()
+    return jsonify({"error" : "Password reset successfully"}),200    
+    
+

@@ -4,6 +4,7 @@ from flask_migrate import Migrate
 from config import Config
 from flask_sqlalchemy import SQLAlchemy
 from celery import Celery, Task
+from flask_uuid import UUIDConverter
 
 # Create a single instance of SQLAlchemy
 db = SQLAlchemy()
@@ -22,14 +23,23 @@ mail = Mail()
 
 def create_app():
     app = Flask(__name__)
+    app.url_map.converters['uuid'] = UUIDConverter
     app.config.from_object(Config)
+    
     app.config["JWT_SECRET_KEY"] = os.getenv('JWT_SECRET_KEY')  # Replace with a strong secret key
     app.config['MAIL_SERVER'] = 'smtp.googlemail.com'
     app.config['MAIL_PORT'] = 587
     app.config['MAIL_USE_TLS'] = True
     app.config['MAIL_USERNAME'] = os.getenv('EMAIL_USERNAME')
-    print(os.getenv('EMAIL_PASS'))
     app.config['MAIL_PASSWORD'] = os.getenv('EMAIL_PASS')
+    UPLOAD_FOLDER ='/uploads'
+    app.config['UPLOAD_FOLDER'] =UPLOAD_FOLDER
+    ALLOWED_EXTENSIONS = {'png','jpg','jpeg','gif'}
+    app.config['MAX_CONTENT_LENGTH'] = 16*1024*1024
+    def allowed_file(filename):
+        return '.' in filename and filename.rsplit('.',1)[1].lower() in ALLOWED_EXTENSIONS
+    
+    
 
     app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER')
     mail.init_app(app)
