@@ -66,6 +66,39 @@ def create_user():
     return jsonify({"data": user_dict}), 201
 
 
+@api.route("/users/profile", defaults={"user_id": None}, methods=["GET", "PUT"])
+@api.route("/users/profile/<uuid:user_id>", methods=["GET"])
+@jwt_required()
+def user_profile(user_id=None):
+    profile_schema = ProfileSchema()
+    current_user_id = get_jwt_identity()
+    if request.method == "GET":
+        if user_id:
+            user = User.query.get(user_id)
+            if not user:
+                return jsonify({"error": "user not found"})
+        else:
+            if not current_user_id:
+                return jsonify({"error": "Unauthorized"}), 403
+            user = User.query.get_or_404(current_user_id)
+        try:
+            profile_data = profile_schema.dump(user)
+        except ValidationError as e:
+            first_error = next(iter(e.messages.values()))[0]
+            return jsonify({"error": first_error}), 400
+        return jsonify({"data": profile_data})
+            
+    elif request.method == "PUT":
+        if not current_user_id :
+            return jsonify({"error": "Unauthorized"}),403
+        user = User.query.get_or_404(current_user_id)
+        data = request.json
+        try:
+            profile_data = profile_schema.dump(user)
+        except ValidationError as e:
+            first_error = next(iter(e.messages.values()))[0]
+            return jsonify({"error": first_error}), 400
+        return jsonify({"data": profile_data})
             
 @api.route("/login", methods=["POST"])
 def login_user():
