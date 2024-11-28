@@ -1,22 +1,21 @@
-from flask import Flask,jsonify
+from flask import Flask,jsonify,request
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from config import Config
 from flask_sqlalchemy import SQLAlchemy
 from celery import Celery, Task
 from flask_uuid import UUIDConverter
-
-# Create a single instance of SQLAlchemy
-db = SQLAlchemy()
-from app.models.user import User
-from app.models.user import TokenBlocklist
-from app.routes.api import api 
-from app.models import db
+from app.db import db
+# from PIL import image
+# from app.middleware.validate_uuid_middleware import validate_uuid_middleware
+from app.models.user import User, TokenBlocklist
+from app.models.post import Post
+from app.routes.user_api import api
+from app.routes.post_api import post_api
 from flask_jwt_extended import JWTManager
 from dotenv import load_dotenv
 from flask_mail import Mail
 import os
-# db = SQLAlchemy()
 migrate = Migrate()
 mail = Mail()
 
@@ -25,8 +24,22 @@ def create_app():
     app = Flask(__name__)
     app.url_map.converters['uuid'] = UUIDConverter
     app.config.from_object(Config)
-    
-    app.config["JWT_SECRET_KEY"] = os.getenv('JWT_SECRET_KEY')  # Replace with a strong secret key
+    # @app.before_request
+    # def apply_uuid_validation():
+    #     # Only run the middleware if the route has a 'uuid' parameter
+    #     if request.view_args and 'uuid' in request.view_args:
+    #         # Call the middleware and handle UUID validation
+    #         error_response = validate_uuid_middleware()
+    #         if error_response:  # If the middleware returns an error, return the response immediately
+    #             return error_respons
+    app.config["PROPAGATE_EXCEPTIONS"] =True
+    app.config["API_TITLE"] = "Instagram Rest Api"
+    app.config["API_VERSION"] = "v1"
+    app.config["OPENAPI_VERSION"] = "3.0.3"
+    app.config["OPENAPI_URL_PREFIX"] = "/"
+    app.config["OPENAPI_SWAGGER_UI_PATH"]="/swagger-ui"
+    app.config["OPENAPI_SWAGGER_UI_URL"]= "https://cdn.jsdelivr.net/npm/swagger-ui-dist/"
+    app.config["JWT_SECRET_KEY"] = os.getenv('JWT_SECRET_KEY')  
     app.config['MAIL_SERVER'] = 'smtp.googlemail.com'
     app.config['MAIL_PORT'] = 587
     app.config['MAIL_USE_TLS'] = True
@@ -38,8 +51,6 @@ def create_app():
     app.config['MAX_CONTENT_LENGTH'] = 16*1024*1024
     def allowed_file(filename):
         return '.' in filename and filename.rsplit('.',1)[1].lower() in ALLOWED_EXTENSIONS
-    
-    
 
     app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER')
     mail.init_app(app)
@@ -47,6 +58,7 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
     app.register_blueprint(api)
+    app.register_blueprint(post_api)
     @jwt.unauthorized_loader
     def custom_unauthorized_response(error_string):
         return jsonify({"error": "Authorization header is missing or invalid"}), 401
@@ -66,8 +78,7 @@ def create_app():
     # Blacklist token loader
     @jwt.token_in_blocklist_loader
     def check_if_token_in_blacklist(jwt_header, jwt_payload):
-        jti = jwt_payload['jti']  # Extract the unique identifier (jti) from the JWT
-        # Check if the token is blacklisted in the database
+        jti = jwt_payload['jti'] 
         return db.session.query(TokenBlocklist.id).filter_by(jti=jti).scalar() is not None
 
     return app

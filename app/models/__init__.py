@@ -1,5 +1,5 @@
-from flask_sqlalchemy import SQLAlchemy
+# from flask_sqlalchemy import SQLAlchemy
 
-# Create a single instance of SQLAlchemy
-db = SQLAlchemy()
+# # Create a single instance of SQLAlchemy
+# db = SQLAlchemy()
 

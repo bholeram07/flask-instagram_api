@@ -152,10 +152,8 @@ def update_password():
     user_id = get_jwt_identity()
     update_password_schema = UpdatePasswordSchema()
     data = request.json
-
     if not user_id:
-        return jsonify({"error": "Unauthorized"}), 403
-
+        return jsonify({"error": "Unauthorized"}), 401
     if not "current_password" in data or not "new_password" in data:
         return jsonify({"error": "Invalid data"}), 400
     

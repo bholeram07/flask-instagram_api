@@ -1,4 +1,4 @@
-from . import db
+from app.db import db
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 from werkzeug.security import generate_password_hash,check_password_hash
@@ -40,7 +40,9 @@ class User(db.Model):
                 'email': self.email
             }
 class TokenBlocklist(db.Model):
+    __tablename__ = "blacklist_token"
     id = db.Column(db.Integer, primary_key=True)
     jti = db.Column(db.String(36), nullable=False, index=True)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
+    
         

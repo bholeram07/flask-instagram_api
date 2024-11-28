@@ -1,11 +1,10 @@
 from marshmallow import Schema, fields,ValidationError,validates,validates_schema
 import re
 class  SignupSchema(Schema):
-    id = fields.UUID()
+    id = fields.UUID(dump_only=True)
     username = fields.Str(required=True)
     email = fields.Email(required=True)
     password = fields.Str(required = True)
-    # profile_image = fields.Str(required=False)
     
     
     @validates("password")
