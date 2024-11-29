@@ -173,10 +173,9 @@ def update_password():
     
     user.set_password(data['new_password'])
     jti = get_jwt()["jti"]
-    blacklisted_token = TokenBlocklist(jti=jti)
-    db.session.add(blacklisted_token)
-
-    db.session.commit()
+    expires_in = get_jwt()["exp"] - get_jwt()["iat"] 
+    redis_client = current_app.config['REDIS_CLIENT']
+    redis_client.setex(jti, expires_in, "blacklisted")
 
     return jsonify({"detail": "Password Update Successfully"}), 200
 
@@ -187,7 +186,6 @@ def logout():
     jti = get_jwt()["jti"]
     expires_in = get_jwt()["exp"] - get_jwt()["iat"] 
     redis_client = current_app.config['REDIS_CLIENT']
-    print(redis_client)
     redis_client.setex(jti, expires_in, "blacklisted")
     return jsonify({"msg": "Token has been revoked"}), 200
 
