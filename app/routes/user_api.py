@@ -1,10 +1,8 @@
-from flask import Blueprint, jsonify, request
-from app.models.user import db, User, TokenBlocklist
+from flask import Blueprint, jsonify, request,current_app
+from app.models.user import db, User
 import datetime
 from app.utils.jwt_utils import add_to_blocklist
 from flask import app
-
-
 from app.schemas.user_schema import SignupSchema, LoginSchema,UpdatePasswordSchema,ResetPasswordSchema,ProfileSchema
 from marshmallow import ValidationError
 from flask_jwt_extended import (
@@ -17,9 +15,7 @@ from flask_jwt_extended import (
 from datetime import timedelta
 from flask_restful import Resource, Api
 from app.utils.tasks import send_mail
-
 api = Blueprint("api", __name__)
-
 @api.route("/signup", methods=["POST"])
 def create_user():
     user_schema = SignupSchema()
@@ -189,13 +185,11 @@ def update_password():
 @jwt_required()
 def logout():
     jti = get_jwt()["jti"]
-    if TokenBlocklist.query.filter_by(jti=jti).first():
-        return jsonify({"detail": "Token already blacklisted."}), 200
-
-    blacklisted_token = TokenBlocklist(jti=jti)
-    db.session.add(blacklisted_token)
-    db.session.commit()
-    return jsonify({"detail": "Successfully logged out."}), 204
+    expires_in = get_jwt()["exp"] - get_jwt()["iat"] 
+    redis_client = current_app.config['REDIS_CLIENT']
+    print(redis_client)
+    redis_client.setex(jti, expires_in, "blacklisted")
+    return jsonify({"msg": "Token has been revoked"}), 200
 
 
 @api.route('/reset-password/',methods = ["POST"])

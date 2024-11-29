@@ -12,5 +12,7 @@ class Post(db.Model):
     title = db.Column(db.String(40),nullable = False)
     content = db.Column(db.String(50),nullable = False)
     is_deleted = db.Column(db.Boolean,nullable = False,default = False)
-    created_at = db.Column(db.DateTime, server_default=db.func.now())
+    deleted_at = db.Column(db.DateTime, default = db.func.now(),onupdate = db.func.now())
+    created_at = db.Column(db.DateTime, default=db.func.now())
+    updated_at = db.Column(db.DateTime, default=db.func.now, onupdate=db.func.now())
     

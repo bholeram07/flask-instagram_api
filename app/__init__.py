@@ -8,7 +8,7 @@ from flask_uuid import UUIDConverter
 from app.db import db
 # from PIL import image
 # from app.middleware.validate_uuid_middleware import validate_uuid_middleware
-from app.models.user import User, TokenBlocklist
+from app.models.user import User
 from app.models.post import Post
 from app.routes.user_api import api
 from app.routes.post_api import post_api
@@ -16,6 +16,7 @@ from flask_jwt_extended import JWTManager
 from dotenv import load_dotenv
 from flask_mail import Mail
 import os
+import redis
 migrate = Migrate()
 mail = Mail()
 
@@ -59,6 +60,10 @@ def create_app():
     migrate.init_app(app, db)
     app.register_blueprint(api)
     app.register_blueprint(post_api)
+    
+    redis_client = redis.StrictRedis(host='localhost', port=6379, db=0, decode_responses=True)
+    BLACKLIST_KEY = "blacklisted_tokens"
+    app.config['REDIS_CLIENT'] = redis_client
     @jwt.unauthorized_loader
     def custom_unauthorized_response(error_string):
         return jsonify({"error": "Authorization header is missing or invalid"}), 401
@@ -78,9 +83,8 @@ def create_app():
     # Blacklist token loader
     @jwt.token_in_blocklist_loader
     def check_if_token_in_blacklist(jwt_header, jwt_payload):
-        jti = jwt_payload['jti'] 
-        return db.session.query(TokenBlocklist.id).filter_by(jti=jti).scalar() is not None
-
+       jti = jwt_payload['jti']
+       return redis_client.exists(jti)
     return app
 
 
