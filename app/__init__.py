@@ -6,8 +6,6 @@ from flask_sqlalchemy import SQLAlchemy
 from celery import Celery, Task
 from flask_uuid import UUIDConverter
 from app.db import db
-# from PIL import image
-# from app.middleware.validate_uuid_middleware import validate_uuid_middleware
 from app.models.user import User
 from app.models.post import Post
 from app.routes.user_api import api
@@ -21,18 +19,25 @@ migrate = Migrate()
 mail = Mail()
 
 
+celery = None
+
+def create_celery_app(app=None):
+    global celery
+    if app is None:
+        app = create_app()  
+    celery = Celery(app.import_name, broker=app.config['CELERY_BROKER_URL'])
+    celery.conf.update(app.config)
+    return celery
+
+
 def create_app():
     app = Flask(__name__)
     app.url_map.converters['uuid'] = UUIDConverter
     app.config.from_object(Config)
-    # @app.before_request
-    # def apply_uuid_validation():
-    #     # Only run the middleware if the route has a 'uuid' parameter
-    #     if request.view_args and 'uuid' in request.view_args:
-    #         # Call the middleware and handle UUID validation
-    #         error_response = validate_uuid_middleware()
-    #         if error_response:  # If the middleware returns an error, return the response immediately
-    #             return error_respons
+    app.config.from_object('config.Config')
+    app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
+    app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
+    create_celery_app(app)
     app.config["PROPAGATE_EXCEPTIONS"] =True
     app.config["API_TITLE"] = "Instagram Rest Api"
     app.config["API_VERSION"] = "v1"
