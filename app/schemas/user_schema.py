@@ -11,7 +11,6 @@ class  SignupSchema(Schema):
     def validate_password(self, password):
         if len(password) < 8:
             raise ValidationError("Password must be at least 8 characters long.")
-        
         if not re.search(r"[!@#$%^&*()_]", password):
             raise ValidationError("Password must contain at least one special character.")
         if not re.search(r"[1-9]",password):
@@ -22,7 +21,7 @@ class  SignupSchema(Schema):
 
         if not re.search(r"[A-Z]", password):
             raise ValidationError("Password must contain at least one uppercase letter.")
-            
+        
         return password
     
     

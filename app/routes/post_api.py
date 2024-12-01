@@ -1,4 +1,4 @@
-from flask import app, jsonify, Blueprint, request
+from flask import app, jsonify, Blueprint, request,current_app
 from marshmallow import ValidationError
 from datetime import timedelta
 from app.schemas.post_schemas import PostSchema
@@ -11,12 +11,14 @@ from app.custom_pagination import CustomPagination
 post_api = Blueprint("post_api", __name__)
 
 
+
 @post_api.route("/posts", methods=["POST", "GET"])
 @post_api.route("/posts/<uuid:post_id>", methods=["PUT", "DELETE", "GET"])
 @post_api.route("/users/<uuid:user_id>/posts", methods=["GET"])
 @post_api.route("/users/<uuid:user_id>/posts/<uuid:post_id>",methods = ["GET","PUT","DELETE"])
 @jwt_required()
 def posts(post_id=None, user_id=None):
+    redis_client = current_app.config['REDIS_CLIENT']
     post_schema = PostSchema()
     current_user_id = get_jwt_identity()
 

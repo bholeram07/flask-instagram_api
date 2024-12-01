@@ -185,9 +185,11 @@ def update_password():
 def logout():
     jti = get_jwt()["jti"]
     expires_in = get_jwt()["exp"] - get_jwt()["iat"] 
-    redis_client = current_app.config['REDIS_CLIENT']
+   
+    print(jti)
     redis_client.setex(jti, expires_in, "blacklisted")
-    return jsonify({"msg": "Token has been revoked"}), 200
+
+    return jsonify({"msg": "Logout Successfully"}), 200
 
 
 @api.route('/reset-password/',methods = ["POST"])
