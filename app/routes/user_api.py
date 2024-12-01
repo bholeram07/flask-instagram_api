@@ -21,9 +21,9 @@ def create_user():
     user_schema = SignupSchema()
     if request.is_json:
         data = request.get_json()
-        file = None  # No file in JSON requests
+        file = None  
     else:
-        data = request.form  # Use form-data for non-JSON requests
+        data = request.form  
         file = request.files.get("image")
 
     if "email" not in data or "username" not in data or "password" not in data:
@@ -58,7 +58,7 @@ def create_user():
     db.session.commit()
     user_dict = user_schema.dump(new_user)
     user_dict.pop("password", None)
-    # send_mail(data['email'])
+    send_mail.delay(data['email'])
     return jsonify({"data": user_dict}), 201
 
 
