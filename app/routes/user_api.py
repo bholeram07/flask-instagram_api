@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request,current_app
+from flask import Blueprint, jsonify, request,current_app,render_template
 from app.models.user import db, User
 import datetime
 from app.utils.jwt_utils import add_to_blocklist
@@ -197,18 +197,19 @@ def send_mail_reset_password():
     data = request.json
     if not "email" in data:
         return jsonify({"error" : "Invalid data"}),400
-    user = User.query.get(email = data['email'])
+    user = User.query.filter_by(email=data['email']).first()
     if not user:
         return jsonify({"error":"Not registered"}),400
     user_id = user.id
-    link = 'http://127.0.0.1:5000/reset-password/user_id'
-    print(link)
-    send_mail.delay(data['email'])
+    reset_link = f'http://127.0.0.1:5000/reset-password/{user_id}/'
+    html_message= render_template('reset_password_email.html',
+                                 subject="Reset Link Password",reset_link=reset_link,user_name =user.username) 
+    send_mail(user.email,html_message,"Reset Link Password")
     return jsonify({"detail": "link sent successfully please check your mail"}),200
 
 
 @api.route('/reset-password/<uuid:user_id>/',methods = ["POST"])
-def reset_password(user_id):
+def reset_password(user_id=None):
     user = User.query.get(user_id)
     data = request.json
     
