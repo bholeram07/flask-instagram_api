@@ -213,10 +213,6 @@ def reset_password(user_id=None):
     user = User.query.get(user_id)
     data = request.json
     
-    if not ("password" in data and "confirm_password" in data):
-        return jsonify({"error":"Invalid data"}),400
-    
-    
     if  user.check_password(data["password"]):
         return jsonify({"error": "new password must be defrent from existing password"}), 401
     
