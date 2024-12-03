@@ -30,17 +30,9 @@ def create_app():
     app = Flask(__name__)
     app.url_map.converters['uuid'] = UUIDConverter
     app.config.from_object(Config)
-    app.config.from_object('config.Config')
-    app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
-    app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
-    app.config["PROPAGATE_EXCEPTIONS"] =True
-    app.config["JWT_SECRET_KEY"] = os.getenv('JWT_SECRET_KEY')  
-    app.config['MAIL_SERVER'] = 'smtp.googlemail.com'
-    app.config['MAIL_PORT'] = 587
-    app.config['MAIL_USE_TLS'] = True
-    app.config['MAIL_USERNAME'] = os.getenv('EMAIL_USERNAME')
-    app.config['MAIL_PASSWORD'] = os.getenv('EMAIL_PASS')
-    app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER')
+    app.config.from_object('config.Config') 
+    if not os.path.exists(app.config['UPLOAD_FOLDER']):
+        os.makedirs(app.config['UPLOAD_FOLDER'])
     mail.init_app(app)
     jwt = JWTManager(app)
     db.init_app(app)
@@ -53,7 +45,6 @@ def create_app():
     @jwt.unauthorized_loader
     def custom_unauthorized_response(error_string):
         return jsonify({"error": "Authorization header is missing or invalid"}), 401
-    from app.routes.post_api import post_api
     app.register_blueprint(post_api)
     
     @jwt.expired_token_loader
@@ -68,7 +59,6 @@ def create_app():
     def custom_revoked_token_response(jwt_header, jwt_payload):
         return jsonify({"error": "You have to login again"}), 401
 
-    # Blacklist token loader
     @jwt.token_in_blocklist_loader
     def check_if_token_in_blacklist(jwt_header, jwt_payload):
        jti = jwt_payload['jti']

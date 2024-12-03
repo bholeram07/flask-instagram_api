@@ -5,37 +5,48 @@ from app.schemas.post_schemas import PostSchema
 from app.models.post import Post
 from app.models.user import User
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from app.utils.allowed_file import allowed_file
 from app.db import db
 from app.custom_pagination import CustomPagination
+from werkzeug.utils import secure_filename
+import os
 
 post_api = Blueprint("post_api", __name__)
-
-
-
 @post_api.route("/posts", methods=["POST", "GET"])
 @post_api.route("/posts/<uuid:post_id>", methods=["PUT", "DELETE", "GET"])
 @post_api.route("/users/<uuid:user_id>/posts", methods=["GET"])
 @post_api.route("/users/<uuid:user_id>/posts/<uuid:post_id>",methods = ["GET","PUT","DELETE"])
 @jwt_required()
 def posts(post_id=None, user_id=None):
-    redis_client = current_app.config['REDIS_CLIENT']
     post_schema = PostSchema()
-    current_user_id = get_jwt_identity()
-
     if request.method == "POST":
-        data = request.json
         current_user_id = get_jwt_identity()
         if not current_user_id:
-            "User not found"
+            return jsonify({"error": "User not found"}), 404
+        image = request.files.get('image')
+        if image and allowed_file(image.filename):  
+            filename = secure_filename(image.filename)
+            image_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+
+        else:
+            image_path = None 
+        data = request.form if request.form else request.json
         print(data)
-        print(current_user_id)
         try:
             post_data = post_schema.load(data)
         except ValidationError as e:
             first_error = next(iter(e.messages.values()))[0]
             return jsonify({"error": first_error}), 400
+        
+        if image and allowed_file(image.filename):
+            filename = secure_filename(image.filename)
+            image_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+            image.save(image_path)
         post = Post(
-            title=data.get("title"), content=data.get("content"), user=current_user_id
+            title=data.get("title"),
+            content=data.get("content"),
+            image=image_path,
+            user=current_user_id,
         )
         db.session.add(post)
         db.session.commit()
@@ -52,7 +63,6 @@ def posts(post_id=None, user_id=None):
         post = Post.query.filter_by(user=user_id, id=post,is_deleted = False)
         if post == None:
             return jsonify({"error": "Post not exist"}), 204
-
         try:
             updated_data = post_schema.load(data)
             updated_data["title"] = data.get("title")
