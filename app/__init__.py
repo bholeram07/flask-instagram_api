@@ -8,6 +8,7 @@ from flask_uuid import UUIDConverter
 from app.db import db
 from app.models.user import User
 from app.models.post import Post
+from app.models.comment import Comment
 from app.routes.user_api import api
 from app.routes.post_api import post_api
 from flask_jwt_extended import JWTManager
