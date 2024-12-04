@@ -15,7 +15,7 @@ post_api = Blueprint("post_api", __name__)
 @post_api.route("/posts", methods=["POST", "GET"])
 @post_api.route("/posts/<uuid:post_id>", methods=["PUT", "DELETE", "GET"])
 @post_api.route("/users/<uuid:user_id>/posts", methods=["GET"])
-@post_api.route("/users/<uuid:user_id>/posts/<uuid:post_id>",methods = ["GET","PUT","DELETE"])
+@post_api.route("/users/<uuid:user_id>/posts/<uuid:post_id>",methods = ["GET"])
 @jwt_required()
 def posts(post_id=None, user_id=None):
     post_schema = PostSchema()
@@ -31,7 +31,6 @@ def posts(post_id=None, user_id=None):
         else:
             image_path = None 
         data = request.form if request.form else request.json
-        print(data)
         try:
             post_data = post_schema.load(data)
         except ValidationError as e:
@@ -57,10 +56,10 @@ def posts(post_id=None, user_id=None):
         data = request.json
         current_user_id = get_jwt_identity()
         if not current_user_id:
-            return jsonify({"error":"Please Provide Post"})
+            return jsonify({"error":"Unauthorized"})
         if not post_id:
             return jsonify({"error": "Please Provide Post id"})
-        post = Post.query.filter_by(user=user_id, id=post,is_deleted = False)
+        post = Post.query.filter_by(user=current_user_id, id=post,is_deleted = False)
         if post == None:
             return jsonify({"error": "Post not exist"}), 204
         try:
