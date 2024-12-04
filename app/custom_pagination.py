@@ -11,10 +11,13 @@ class CustomPagination:
         total_items = len(self.query)
         total_pages = (total_items + self.per_page - 1) // self.per_page 
         return {
+           
+            "items": items,
+            "pagination":{
             "current_page": self.page,
             "per_page": self.per_page,
             "total_items": total_items,
             "total_pages": total_pages,
-            "items": items
+            }
         }
     
