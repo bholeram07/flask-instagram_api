@@ -11,6 +11,7 @@ from app.models.post import Post
 from app.models.comment import Comment
 from app.routes.user_api import api
 from app.routes.post_api import post_api
+from app.routes.comment_api import comment_api
 from flask_jwt_extended import JWTManager
 from dotenv import load_dotenv
 from flask_mail import Mail
@@ -47,6 +48,7 @@ def create_app():
     def custom_unauthorized_response(error_string):
         return jsonify({"error": "Authorization header is missing or invalid"}), 401
     app.register_blueprint(post_api)
+    app.register_blueprint(comment_api)
     
     @jwt.expired_token_loader
     def custom_expired_token_response(jwt_header, jwt_payload):
