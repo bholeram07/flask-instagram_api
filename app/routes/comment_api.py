@@ -13,8 +13,6 @@ comment_api = Blueprint("comment_api", __name__)
 
 
 @comment_api.route("/api/comments/", methods=["GET", "POST", "PUT", "DELETE"])
-
-
 @jwt_required()
 def comments(post_id=None, comment_id=None):
     current_user_id = get_jwt_identity()
@@ -44,7 +42,7 @@ def comments(post_id=None, comment_id=None):
 
     if request.method == "GET":
         comment_id = request.args.get("comment_id")
-       
+
         if comment_id:
             comment = Comment.query.filter_by(id=comment_id, is_deleted=False).first()
             if comment == None:
@@ -91,13 +89,13 @@ def comments(post_id=None, comment_id=None):
 
     if request.method == "DELETE":
         comment_id = request.args.get("comment_id")
-        if not comment_id :
-            return jsonify({"error" : "Please provide comment id"}),400
+        if not comment_id:
+            return jsonify({"error": "Please provide comment id"}), 400
         comment = Comment.query.filter_by(
             id=comment_id, user_id=current_user_id, is_deleted=False
         ).first()
         if comment == None:
-            return jsonify({"error": "Comment not exist"}),404
+            return jsonify({"error": "Comment not exist"}), 404
         comment.is_deleted = True
         db.session.commit()
         return jsonify(), 204
