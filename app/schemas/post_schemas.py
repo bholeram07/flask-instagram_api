@@ -14,7 +14,7 @@ class PostSchema(Schema):
             raise ValidationError("Title should not be purely numerical.")
         
     @validates("content")
-    def validate_title(self,value):
+    def validate_content(self,value):
         if not value.strip():
             raise ValidationError("Content should not be blank.")
        

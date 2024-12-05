@@ -17,3 +17,7 @@ class Post(db.Model):
     deleted_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, server_default=func.now())  
     updated_at = db.Column(db.DateTime, onupdate=func.now(), default=func.now()) 
+    
+    def __str__(self):
+        return f"{self.content} by {self.user}"
+    

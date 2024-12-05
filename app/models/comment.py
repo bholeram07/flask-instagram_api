@@ -11,7 +11,7 @@ class Comment(db.Model):
     id = db.Column(UUID(as_uuid=True),primary_key = True, default=uuid.uuid4)
     user_id = db.Column(UUID(as_uuid=True),db.ForeignKey('user.id'))
     post_id = db.Column(UUID(as_uuid=True),db.ForeignKey('post.id'))
-    content = db.Column(db.String, nullable = False)
+    content = db.Column(db.String, nullable = False) #size
     is_deleted = db.Column(db.Boolean, default= False)
     deleted_at = db.Column(db.DateTime, nullable = True)
     created_at = db.Column(db.DateTime, server_default=func.now())  
