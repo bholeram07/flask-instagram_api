@@ -12,6 +12,7 @@ from app.models.comment import Comment
 from app.models.likes import Like
 from app.routes.user_api import api
 from app.routes.post_api import post_api
+from app.routes.follower_api import follower_api,following_api
 from app.routes.comment_api import comment_api
 from app.routes.like_api import like_api
 from flask_jwt_extended import JWTManager
@@ -59,6 +60,8 @@ def create_app():
     app.register_blueprint(post_api)
     app.register_blueprint(comment_api)
     app.register_blueprint(like_api)
+    app.register_blueprint(follower_api)
+    app.register_blueprint(following_api)
 
     @jwt.expired_token_loader
     def custom_expired_token_response(jwt_header, jwt_payload):
