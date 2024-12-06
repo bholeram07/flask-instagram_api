@@ -18,6 +18,9 @@ class PostSchema(Schema):
         if not value.strip():
             raise ValidationError("Content should not be blank.")
        
+class UpdatePostSchema(Schema):
+    content = fields.Str()
+    title = fields.Str()
     
     
 
