@@ -74,10 +74,9 @@ class PostApi(MethodView):
             return jsonify({"error": first_error}), 400
         return jsonify(updated_data), 202
 
-    def get(self):
+    def get(self,user_id = None):
         current_user_id = get_jwt_identity()
         post_id = request.args.get("post_id")
-        user_id = request.args.get("user_id")
         if post_id:
             post = Post.query.filter_by(id=post_id, is_deleted=False).first()
             if not post:
@@ -122,5 +121,5 @@ post_view = PostApi.as_view("post_api")
 post_api.add_url_rule(
     "/api/posts/", view_func=post_view, methods=["GET", "POST", "PUT", "DELETE"]
 )
-# user_post_view = PostApi.as_view("user_post_view")
-# user_post_view.add_url_rule("/api/user/<uuid:user_id>/posts/",view_func=post_view, methods=["GET"])
+
+post_api.add_url_rule("/api/users/<uuid:user_id>/posts/",view_func=post_view, methods=["GET"])
