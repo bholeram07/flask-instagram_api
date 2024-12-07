@@ -31,6 +31,24 @@ class User(db.Model):
                                 backref=db.backref('following', lazy='joined'),
                                 lazy='dynamic',
                                 cascade='all, delete-orphan')
+
+    @property
+    def password(self):
+        raise AttributeError("Password is not readable")
+
+    @password.setter
+    def password(self, raw_password):
+        self._password = generate_password_hash(raw_password)
+
+    def check_password(self, raw_password):
+        return check_password_hash(self._password, raw_password)
+
+    def set_password(self, raw_password):
+        self.password = raw_password
+        db.session.commit()   
+        
+        
+        
     def follow(self, user):
         if not self.is_following(user):
             f = Follow(follower=self, following=user)
@@ -52,20 +70,6 @@ class User(db.Model):
             return False
         return self.followers.filter_by(
             follower_id=user.id).first() is not None
-
-    @property
-    def password(self):
-        raise AttributeError("Password is not readable")
-
-    @password.setter
-    def password(self, raw_password):
-        self._password = generate_password_hash(raw_password)
-
-    def check_password(self, raw_password):
-        return check_password_hash(self._password, raw_password)
-
-    def set_password(self, raw_password):
-        self.password = raw_password
 
     def to_dict(self):
         """Convert user object to a dictionary for JSON serialization."""

@@ -16,6 +16,7 @@ from flask_jwt_extended import (
     get_jwt_identity,
     jwt_required,
     create_refresh_token,
+    get_jwt
 )
 from datetime import timedelta
 from flask_restful import Resource, Api
@@ -176,9 +177,9 @@ def update_password():
         return jsonify({"error": first_error}), 400
 
     if current_password == new_password:
-        return jsonify({"error": "current password and old password not be same"})
+        return jsonify({"error": "old and new password not be same"}),400
 
-    user.set_password(data["new_password"])
+    user.set_password(data["new_password"])             
     jti = get_jwt()["jti"]
     expires_in = get_jwt()["exp"] - get_jwt()["iat"]
     redis_client = current_app.config["REDIS_CLIENT"]
@@ -192,19 +193,17 @@ def update_password():
 def logout():
     jti = get_jwt()["jti"]
     expires_in = get_jwt()["exp"] - get_jwt()["iat"]
-
-    print(jti)
     redis_client.setex(jti, expires_in, "blacklisted")
-
     return jsonify({"detail": "Logout Successfully"}), 200
-
 
 @api.route("/reset-password/", methods=["POST"])
 def send_mail_reset_password():
     data = request.json
-    if not "email" in data:
+    email = data.get('email')
+    if email == None:
         return jsonify({"error": "Invalid data"}), 400
-    user = User.query.filter_by(email=data["email"]).first()
+    
+    user = User.query.filter_by(email=email).first()
     if not user:
         return jsonify({"error": "Not registered"}), 400
     user_id = user.id
@@ -219,20 +218,25 @@ def send_mail_reset_password():
     return jsonify({"detail": "link sent successfully please check your mail"}), 200
 
 
-@api.route("/reset-password/<uuid:user_id>/", methods=["POST"])
-def reset_password(user_id=None):
+@api.route("/reset-password/<uuid:user_id>/", methods=["POST","GET"])
+def reset_password(user_id):
+    print(user_id)
     user = User.query.get(user_id)
     data = request.json
-
-    if user.check_password(data["password"]):
+    if not data or "new_password" not in data:
+        return jsonify({"error": "New password is required"}), 400
+    new_password = data.get("new_password")
+    if not new_password:
+        return jsonify({"error": "New password cannot be empty"}), 400
+    if user is None:
+        return jsonify({"error": "User not found"}), 404
+    if user.check_password(data.get('new_password')):
         return (
-            jsonify({"error": "new password must be defrent from existing password"}),
+            jsonify({"error": "new password must be diffrent from existing password"}),
             401,
         )
 
-    if data["password"] != data["confirm_password"]:
+    if data["new_password"] != data["confirm_password"]:
         return jsonify({"error": "password and confirm password must be same"}), 400
-
-    user.set_password(data["password"])
-    db.session.commit()
+    user.set_password(data["new_password"])
     return jsonify({"detail": "Password reset successfully"}), 200
