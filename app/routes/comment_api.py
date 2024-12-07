@@ -45,19 +45,24 @@ class CommentApi(MethodView):
     def get(self, post_id=None, comment_id=None):
         current_user_id = get_jwt_identity()
         comment_id = request.args.get("comment_id")
-
+       
+        
         if comment_id:
             comment = Comment.query.filter_by(id=comment_id, is_deleted=False).first()
-
             if comment == None:
                 return jsonify({"error": "Comment not exist"}), 404
             comment_data = self.comment_schema.dump(comment)
             return jsonify(comment_data), 200
-        else:
+   
+        elif post_id:
             comments = Comment.query.filter_by(post_id=post_id, is_deleted=False).all()
-
-            if comments == None:
-                return jsonify({"error": "Comment not exist on this post"})
+            if not comments: 
+                return jsonify({"error": "No comments found for this post"}), 404
+            comments_data = self.comment_schema.dump(comments, many=True)
+            return jsonify({"data": comments_data}), 200
+        return jsonify({"error": "Invalid request. Specify a comment_id or post_id"}),400
+                
+      
 
         page = request.args.get("page", 1, type=int)
         per_page = request.args.get("per_page", 10, type=int)
@@ -111,7 +116,7 @@ class CommentApi(MethodView):
 
 comment_view = CommentApi.as_view("comment_api")
 comment_api.add_url_rule(
-    "/api/comments/", view_func=comment_view, methods=["GET", "POST", "PUT", "DELETE"]
+    "/api/comments/", view_func=comment_view, methods=["GET","POST", "PUT", "DELETE"]
 )
 comment_api.add_url_rule(
     "/api/posts/<uuid:post_id>/comments/",view_func=comment_view,methods = ["GET"]

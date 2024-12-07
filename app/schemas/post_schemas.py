@@ -1,4 +1,4 @@
-from marshmallow import Schema,fields,ValidationError,validates,validates_schema
+from marshmallow import Schema,fields,ValidationError,validates,validates_schema,validate
 
 class PostSchema(Schema):
     id  = fields.UUID(dump_only=True)
@@ -18,10 +18,10 @@ class PostSchema(Schema):
         if not value.strip():
             raise ValidationError("Content should not be blank.")
        
+
 class UpdatePostSchema(Schema):
-    content = fields.Str()
-    title = fields.Str()
-    
+    title = fields.Str(validate=validate.Length(min=1), required=False)
+    content = fields.Str(validate=validate.Length(min=1), required=False)
     
 
     

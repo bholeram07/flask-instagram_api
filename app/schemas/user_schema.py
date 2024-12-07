@@ -47,8 +47,59 @@ class LoginSchema(Schema):
 class UpdatePasswordSchema(Schema):
     current_password = fields.Str(required=True)
     new_password = fields.Str(required=True)
+    @validates("new_password")
+    def validate_password(self, new_password):
+        if not new_password.strip():
+           raise ValidationError("new password should not be blank.")
+    
+        if len(new_password) < 8:
+            raise ValidationError("Password must be at least 8 characters long.")
+        if not re.search(r"[!@#$%^&*()_]", new_password):
+            raise ValidationError(
+                "Password must contain at least one special character."
+            )
+        if not re.search(r"[1-9]", new_password):
+            raise ValidationError("Password must contain at least one numerical value")
+
+        if not re.search(r"[a-z]", new_password):
+            raise ValidationError(
+                "Password must contain at least one lowercase letter."
+            )
+
+        if not re.search(r"[A-Z]", new_password):
+            raise ValidationError(
+                "Password must contain at least one uppercase letter."
+            )
+
+        return new_password
 
 
 class ResetPasswordSchema(Schema):
-    password = fields.Str(required=True)
+    new_password = fields.Str(required=True)
     confirm_password = fields.Str(required=True)
+    
+    @validates("new_password")
+    def validate_password(self, new_password):
+        if not new_password.strip():
+           raise ValidationError("new password should not be blank.")
+    
+        if len(new_password) < 8:
+            raise ValidationError("Password must be at least 8 characters long.")
+        if not re.search(r"[!@#$%^&*()_]", new_password):
+            raise ValidationError(
+                "Password must contain at least one special character."
+            )
+        if not re.search(r"[1-9]", new_password):
+            raise ValidationError("Password must contain at least one numerical value")
+
+        if not re.search(r"[a-z]", new_password):
+            raise ValidationError(
+                "Password must contain at least one lowercase letter."
+            )
+
+        if not re.search(r"[A-Z]", new_password):
+            raise ValidationError(
+                "Password must contain at least one uppercase letter."
+            )
+
+        return new_password

@@ -71,7 +71,7 @@ def create_user():
 
 
 @api.route("/users/profile", defaults={"user_id": None}, methods=["GET", "PUT"])
-@api.route("/users/profile/<uuid:user_id>", methods=["GET"])
+@api.route("/users/<uuid:user_id>/profile", methods=["GET"])
 @jwt_required()
 def user_profile(user_id=None):
     profile_schema = ProfileSchema()
@@ -90,7 +90,7 @@ def user_profile(user_id=None):
         except ValidationError as e:
             first_error = next(iter(e.messages.values()))[0]
             return jsonify({"error": first_error}), 400
-        return jsonify({"data": profile_data})
+        return jsonify(profile_data)
 
     elif request.method == "PUT":
         if not current_user_id:
@@ -99,14 +99,17 @@ def user_profile(user_id=None):
         data = request.json
         try:
             updated_data = profile_schema.dump(user)
-            updated_data["username"] = data.get("username")
-            updated_data["bio"] = data.get("bio")
-            updated_data["profile_image"] = data.get("profile_image")
+            if "username" in data:
+                user.username = data.get("username")
+            if "bio" in data:
+                user.bio = data.get("bio")
+            if "profile_image" in data:
+                user.profile_image = data.get("profile_image")
             db.session.commit()
         except ValidationError as e:
             first_error = next(iter(e.messages.values()))[0]
             return jsonify({"error": first_error}), 400
-        return jsonify({"data": updated_data}), 202
+        return jsonify(updated_data), 202
 
 
 @api.route("/login", methods=["POST"])
@@ -198,11 +201,11 @@ def logout():
     return jsonify(), 204
  
 
-@api.route("/reset-password/", methods=["POST"])
+@api.route("/reset-password/send-mail", methods=["POST"])
 def send_mail_reset_password():
     data = request.json
     email = data.get('email')
-    if email == None:
+    if email == None or email == "":
         return jsonify({"error": "Invalid data"}), 400
     
     user = User.query.filter_by(email=email).first()
