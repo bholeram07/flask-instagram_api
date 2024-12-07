@@ -188,13 +188,15 @@ def update_password():
     return jsonify({"detail": "Password Update Successfully"}), 200
 
 
-@api.route("/logout", methods=["POST"])
+@api.route("/logout", methods=["DELETE"])
 @jwt_required()
 def logout():
     jti = get_jwt()["jti"]
     expires_in = get_jwt()["exp"] - get_jwt()["iat"]
+    redis_client = current_app.config['REDIS_CLIENT']
     redis_client.setex(jti, expires_in, "blacklisted")
-    return jsonify({"detail": "Logout Successfully"}), 200
+    return jsonify(), 204
+ 
 
 @api.route("/reset-password/", methods=["POST"])
 def send_mail_reset_password():
