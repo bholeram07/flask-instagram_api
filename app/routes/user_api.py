@@ -1,6 +1,8 @@
 from flask import Blueprint, jsonify, request, current_app, render_template
 from app.models.user import db, User
 import datetime
+from app.models.follower import Follow
+from app.models.post import Post
 from app.utils.jwt_utils import add_to_blocklist
 from flask import app
 from app.schemas.user_schema import (
@@ -16,7 +18,7 @@ from flask_jwt_extended import (
     get_jwt_identity,
     jwt_required,
     create_refresh_token,
-    get_jwt
+    get_jwt,
 )
 from datetime import timedelta
 from flask_restful import Resource, Api
@@ -58,7 +60,6 @@ def create_user():
             return jsonify({"error": "email already exists"}), 409
         if existing_user.username == data["username"]:
             return jsonify({"error": "Username already exists"}), 409
-  
 
     new_user.set_password(user_data["password"])
     db.session.add(new_user)
@@ -68,10 +69,10 @@ def create_user():
     html_message = render_template(
         "welcome_email.html",
         subject="Welcome mail",
-        user_name=data['username'],
+        user_name=data["username"],
     )
-    send_mail.delay(data["email"], html_message, "Welcome mail")
-    return jsonify({"data": user_dict}), 201
+    send_mail(data["email"], html_message, "Welcome mail")
+    return jsonify(user_dict), 201
 
 
 @api.route("/users/profile", defaults={"user_id": None}, methods=["GET", "PUT"])
@@ -80,20 +81,30 @@ def create_user():
 def user_profile(user_id=None):
     profile_schema = ProfileSchema()
     current_user_id = get_jwt_identity()
+
     if request.method == "GET":
         if user_id:
             user = User.query.get(user_id)
             if not user:
-                return jsonify({"error": "user not found"})
+                return jsonify({"error": "User not found"}), 404
         else:
             if not current_user_id:
                 return jsonify({"error": "Unauthorized"}), 403
             user = User.query.get_or_404(current_user_id)
+
         try:
+            followers_count = Follow.query.filter_by(follower_id=user.id).count()
+            following_count = Follow.query.filter_by(following_id=user.id).count()
+            post_count = Post.query.filter_by(user = user.id , is_deleted = False).count()
             profile_data = profile_schema.dump(user)
+            profile_data["followers"] = followers_count
+            profile_data["following"] = following_count
+            profile_data['posts'] = post_count
+
         except ValidationError as e:
             first_error = next(iter(e.messages.values()))[0]
             return jsonify({"error": first_error}), 400
+
         return jsonify(profile_data)
 
     elif request.method == "PUT":
@@ -184,9 +195,9 @@ def update_password():
         return jsonify({"error": first_error}), 400
 
     if current_password == new_password:
-        return jsonify({"error": "old and new password not be same"}),400
+        return jsonify({"error": "old and new password not be same"}), 400
 
-    user.set_password(data["new_password"])             
+    user.set_password(data["new_password"])
     jti = get_jwt()["jti"]
     expires_in = get_jwt()["exp"] - get_jwt()["iat"]
     redis_client = current_app.config["REDIS_CLIENT"]
@@ -200,18 +211,18 @@ def update_password():
 def logout():
     jti = get_jwt()["jti"]
     expires_in = get_jwt()["exp"] - get_jwt()["iat"]
-    redis_client = current_app.config['REDIS_CLIENT']
+    redis_client = current_app.config["REDIS_CLIENT"]
     redis_client.setex(jti, expires_in, "blacklisted")
     return jsonify(), 204
- 
 
-@api.route("/reset-password/send-mail", methods=["POST"])
+
+@api.route("/reset-password/send-mail/", methods=["POST"])
 def send_mail_reset_password():
     data = request.json
-    email = data.get('email')
+    email = data.get("email")
     if email == None or email == "":
         return jsonify({"error": "Invalid data"}), 400
-    
+
     user = User.query.filter_by(email=email).first()
     if not user:
         return jsonify({"error": "Not registered"}), 400
@@ -227,9 +238,8 @@ def send_mail_reset_password():
     return jsonify({"detail": "link sent successfully please check your mail"}), 200
 
 
-@api.route("/reset-password/<uuid:user_id>/", methods=["POST","GET"])
+@api.route("/reset-password/<uuid:user_id>/", methods=["POST", "GET"])
 def reset_password(user_id):
-    print(user_id)
     user = User.query.get(user_id)
     data = request.json
     if not data or "new_password" not in data:
@@ -239,7 +249,7 @@ def reset_password(user_id):
         return jsonify({"error": "New password cannot be empty"}), 400
     if user is None:
         return jsonify({"error": "User not found"}), 404
-    if user.check_password(data.get('new_password')):
+    if user.check_password(data.get("new_password")):
         return (
             jsonify({"error": "new password must be diffrent from existing password"}),
             401,
