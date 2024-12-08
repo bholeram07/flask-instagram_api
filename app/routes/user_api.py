@@ -23,6 +23,7 @@ from flask_jwt_extended import (
 from datetime import timedelta
 from flask_restful import Resource, Api
 from app.utils.tasks import send_mail
+from app.uuid_validator import is_valid_uuid
 
 api = Blueprint("api", __name__)
 
@@ -76,9 +77,9 @@ def create_user():
 
 
 @api.route("/users/profile", defaults={"user_id": None}, methods=["GET", "PUT"])
-@api.route("/users/<uuid:user_id>/profile", methods=["GET"])
+@api.route("/users/<user_id>/profile", methods=["GET"])
 @jwt_required()
-def user_profile(user_id=None):
+def user_profile(user_id = None):
     profile_schema = ProfileSchema()
     current_user_id = get_jwt_identity()
 
@@ -92,7 +93,7 @@ def user_profile(user_id=None):
         else:
             if not current_user_id:
                 return jsonify({"error": "Unauthorized"}), 403
-            user = User.query.get_or_404(current_user_id)
+            user = User.query.get(current_user_id)
 
         try:
             followers_count = Follow.query.filter_by(follower_id=user.id).count()
@@ -112,7 +113,7 @@ def user_profile(user_id=None):
     elif request.method == "PUT":
         if not current_user_id:
             return jsonify({"error": "Unauthorized"}), 403
-        user = User.query.get_or_404(current_user_id)
+        user = User.query.filter_by(current_user_id)
         data = request.json
         try:
             updated_data = profile_schema.dump(user)

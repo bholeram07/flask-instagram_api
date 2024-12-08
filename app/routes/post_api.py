@@ -102,12 +102,13 @@ class PostApi(MethodView):
             return jsonify(post_data), 200
 
         elif user_id:
-            if not is_valid_uuid(post_id):
+            if not is_valid_uuid(user_id):
                 return {"error": "Invalid UUID format"}, 400
-            posts = Post.query.filter_by(user=user_id).all()
+            posts = Post.query.filter_by(user=user_id,is_deleted = False).all()
 
         else:
-            posts = Post.query.filter_by(user=current_user_id).all()
+            posts = Post.query.filter_by(user=current_user_id, is_deleted = False).all()
+            print(posts)
 
         if not posts:
             return jsonify({"error": "No posts found for the user"}), 404
@@ -145,5 +146,5 @@ post_api.add_url_rule(
 )
 
 post_api.add_url_rule(
-    "/api/users/<uuid:user_id>/posts/", view_func=post_view, methods=["GET"]
+    "/api/users/<user_id>/posts/", view_func=post_view, methods=["GET"]
 )
