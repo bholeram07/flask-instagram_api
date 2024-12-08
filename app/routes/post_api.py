@@ -104,10 +104,10 @@ class PostApi(MethodView):
         elif user_id:
             if not is_valid_uuid(user_id):
                 return {"error": "Invalid UUID format"}, 400
-            posts = Post.query.filter_by(user=user_id,is_deleted = False).all()
+            posts = Post.query.filter_by(user=user_id, is_deleted=False).all()
 
         else:
-            posts = Post.query.filter_by(user=current_user_id, is_deleted = False).all()
+            posts = Post.query.filter_by(user=current_user_id, is_deleted=False).all()
             print(posts)
 
         if not posts:

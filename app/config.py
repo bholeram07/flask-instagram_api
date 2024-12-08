@@ -1,8 +1,8 @@
 import os
 from flask import jsonify
 class Config:
-    BASE_DIR = os.path.abspath(os.path.dirname(__file__))  # Base directory of the project
-    UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')      # Upload folder path
+    BASE_DIR = os.path.abspath(os.path.dirname(__file__)) 
+    UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')     
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}  
     PROPAGATE_EXCEPTIONS = True
     JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY')

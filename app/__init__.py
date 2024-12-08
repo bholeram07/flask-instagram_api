@@ -1,8 +1,6 @@
 from flask import Flask, jsonify, request
-from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from config import Config
-from flask_sqlalchemy import SQLAlchemy
 from celery import Celery, Task
 from flask_uuid import UUIDConverter
 from app.db import db
@@ -12,7 +10,7 @@ from app.models.comment import Comment
 from app.models.likes import Like
 from app.routes.user_api import api
 from app.routes.post_api import post_api
-from app.routes.follower_api import follower_api,following_api
+from app.routes.follower_api import follower_api, following_api
 from app.routes.comment_api import comment_api
 from app.routes.like_api import like_api
 from flask_jwt_extended import JWTManager
@@ -39,29 +37,31 @@ def create_app():
     app.url_map.converters["uuid"] = UUIDConverter
     app.config.from_object(Config)
     app.config.from_object("config.Config")
+    
     if not os.path.exists(app.config["UPLOAD_FOLDER"]):
         os.makedirs(app.config["UPLOAD_FOLDER"])
+        
     mail.init_app(app)
     jwt = JWTManager(app)
     db.init_app(app)
     init_celery(app)
     migrate.init_app(app, db)
-    app.register_blueprint(api)
     redis_client = redis.StrictRedis(
         host="localhost", port=6379, db=0, decode_responses=True
     )
     BLACKLIST_KEY = "blacklisted_tokens"
     app.config["REDIS_CLIENT"] = redis_client
 
-    @jwt.unauthorized_loader
-    def custom_unauthorized_response(error_string):
-        return jsonify({"error": "Authorization header is missing or invalid"}), 401
-
+    app.register_blueprint(api)
     app.register_blueprint(post_api)
     app.register_blueprint(comment_api)
     app.register_blueprint(like_api)
     app.register_blueprint(follower_api)
     app.register_blueprint(following_api)
+    
+    @jwt.unauthorized_loader
+    def custom_unauthorized_response(error_string):
+        return jsonify({"error": "Authorization header is missing or invalid"}), 401
 
     @jwt.expired_token_loader
     def custom_expired_token_response(jwt_header, jwt_payload):

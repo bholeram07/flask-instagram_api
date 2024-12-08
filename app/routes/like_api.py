@@ -24,7 +24,7 @@ def like(post_id=None):
 
         if post_id is None:
             return jsonify({"error": "Please provide post id"}), 400
-        
+
         if not is_valid_uuid(post_id):
             return {"error": "Invalid UUID format"}, 400
 
@@ -58,21 +58,19 @@ def like(post_id=None):
         like_data["liked_at"] = like.created_at.isoformat()
 
         return jsonify(like_data), 201
-    
+
     if request.method == "DELETE":
         current_user_id = get_jwt_identity()
-      
+
         if not post_id:
-            return jsonify({"error" : "Please Provide post id"})
-        
+            return jsonify({"error": "Please Provide post id"})
+
         if not is_valid_uuid(post_id):
             return {"error": "Invalid UUID format"}, 400
-        
-        like = Like.query.filter_by(post = post_id , user = current_user_id).first()
+
+        like = Like.query.filter_by(post=post_id, user=current_user_id).first()
         if not like:
-            return jsonify({"error" : "Like not found"}),404
+            return jsonify({"error": "Like not found"}), 404
         db.session.delete(like)
         db.session.commit()
-        return jsonify({'detail' : "Post unliked"}),204
-
-        
+        return jsonify({"detail": "Post unliked"}), 204

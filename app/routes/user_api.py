@@ -79,7 +79,7 @@ def create_user():
 @api.route("/users/profile", defaults={"user_id": None}, methods=["GET", "PUT"])
 @api.route("/users/<user_id>/profile", methods=["GET"])
 @jwt_required()
-def user_profile(user_id = None):
+def user_profile(user_id=None):
     profile_schema = ProfileSchema()
     current_user_id = get_jwt_identity()
 
@@ -98,11 +98,11 @@ def user_profile(user_id = None):
         try:
             followers_count = Follow.query.filter_by(follower_id=user.id).count()
             following_count = Follow.query.filter_by(following_id=user.id).count()
-            post_count = Post.query.filter_by(user = user.id , is_deleted = False).count()
+            post_count = Post.query.filter_by(user=user.id, is_deleted=False).count()
             profile_data = profile_schema.dump(user)
             profile_data["followers"] = followers_count
             profile_data["following"] = following_count
-            profile_data['posts'] = post_count
+            profile_data["posts"] = post_count
 
         except ValidationError as e:
             first_error = next(iter(e.messages.values()))[0]

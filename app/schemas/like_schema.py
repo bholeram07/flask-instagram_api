@@ -1,4 +1,5 @@
-from marshmallow import Schema,validates,ValidationError,fields
+from marshmallow import Schema, validates, ValidationError, fields
+
 
 class LikeSchema(Schema):
     post = fields.UUID(dump_only=True)
