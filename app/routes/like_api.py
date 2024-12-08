@@ -11,7 +11,7 @@ like_api = Blueprint("like_api", __name__)
 
 
 @like_api.route("/api/posts/like/", methods=["POST"])
-@like_api.route("/api/posts/<uuid:post_id>/like/", methods=["DELETE"])
+@like_api.route("/api/posts/<post_id>/like/", methods=["DELETE"])
 @jwt_required()
 def like(post_id=None):
 

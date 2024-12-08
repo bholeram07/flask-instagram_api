@@ -8,7 +8,7 @@ from app.models.comment import Comment
 from app.schemas.comment_schema import CommentSchema
 from app.custom_pagination import CustomPagination
 from app.db import db
-
+from app.uuid_validator import is_valid_uuid
 
 comment_api = Blueprint("comment_api", __name__)
 
@@ -48,6 +48,8 @@ class CommentApi(MethodView):
        
         
         if comment_id:
+            if not is_valid_uuid(comment_id):
+                return jsonify({"error" : "Invalid uuid format"}),400
             comment = Comment.query.filter_by(id=comment_id, is_deleted=False).first()
             if comment == None:
                 return jsonify({"error": "Comment not exist"}), 404
@@ -55,6 +57,8 @@ class CommentApi(MethodView):
             return jsonify(comment_data), 200
    
         elif post_id:
+            if not is_valid_uuid(post_id):
+                return jsonify({"error" : "Invalid uuid format"}),400
             comments = Comment.query.filter_by(post_id=post_id, is_deleted=False).all()
             if not comments: 
                 return jsonify({"error": "No comments found for this post"}), 404
@@ -75,7 +79,9 @@ class CommentApi(MethodView):
         comment_id = request.args.get("comment_id")
 
         if not comment_id:
-            return jsonify({"error": "Please Provide comment id"})
+            return jsonify({"error": "Please Provide comment id"}),400
+        if not is_valid_uuid(comment_id):
+                return jsonify({"error" : "Invalid uuid format"}),400
 
         comment = Comment.query.filter_by(
             id=comment_id, user_id=current_user_id, is_deleted=False
@@ -100,6 +106,8 @@ class CommentApi(MethodView):
         comment_id = request.args.get("comment_id")
         if not comment_id:
             return jsonify({"error": "Please provide comment id"}), 400
+        if not is_valid_uuid(comment_id):
+            return jsonify({"error" : "Invalid uuid format"}),400
         comment = Comment.query.filter_by(
             id=comment_id, user_id=current_user_id, is_deleted=False
         ).first()
@@ -115,5 +123,5 @@ comment_api.add_url_rule(
     "/api/comments/", view_func=comment_view, methods=["GET","POST", "PUT", "DELETE"]
 )
 comment_api.add_url_rule(
-    "/api/posts/<uuid:post_id>/comments/",view_func=comment_view,methods = ["GET"]
+    "/api/posts/<post_id>/comments/",view_func=comment_view,methods = ["GET"]
 )
