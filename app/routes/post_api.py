@@ -11,6 +11,7 @@ from app.db import db
 from app.custom_pagination import CustomPagination
 from werkzeug.utils import secure_filename
 import os
+from app.uuid_validator import is_valid_uuid
 
 post_api = Blueprint("post_api", __name__)
 
@@ -55,6 +56,8 @@ class PostApi(MethodView):
         post_schema = PostSchema()  # Schema for serializing the full post
         current_user_id = get_jwt_identity()
         post_id = request.args.get("post_id")
+        if not is_valid_uuid(post_id):
+            return {"error": "Invalid UUID format"}, 400
         data = request.json
 
         if not current_user_id:
@@ -63,8 +66,9 @@ class PostApi(MethodView):
         if not post_id:
             return jsonify({"error": "Please Provide Post id"}), 400
 
-        # Fetch the post
-        post = Post.query.filter_by(user=current_user_id, id=post_id, is_deleted=False).first()
+        post = Post.query.filter_by(
+            user=current_user_id, id=post_id, is_deleted=False
+        ).first()
         if not post:
             return jsonify({"error": "Post not exist"}), 404
 
@@ -79,15 +83,18 @@ class PostApi(MethodView):
         except ValidationError as e:
             first_error = next(iter(e.messages.values()))[0]
             return jsonify({"error": first_error}), 400
-        
+
         post_data = post_schema.dump(post)
 
         return jsonify(post_data), 202
 
-    def get(self,user_id = None):
+    def get(self, user_id=None):
         current_user_id = get_jwt_identity()
         post_id = request.args.get("post_id")
+
         if post_id:
+            if not is_valid_uuid(post_id):
+                return {"error": "Invalid UUID format"}, 400
             post = Post.query.filter_by(id=post_id, is_deleted=False).first()
             if not post:
                 return jsonify({"error": "Not exist"}), 404
@@ -95,13 +102,15 @@ class PostApi(MethodView):
             return jsonify(post_data), 200
 
         elif user_id:
-            posts = Post.query.filter_by(user=current_user_id).all()
+            if not is_valid_uuid(post_id):
+                return {"error": "Invalid UUID format"}, 400
+            posts = Post.query.filter_by(user=user_id).all()
 
         else:
             posts = Post.query.filter_by(user=current_user_id).all()
 
-        if posts == None:
-            return jsonify({"error": "Post not exist for the user"})
+        if not posts:
+            return jsonify({"error": "No posts found for the user"}), 404
         page = request.args.get("page", 1, type=int)
         per_page = request.args.get("per_page", 10, type=int)
         paginator = CustomPagination(posts, page, per_page)
@@ -114,8 +123,11 @@ class PostApi(MethodView):
     def delete(self):
         current_user_id = get_jwt_identity()
         post_id = request.args.get("post_id")
+
         if not post_id:
             return jsonify({"error": "Post id is required"})
+        if not is_valid_uuid(post_id):
+            return {"error": "Invalid UUID format"}, 400
 
         post = Post.query.filter_by(
             user=current_user_id, id=post_id, is_deleted=False
@@ -132,4 +144,6 @@ post_api.add_url_rule(
     "/api/posts/", view_func=post_view, methods=["GET", "POST", "PUT", "DELETE"]
 )
 
-post_api.add_url_rule("/api/users/<uuid:user_id>/posts/",view_func=post_view, methods=["GET"])
+post_api.add_url_rule(
+    "/api/users/<uuid:user_id>/posts/", view_func=post_view, methods=["GET"]
+)

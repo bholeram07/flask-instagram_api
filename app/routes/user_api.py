@@ -84,6 +84,8 @@ def user_profile(user_id=None):
 
     if request.method == "GET":
         if user_id:
+            if not is_valid_uuid(user_id):
+                return {"error": "Invalid UUID format"}, 400
             user = User.query.get(user_id)
             if not user:
                 return jsonify({"error": "User not found"}), 404
