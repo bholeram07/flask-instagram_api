@@ -58,11 +58,7 @@ class CommentApi(MethodView):
             comments = Comment.query.filter_by(post_id=post_id, is_deleted=False).all()
             if not comments: 
                 return jsonify({"error": "No comments found for this post"}), 404
-            comments_data = self.comment_schema.dump(comments, many=True)
-            return jsonify({"data": comments_data}), 200
-        return jsonify({"error": "Invalid request. Specify a comment_id or post_id"}),400
-                
-      
+            
 
         page = request.args.get("page", 1, type=int)
         per_page = request.args.get("per_page", 10, type=int)
