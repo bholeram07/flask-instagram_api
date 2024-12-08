@@ -35,8 +35,6 @@ def create_user():
         data = request.form
         file = request.files.get("image")
 
-    if "email" not in data or "username" not in data or "password" not in data:
-        return jsonify({"error": "Invalid data"}), 400
     new_user = User(
         username=data["username"], email=data["email"], password=data["password"]
     )
@@ -46,6 +44,11 @@ def create_user():
         filename = secure_filename(file.filename)
         image_path = os.path.join(UPLOAD_FOLDER, filename)
         file.save(image_path)
+    try:
+        user_data = user_schema.load(data)
+    except ValidationError as e:
+        first_error = next(iter(e.messages.values()))[0]
+        return jsonify({"error": first_error}), 400
 
     existing_user = User.query.filter(
         (User.email == data["email"]) | (User.username == data["username"])
@@ -55,18 +58,19 @@ def create_user():
             return jsonify({"error": "email already exists"}), 409
         if existing_user.username == data["username"]:
             return jsonify({"error": "Username already exists"}), 409
-    try:
-        user_data = user_schema.load(data)
-    except ValidationError as e:
-        first_error = next(iter(e.messages.values()))[0]
-        return jsonify({"error": first_error}), 400
+  
 
     new_user.set_password(user_data["password"])
     db.session.add(new_user)
     db.session.commit()
     user_dict = user_schema.dump(new_user)
     user_dict.pop("password", None)
-    send_mail.delay(data["email"])
+    html_message = render_template(
+        "welcome_email.html",
+        subject="Welcome mail",
+        user_name=data['username'],
+    )
+    send_mail.delay(data["email"], html_message, "Welcome mail")
     return jsonify({"data": user_dict}), 201
 
 

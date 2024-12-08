@@ -5,7 +5,7 @@ import re
 class SignupSchema(Schema):
     id = fields.UUID(dump_only=True)
     username = fields.Str(required=True)
-    email = fields.Email(required=True)
+    email = fields.Email(required=True,unique = True)
     password = fields.Str(required=True)
 
     @validates("password")
@@ -30,6 +30,11 @@ class SignupSchema(Schema):
             )
 
         return password
+    
+    @validates("username")
+    def validate_username(self, value):
+        if not value.strip():
+            raise ValidationError("Username should not be blank.")
 
 
 class ProfileSchema(Schema):
