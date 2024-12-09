@@ -2,7 +2,7 @@ from flask import Blueprint
 from app.routes.auth_routes import user_api
 from app.routes.post_routes import post_api
 from app.routes.comment_routes import comment_api
-from app.views.like_view import like_api
+from app.routes.like_routes import like_api
 from app.routes.follower_routes import follower_api
 
 
