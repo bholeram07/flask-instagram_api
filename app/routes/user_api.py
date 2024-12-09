@@ -113,7 +113,7 @@ def user_profile(user_id=None):
     elif request.method == "PUT":
         if not current_user_id:
             return jsonify({"error": "Unauthorized"}), 403
-        user = User.query.filter_by(current_user_id)
+        user = User.query.get(current_user_id)
         data = request.json
         try:
             updated_data = profile_schema.dump(user)

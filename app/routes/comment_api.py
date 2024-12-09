@@ -24,6 +24,8 @@ class CommentApi(MethodView):
 
         if not post_id:
             return jsonify({"error": "please provide post id"}), 400
+        if not is_valid_uuid(post_id):
+            return jsonify({"error" : "invalid uuid format"}),400
 
         post = Post.query.filter_by(id=post_id, is_deleted=False).first()
 
