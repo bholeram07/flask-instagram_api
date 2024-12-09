@@ -9,7 +9,7 @@ from app.models.user import User
 class Post(db.Model):
     __tablename__ = "post"
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user = db.Column(UUID(as_uuid=True), db.ForeignKey("user.id"))
+    user = db.Column(UUID(as_uuid=True), db.ForeignKey("user.id", ondelete="CASCADE"))
     title = db.Column(db.String(40), nullable=False)
     content = db.Column(db.String(50), nullable=False)
     image = db.Column(db.String(255), nullable=True)

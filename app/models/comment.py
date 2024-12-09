@@ -9,8 +9,8 @@ from app.models.post import Post
 class Comment(db.Model):
     __tablename__ = "comment"
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey("user.id"))
-    post_id = db.Column(UUID(as_uuid=True), db.ForeignKey("post.id"))
+    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey("user.id",ondelete = "CASCADE"))
+    post_id = db.Column(UUID(as_uuid=True), db.ForeignKey("post.id",ondelete = "CASCADE"))
     content = db.Column(db.String(50), nullable=False)  # size
     is_deleted = db.Column(db.Boolean, default=False)
     deleted_at = db.Column(db.DateTime, nullable=True)
