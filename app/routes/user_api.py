@@ -115,8 +115,6 @@ class UserProfile(MethodView):
             return jsonify({"error": "Unauthorized"}), 403
 
         image = request.files.get("profile_pic")
-        print(request.form)
-        print(image)
         if image and allowed_file(image.filename):
             filename = secure_filename(image.filename)
             image_path = os.path.join(current_app.config["UPLOAD_FOLDER"], filename)
@@ -126,19 +124,24 @@ class UserProfile(MethodView):
 
         data = request.form if request.form else request.json
 
-        try:
-            updated_data = self.profile_schema.dump(data)
-            print(updated_data)
-            if "username" in data:
-                user.username = data.get("username")
-            if "bio" in data:
-                user.bio = data.get("bio")
-            if "profile_pic" in data:
-                user.profile_image = image_path
-            db.session.commit()
-        except ValidationError as e:
-            first_error = next(iter(e.messages.values()))[0]
-            return jsonify({"error": first_error}), 400
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+
+        user = User.query.get(current_user_id)
+
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        if "username" in data:
+            user.username = data.get("username")
+        if "bio" in data:
+            user.bio = data.get("bio")
+        if image_path:
+            user.profile_pic = image_path
+
+        db.session.commit()
+
+        updated_data = self.profile_schema.dump(user)
         return jsonify(updated_data), 202
 
 
