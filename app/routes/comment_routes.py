@@ -5,7 +5,10 @@ comment_api = Blueprint("comment_api", __name__)
 
 comment_view = CommentApi.as_view("comment_api")
 comment_api.add_url_rule(
-    "/comments/<comment_id>", view_func=comment_view, methods=["GET", "POST", "PUT", "DELETE"]
+    "/comments/", view_func=comment_view, methods=["POST"]
+)
+comment_api.add_url_rule(
+    "/comments/<comment_id>", view_func=comment_view, methods=["GET", "PUT", "DELETE"]
 )
 comment_api.add_url_rule(
     "/posts/<post_id>/comments/", view_func=comment_view, methods=["GET"]

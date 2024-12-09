@@ -74,7 +74,7 @@ class CommentApi(MethodView):
         )
         return jsonify(paginated_data), 200
 
-    def put(self):
+    def put(self,comment_id):
         current_user_id = get_jwt_identity()
         data = request.json
         if not comment_id:
@@ -100,7 +100,7 @@ class CommentApi(MethodView):
         updated_comment_data = self.comment_schema.dump(comment)
         return jsonify(updated_comment_data), 202
 
-    def delete(self):
+    def delete(self,comment_id):
         current_user_id = get_jwt_identity()
         if not comment_id:
             return jsonify({"error": "Please provide comment id"}), 400
