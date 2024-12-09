@@ -8,7 +8,16 @@ from app.models.user import User
 from app.models.post import Post
 from app.models.comment import Comment
 from app.models.likes import Like
-from app.routes.user_api import api
+from app.routes.user_api import (
+    api,
+    profile_api,
+    signup_api,
+    login_api,
+    update_password_api,
+    logout_api,
+    reset_password_send_mail_api,
+    reset_password_api,
+)
 from app.routes.post_api import post_api
 from app.routes.follower_api import follower_api, following_api
 from app.routes.comment_api import comment_api
@@ -37,15 +46,16 @@ def create_app():
     app.url_map.converters["uuid"] = UUIDConverter
     app.config.from_object(Config)
     app.config.from_object("config.Config")
-    
+
     if not os.path.exists(app.config["UPLOAD_FOLDER"]):
         os.makedirs(app.config["UPLOAD_FOLDER"])
-        
+
     mail.init_app(app)
     jwt = JWTManager(app)
     db.init_app(app)
     init_celery(app)
     migrate.init_app(app, db)
+    
     redis_client = redis.StrictRedis(
         host="localhost", port=6379, db=0, decode_responses=True
     )
@@ -58,7 +68,15 @@ def create_app():
     app.register_blueprint(like_api)
     app.register_blueprint(follower_api)
     app.register_blueprint(following_api)
+    app.register_blueprint(profile_api)
+    app.register_blueprint(signup_api)
+    app.register_blueprint(login_api)
+    app.register_blueprint(logout_api)
+    app.register_blueprint(update_password_api)
+    app.register_blueprint(reset_password_api)
+    app.register_blueprint(reset_password_send_mail_api)
     
+
     @jwt.unauthorized_loader
     def custom_unauthorized_response(error_string):
         return jsonify({"error": "Authorization header is missing or invalid"}), 401

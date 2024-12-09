@@ -10,6 +10,8 @@ class SignupSchema(Schema):
 
     @validates("password")
     def validate_password(self, password):
+        if not password.strip():
+           raise ValidationError(" password should not be blank.")
         if len(password) < 8:
             raise ValidationError("Password must be at least 8 characters long.")
         if not re.search(r"[!@#$%^&*()_]", password):
@@ -40,13 +42,18 @@ class SignupSchema(Schema):
 class ProfileSchema(Schema):
     id = fields.UUID()
     username = fields.Str(required=False)
-    profile_image = fields.Str(required=False)
+    profile_pic = fields.Str(required=False)
     bio = fields.Str(required=False)
 
 
 class LoginSchema(Schema):
     email = fields.Email(required=True)
     password = fields.Str(required=True)
+    
+    @validates("password")
+    def validate_password(self, password):
+        if not password.strip():
+           raise ValidationError("password should not be blank.")
 
 
 class UpdatePasswordSchema(Schema):
