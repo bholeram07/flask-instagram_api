@@ -24,8 +24,9 @@ class CommentApi(MethodView):
 
         if not post_id:
             return jsonify({"error": "please provide post id"}), 400
+
         if not is_valid_uuid(post_id):
-            return jsonify({"error" : "invalid uuid format"}),400
+            return jsonify({"error": "invalid uuid format"}), 400
 
         post = Post.query.filter_by(id=post_id, is_deleted=False).first()
 
@@ -50,18 +51,25 @@ class CommentApi(MethodView):
         comment_id = request.args.get("comment_id")
 
         if comment_id:
+
             if not is_valid_uuid(comment_id):
                 return jsonify({"error": "Invalid uuid format"}), 400
+
             comment = Comment.query.filter_by(id=comment_id, is_deleted=False).first()
+
             if comment == None:
                 return jsonify({"error": "Comment not exist"}), 404
+
             comment_data = self.comment_schema.dump(comment)
             return jsonify(comment_data), 200
 
         elif post_id:
+
             if not is_valid_uuid(post_id):
                 return jsonify({"error": "Invalid uuid format"}), 400
+
             comments = Comment.query.filter_by(post_id=post_id, is_deleted=False).all()
+
             if not comments:
                 return jsonify({"error": "No comments found for this post"}), 404
 
@@ -81,6 +89,7 @@ class CommentApi(MethodView):
 
         if not comment_id:
             return jsonify({"error": "Please Provide comment id"}), 400
+
         if not is_valid_uuid(comment_id):
             return jsonify({"error": "Invalid uuid format"}), 400
 
@@ -105,15 +114,20 @@ class CommentApi(MethodView):
     def delete(self):
         current_user_id = get_jwt_identity()
         comment_id = request.args.get("comment_id")
+
         if not comment_id:
             return jsonify({"error": "Please provide comment id"}), 400
+
         if not is_valid_uuid(comment_id):
             return jsonify({"error": "Invalid uuid format"}), 400
+
         comment = Comment.query.filter_by(
             id=comment_id, user_id=current_user_id, is_deleted=False
         ).first()
+
         if comment == None:
             return jsonify({"error": "Comment not exist"}), 404
+
         comment.is_deleted = True
         db.session.commit()
         return jsonify(), 204

@@ -157,7 +157,7 @@ class Login(MethodView):
         user = User.query.filter_by(email=data["email"]).first()
 
         if not user:
-            return jsonify({"error": "This email is not registered"}),400
+            return jsonify({"error": "This email is not registered"}), 400
 
         if not user.check_password(data["password"]):
             return jsonify({"error": "Incorrect password"}), 401
@@ -262,7 +262,7 @@ class ResetPasswordSendMail(MethodView):
 class ResetPassword(MethodView):
     reset_password_schema = ResetPasswordSchema()
 
-    def post(self,user_id):
+    def post(self, user_id):
         user = User.query.get(user_id)
 
         if user is None:
@@ -316,7 +316,9 @@ reset_password_send_mail_api.add_url_rule(
 
 reset_password_view = ResetPassword.as_view("reset_password_api")
 reset_password_api.add_url_rule(
-    "/api/reset-password/<uuid:user_id>/", view_func=reset_password_view, methods=["POST"]
+    "/api/reset-password/<uuid:user_id>/",
+    view_func=reset_password_view,
+    methods=["POST"],
 )
 
 user_profile_view = UserProfile.as_view("profile_api")
