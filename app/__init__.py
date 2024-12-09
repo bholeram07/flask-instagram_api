@@ -1,82 +1,32 @@
-from flask import Flask, jsonify, request
-from flask_migrate import Migrate
+from flask import Flask, jsonify
 from config import Config
-from celery import Celery, Task
 from flask_uuid import UUIDConverter
-from app.db import db
-from app.models.user import User
-from app.models.post import Post
-from app.models.comment import Comment
-from app.models.likes import Like
-from app.routes.user_api import (
-    api,
-    profile_api,
-    signup_api,
-    login_api,
-    update_password_api,
-    logout_api,
-    reset_password_send_mail_api,
-    reset_password_api,
-)
-from app.routes.post_api import post_api
-from app.routes.follower_api import follower_api, following_api
-from app.routes.comment_api import comment_api
-from app.routes.like_api import like_api
-from flask_jwt_extended import JWTManager
-from dotenv import load_dotenv
-from flask_mail import Mail
+from app.extensions import db, mail, migrate, jwt, redis_client
+from app.blueprints import register_blueprints
 import os
-import redis
-
-migrate = Migrate()
-mail = Mail()
-
-from celery import Celery
-
-celery = Celery()
-
-
-def init_celery(app):
-    celery.conf.update(app.config)
-    celery.app = app
 
 
 def create_app():
     app = Flask(__name__)
-    app.url_map.converters["uuid"] = UUIDConverter
     app.config.from_object(Config)
-    app.config.from_object("config.Config")
-
+    app.url_map.converters["uuid"] = UUIDConverter
     if not os.path.exists(app.config["UPLOAD_FOLDER"]):
-        os.makedirs(app.config["UPLOAD_FOLDER"])
+        os.makedirs(folder_path)
 
+    initialize_extensions(app)
+    register_blueprints(app)
+    register_jwt_handlers(app)
+
+    return app
+    
+def initialize_extensions(app):
     mail.init_app(app)
-    jwt = JWTManager(app)
+    jwt.init_app(app)
     db.init_app(app)
-    init_celery(app)
     migrate.init_app(app, db)
-    
-    redis_client = redis.StrictRedis(
-        host="localhost", port=6379, db=0, decode_responses=True
-    )
-    BLACKLIST_KEY = "blacklisted_tokens"
-    app.config["REDIS_CLIENT"] = redis_client
 
-    app.register_blueprint(api)
-    app.register_blueprint(post_api)
-    app.register_blueprint(comment_api)
-    app.register_blueprint(like_api)
-    app.register_blueprint(follower_api)
-    app.register_blueprint(following_api)
-    app.register_blueprint(profile_api)
-    app.register_blueprint(signup_api)
-    app.register_blueprint(login_api)
-    app.register_blueprint(logout_api)
-    app.register_blueprint(update_password_api)
-    app.register_blueprint(reset_password_api)
-    app.register_blueprint(reset_password_send_mail_api)
-    
 
+def register_jwt_handlers(app):
     @jwt.unauthorized_loader
     def custom_unauthorized_response(error_string):
         return jsonify({"error": "Authorization header is missing or invalid"}), 401
@@ -97,22 +47,3 @@ def create_app():
     def check_if_token_in_blacklist(jwt_header, jwt_payload):
         jti = jwt_payload["jti"]
         return redis_client.exists(jti)
-
-    return app
-
-
-def make_celery(app):
-    """Initialize Celery with Flask app context."""
-    celery = Celery(app.import_name, broker=app.config["CELERY_BROKER_URL"])
-    celery.conf.update(app.config)
-    TaskBase = celery.Task
-
-    class ContextTask(TaskBase):
-        """Task class that runs tasks with Flask app context."""
-
-        def __call__(self, *args, **kwargs):
-            with app.app_context():
-                return TaskBase.__call__(self, *args, **kwargs)
-
-    celery.Task = ContextTask
-    return celery
