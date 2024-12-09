@@ -1,5 +1,5 @@
 from flask.views import MethodView
-from flask import jsonify, Blueprint, request
+from flask import jsonify, Blueprint, request,current_app
 from marshmallow import ValidationError
 from datetime import timedelta
 from app.schemas.post_schemas import PostSchema, UpdatePostSchema
@@ -49,7 +49,7 @@ class PostApi(MethodView):
         post_data = self.post_schema.dump(post)
         return jsonify(post_data), 201
 
-    def put(self):
+    def put(self,post_id):
         current_user_id = get_jwt_identity()
         update_post_schema = UpdatePostSchema()
         if not current_user_id:
@@ -82,7 +82,7 @@ class PostApi(MethodView):
         post_data = self.post_schema.dump(post)
         return jsonify(post_data), 202
 
-    def get(self, user_id=None):
+    def get(self, user_id=None,post_id = None):
         current_user_id = get_jwt_identity()
         if post_id:
             if not is_valid_uuid(post_id):
@@ -117,7 +117,7 @@ class PostApi(MethodView):
         )
         return jsonify(paginated_data), 200
 
-    def delete(self):
+    def delete(self,post_id):
         current_user_id = get_jwt_identity()
         if not post_id:
             return jsonify({"error": "Post id is required"})

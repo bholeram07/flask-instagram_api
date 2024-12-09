@@ -6,6 +6,7 @@ from app.models.post import Post
 from app.utils.allowed_file import allowed_file
 from flask_restful import MethodView
 from werkzeug.utils import secure_filename
+import datetime
 from app.schemas.user_schema import (
     SignupSchema,
     LoginSchema,
@@ -163,8 +164,8 @@ class Login(MethodView):
         refresh_token = create_refresh_token(
             identity=user.id, expires_delta=timedelta(days=1)
         )
-        access_token_expiration = datetime.datetime.utcnow() + timedelta(hours=1)
-        refresh_token_expiration = datetime.datetime.utcnow() + timedelta(days=1)
+        access_token_expiration = datetime.utcnow() + timedelta(hours=1)
+        refresh_token_expiration = datetime.utcnow() + timedelta(days=1)
         return (
             jsonify(
                 {
@@ -239,7 +240,7 @@ class ResetPasswordSendMail(MethodView):
             return jsonify({"error": "Not registered"}), 400
 
         user_id = user.id
-        reset_link = f"http://127.0.0.1:5000/reset-password/{user_id}/"
+        reset_link = f"http://127.0.0.1:5000/api/reset-password/{user_id}/"
         html_message = render_template(
             "reset_password_email.html",
             subject="Reset Link Password",
@@ -277,5 +278,6 @@ class ResetPassword(MethodView):
             return jsonify({"error": "password and confirm password must be same"}), 400
 
         user.set_password(data["new_password"])
+        db.session.commit()
         return jsonify({"detail": "Password reset successfully"}), 200
 
