@@ -98,7 +98,7 @@ class UserProfile(MethodView):
             followers_count = Follow.query.filter_by(follower_id=user.id).count()
             following_count = Follow.query.filter_by(following_id=user.id).count()
             post_count = Post.query.filter_by(user=user.id, is_deleted=False).count()
-            profile_data = profile_schema.dump(user)
+            profile_data = self.profile_schema.dump(user)
             profile_data["followers"] = followers_count
             profile_data["following"] = following_count
             profile_data["posts"] = post_count
@@ -322,4 +322,7 @@ reset_password_api.add_url_rule(
 user_profile_view = UserProfile.as_view("profile_api")
 profile_api.add_url_rule(
     "/api/users/profile/", view_func=user_profile_view, methods=["PUT", "GET"]
+)
+profile_api.add_url_rule(
+    "/api/users/<user_id>/profile/", view_func=user_profile_view, methods=["GET"]
 )
