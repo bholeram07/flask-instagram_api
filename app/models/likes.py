@@ -1,4 +1,4 @@
-from app.db import db
+from app.extensions import db
 from app.models.post import Post
 from app.models.user import User
 from sqlalchemy.dialects.postgresql import UUID

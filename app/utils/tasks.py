@@ -2,10 +2,8 @@ from flask import render_template, current_app
 from flask_mail import Message
 from app.extensions import mail
 import os
-from app.celery_app import celery
 
 
-# @celery.task
 def send_mail(recipient, html_message, subject):
     """Send an email using Flask-Mail."""
     msg = Message(
