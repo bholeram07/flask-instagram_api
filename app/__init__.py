@@ -12,6 +12,8 @@ def create_app():
     app.url_map.converters["uuid"] = UUIDConverter
     if not os.path.exists(app.config["UPLOAD_FOLDER"]):
         os.makedirs(folder_path)
+        
+    app.config["REDIS_CLIENT"] = redis_client
 
     initialize_extensions(app)
     register_blueprints(app)
