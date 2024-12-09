@@ -13,7 +13,7 @@ class User(db.Model):
     first_name = db.Column(db.String(15), nullable=True)
     last_name = db.Column(db.String(20), nullable=True)
     bio = db.Column(db.String(120), nullable=True)
-    profile_pic = db.Column(db.LargeBinary, nullable=True)
+    profile_pic = db.Column(db.String(255), nullable=True)
     email = db.Column(db.String(120), nullable=False, unique=True)
     password = db.Column(db.String(255), nullable=False)
 
