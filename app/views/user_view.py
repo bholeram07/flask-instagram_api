@@ -87,10 +87,9 @@ class UserProfile(MethodView):
             user = User.query.get(current_user_id)
 
         try:
-            followers_count = Follow.query.filter_by(
-                follower_id=user.id).count()
-            following_count = Follow.query.filter_by(
-                following_id=user.id).count()
+            followers_count = Follow.query.filter_by(following_id=user.id).count()
+            following_count = Follow.query.filter_by(follower_id=user.id).count()
+
             post_count = Post.query.filter_by(
                 user=user.id, is_deleted=False).count()
 
