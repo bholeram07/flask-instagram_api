@@ -60,13 +60,32 @@ class PostApi(MethodView):
 
         if not is_valid_uuid(post_id):
             return {"error": "Invalid UUID format"}, 400
+        
+        image = request.files.get("image")
+        image_path = None
+        if image and allowed_file(image.filename):
+            filename = secure_filename(image.filename)
+            image_path = os.path.join(current_app.config["UPLOAD_FOLDER"], filename)
+            
+            image.save(image_path)
 
-        data = request.json
         post = Post.query.filter_by(
             user=current_user_id, id=post_id, is_deleted=False
         ).first()
         if not post:
             return jsonify({"error": "Post not exist"}), 404
+        
+        try:
+            if request.form or request.json:
+                data = request.form if request.form else request.json      
+        except :
+            if image_path:
+                post.image = image_path
+                db.session.commit()
+                post_data = self.post_schema.dump(post)
+                return jsonify(post_data), 202 
+            return jsonify({"error" : "provide data to update"}),400
+
         
         try:
             updated_data = update_post_schema.load(data)

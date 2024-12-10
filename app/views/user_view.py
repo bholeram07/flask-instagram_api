@@ -110,7 +110,8 @@ class UserProfile(MethodView):
         current_user_id = get_jwt_identity()
         if not current_user_id:
             return jsonify({"error": "Unauthorized"}), 403
-
+        user = User.query.get(current_user_id)
+    
         image = request.files.get("profile_pic")
         if image and allowed_file(image.filename):
             filename = secure_filename(image.filename)
@@ -119,15 +120,17 @@ class UserProfile(MethodView):
             image.save(image_path)
         else:
             image_path = None
-
-        data = request.form or request.json
-        if not data:
-            return jsonify({"error": "No data provided"}), 400
-
-        user = User.query.get(current_user_id)
-        if not user:
-            return jsonify({"error": "User not found"}), 404
-
+        
+        try:
+           data = request.form or request.json
+        except :
+            if image_path:
+                user.profile_pic = image_path
+                db.session.commit()
+                updated_data = self.profile_schema.dump(user)
+                return jsonify(updated_data), 202
+            return jsonify({"error" : "provide data to update"}),400
+            
         if "username" in data:
             user.username = data["username"]
         if "bio" in data:
