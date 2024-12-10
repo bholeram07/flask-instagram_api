@@ -27,14 +27,20 @@ class FollowApi(MethodView):
                 return jsonify({"error": "Unauthorized"}), 403
 
         followers = user.followers.all()
-        followers_data = [ {
+        followers_list = [ {
                 "id": follower.follower.id,
                 "username": follower.follower.username,
                 "image": follower.follower.profile_pic if follower.follower.profile_pic else None,
             }
             for follower in followers
         ]
-        return jsonify(followers_data), 200
+        page = request.args.get("page", 1, type=int)
+        per_page = request.args.get("per_page", 10, type=int)
+        paginator = CustomPagination(followers_list, page, per_page)
+        paginated_data = paginator.paginate()
+        paginated_data["items"] = followers_list 
+
+        return jsonify(paginated_data), 200
     
     
     def post(self):
@@ -77,7 +83,7 @@ class FollowingApi(MethodView):
         current_user_id = get_jwt_identity()
         user = User.query.get(current_user_id)
         if user_id:
-            user = User.query.filter_by(username=username).first()
+            user = User.query.filter_by(id=user_id).first()
             if not user:
                 return jsonify({"error": "User not found"}), 404
 
@@ -94,8 +100,13 @@ class FollowingApi(MethodView):
         for follow in following
         ]
 
-        return jsonify(following_list), 200
+        page = request.args.get("page", 1, type=int)
+        per_page = request.args.get("per_page", 10, type=int)
+        paginator = CustomPagination(following_list, page, per_page)
+        paginated_data = paginator.paginate()
+        paginated_data["items"] = following_list
 
+        return jsonify(paginated_data), 200
         
 
 
