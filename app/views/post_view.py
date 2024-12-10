@@ -98,6 +98,10 @@ class PostApi(MethodView):
         elif user_id:
             if not is_valid_uuid(user_id):
                 return {"error": "Invalid UUID format"}, 400
+            user = User.query.get(user_id)
+           
+            if user == None:
+                return jsonify({"error" : "User not exist"}),404
             
             posts = Post.query.filter_by(user=user_id, is_deleted=False).all()
             
