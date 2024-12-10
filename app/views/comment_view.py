@@ -59,6 +59,9 @@ class CommentApi(MethodView):
         elif post_id:
             if not is_valid_uuid(post_id):
                 return jsonify({"error": "Invalid uuid format"}), 400
+            post = Post.query.filter_by(id = post_id,is_deleted = False).first()
+            if not post:
+                return jsonify({"error" : "Post not exist"}),404
 
             comments = Comment.query.filter_by(
                 post_id=post_id, is_deleted=False).all()
