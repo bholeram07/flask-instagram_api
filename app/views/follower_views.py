@@ -39,17 +39,22 @@ class FollowApi(MethodView):
     
     def post(self):
         current_user_id = get_jwt_identity()
+        current_user = User.query.get(current_user_id)
         data = request.json
         user_id = data.get("user_id")
         if not user_id:
             return jsonify({"error": "Provide user id"}), 400
+        if not is_valid_uuid(user_id):
+            return jsonify({"error" : "Invalid uuid format"}),400
 
         user_to_follow = User.query.filter_by(id=user_id).first()
         if not user_to_follow:
             return jsonify({"error": "User does not exist"}), 400
 
 
-        follow_relationship = current_user.is_following(user_to_follow)
+        follow_relationship = Follow.query.filter_by(
+            follower_id=current_user_id, following_id=user_to_follow.id).first()
+
         if follow_relationship:
             db.session.delete(follow_relationship)
             db.session.commit()
@@ -63,9 +68,6 @@ class FollowApi(MethodView):
         db.session.commit()
 
         return jsonify({"detail": f"You are now following {user_to_follow.username}"}), 201
-
-    
-
 
 
 class FollowingApi(MethodView):
