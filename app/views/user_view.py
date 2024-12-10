@@ -163,8 +163,8 @@ class Login(MethodView):
         refresh_token = create_refresh_token(
             identity=user.id, expires_delta=timedelta(days=1)
         )
-        access_token_expiration = datetime.datetime.utcnow() + timedelta(hours=1)
-        refresh_token_expiration = datetime.datetime.utcnow() + timedelta(days=1)
+        access_token_expiration = datetime.utcnow() + timedelta(hours=1)
+        refresh_token_expiration = datetime.utcnow() + timedelta(days=1)
         return (
             jsonify(
                 {

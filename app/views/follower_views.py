@@ -11,11 +11,14 @@ from app.uuid_validator import is_valid_uuid
 class FollowApi(MethodView):
     decorators = [jwt_required()]
 
-    def get(self, username=None):
+    def get(self, user_id=None):
         current_user_id = get_jwt_identity()
         user = User.query.get(current_user_id)
-        if username:
-            user = User.query.filter_by(username=username).first()
+        
+        if user_id:
+            if not is_valid_uuid(user_id):
+                return jsonify({"error": "Invalid uuid format"}),400
+            user = User.query.filter_by(id=user_id).first()
             if not user:
                 return jsonify({"error": "User not found"}), 404
         else:
@@ -24,26 +27,33 @@ class FollowApi(MethodView):
                 return jsonify({"error": "Unauthorized"}), 403
 
         followers = user.followers.all()
-        follower_usernames = [follower.follower.username for follower in followers]
-        return jsonify({"followers": follower_usernames}), 200
-
+        followers_data = [ {
+                "id": follower.follower.id,
+                "username": follower.follower.username,
+                "image": follower.follower.profile_pic if follower.follower.profile_pic else None,
+            }
+            for follower in followers
+        ]
+        return jsonify(followers_data), 200
+    
+    
     def post(self):
         current_user_id = get_jwt_identity()
         data = request.json
-        username = data.get("username")
-        if not username:
-            return jsonify({"error": "Provide username"}), 400
+        user_id = data.get("user_id")
+        if not user_id:
+            return jsonify({"error": "Provide user id"}), 400
 
-        user_to_follow = User.query.filter_by(username=username).first()
+        user_to_follow = User.query.filter_by(id=user_id).first()
         if not user_to_follow:
             return jsonify({"error": "User does not exist"}), 400
 
-        current_user = User.query.get(current_user_id)
-        if current_user.id == user_to_follow.id:
-            return jsonify({"error": "you cannot follow yourself"}), 400
 
-        if current_user.is_following(user_to_follow):
-            return jsonify({"detail": f"You are already following {username}"}), 400
+        follow_relationship = current_user.is_following(user_to_follow)
+        if follow_relationship:
+            db.session.delete(follow_relationship)
+            db.session.commit()
+            return jsonify({"detail": "Unfollowed"}), 200
 
         follow = Follow(
             follower_id=current_user.id,
@@ -52,59 +62,19 @@ class FollowApi(MethodView):
         db.session.add(follow)
         db.session.commit()
 
-        return jsonify({"detail": f"You are now following {username}"}), 201
+        return jsonify({"detail": f"You are now following {user_to_follow.username}"}), 201
 
-    def delete(self, username):
-        current_user_id = get_jwt_identity()
-        if not username:
-            return jsonify({"error": "username is required"})
-        user_to_unfollow = User.query.filter_by(username=username).first()
+    
 
-        if not user_to_unfollow:
-            return jsonify({"error": "User not exist"}), 400
-
-        current_user = User.query.get(current_user_id)
-        if current_user.id == user_to_unfollow.id:
-            return jsonify({"error": "You cant unfollow yourself"}), 400
-
-        follow = Follow.query.filter_by(
-            follower_id=current_user.id, following_id=user_to_unfollow.id
-        ).first()
-        if not follow:
-            return jsonify({"detail": f"You are not following {username}"}), 400
-
-        db.session.delete(follow)
-        db.session.commit()
-        reverse_follow = Follow.query.filter_by(
-            follower_id=user_to_unfollow.id, following_id=current_user.id
-        ).first()
-        if reverse_follow:
-            return (
-                jsonify(
-                    {
-                        "detail": f"You have unfollowed {username}, but they are still following you."
-                    }
-                ),
-                200,
-            )
-        else:
-            return (
-                jsonify(
-                    {
-                        "detail": f"You have unfollowed {username} and they are no longer following you."
-                    }
-                ),
-                200,
-            )
 
 
 class FollowingApi(MethodView):
     decorators = [jwt_required()]
 
-    def get(self, username=None):
+    def get(self, user_id=None):
         current_user_id = get_jwt_identity()
         user = User.query.get(current_user_id)
-        if username:
+        if user_id:
             user = User.query.filter_by(username=username).first()
             if not user:
                 return jsonify({"error": "User not found"}), 404
@@ -113,8 +83,17 @@ class FollowingApi(MethodView):
             return jsonify({"error": "User not found"}), 404
 
         following = user.following.all()
-        following_usernames = [follow.following.username for follow in following]
+        following_list = [
+        {
+            "id": follow.following.id,
+            "username": follow.following.username,
+            "image": follow.following.profile_pic if follow.following.profile_pic else None,
+        }
+        for follow in following
+        ]
 
-        return jsonify({"following": following_usernames}), 200
+        return jsonify(following_list), 200
+
+        
 
 
