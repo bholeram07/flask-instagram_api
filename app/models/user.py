@@ -45,25 +45,6 @@ class User(db.Model):
         self.password = generate_password_hash(raw_password)  # Hash the password
         db.session.commit()
 
-    def follow(self, user):
-        if not self.is_following(user):
-            f = Follow(follower=self, following=user)
-            db.session.add(f)
-
-    def unfollow(self, user):
-        f = self.following.filter_by(following_id=user.id).first()
-        if f:
-            db.session.delete(f)
-
-    def is_following(self, user):
-        if user.id is None:
-            return False
-        return self.following.filter_by(following_id=user.id).first() is not None
-
-    def is_a_follower(self, user):
-        if user.id is None:
-            return False
-        return self.followers.filter_by(follower_id=user.id).first() is not None
 
     def to_dict(self):
         """Convert user object to a dictionary for JSON serialization."""
