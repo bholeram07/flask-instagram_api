@@ -26,7 +26,7 @@ user_api.add_url_rule(
 )
 
 user_api.add_url_rule(
-    "/reset-password/<uuid:user_id>/",
+    "/reset-password/<token>/",
     view_func=ResetPassword.as_view("reset_password_api"),
     methods=["POST"],
 )

@@ -1,10 +1,11 @@
-
+from datetime import timedelta
 from flask import Blueprint, jsonify, request, current_app, render_template
 from app.models.user import db, User
 from app.models.follower import Follow
 from app.models.post import Post
 from app.utils.allowed_file import allowed_file
 from flask_restful import MethodView
+import secrets
 from werkzeug.utils import secure_filename
 import datetime
 from app.schemas.user_schema import (
@@ -228,19 +229,27 @@ class Logout(MethodView):
         return jsonify(), 204
 
 
+
 class ResetPasswordSendMail(MethodView):
     def post(self):
         data = request.json
         email = data.get("email")
-        if email == None or email == "":
+        if not email:
             return jsonify({"error": "Invalid data"}), 400
 
         user = User.query.filter_by(email=email).first()
         if not user:
             return jsonify({"error": "Not registered"}), 400
 
-        user_id = user.id
-        reset_link = f"http://127.0.0.1:5000/api/reset-password/{user_id}/"
+
+        token = secrets.token_urlsafe(32)
+
+        redis_key = f"reset_password:{token}"
+        redis_client = current_app.config["REDIS_CLIENT"]
+        redis_client.setex(redis_key, timedelta(minutes=10), str(user.id))
+
+        reset_link = f"http://127.0.0.1:5000/api/reset-password/{token}/"
+        print(reset_link)
         html_message = render_template(
             "reset_password_email.html",
             subject="Reset Link Password",
@@ -248,36 +257,32 @@ class ResetPasswordSendMail(MethodView):
             user_name=user.username,
         )
         send_mail(user.email, html_message, "Reset Link Password")
-        return jsonify({"detail": "link sent successfully please check your mail"}), 200
+        return jsonify({"detail": "Link sent successfully, please check your email"}), 200
 
 
 class ResetPassword(MethodView):
-    reset_password_schema = ResetPasswordSchema()
-
-    def post(self, user_id):
-        user = User.query.get(user_id)
-        if user is None:
-            return jsonify({"error": "User not found"}), 404
-
+    def post(self, token):
         data = request.json
-        try:
-            user_data = self.reset_password_schema.load(data)
-        except ValidationError as e:
-            first_error = next(iter(e.messages.values()))[0]
-            return jsonify({"error": first_error}), 400
+        new_password = data.get("new_password")
+        if not new_password:
+            return jsonify({"error": "Password is required"}), 400
+        
+        redis_key = f"reset_password:{token}"
+        redis_client = current_app.config["REDIS_CLIENT"]
+        user_id = redis_client.get(redis_key)
 
-        if user.check_password(data.get("new_password")):
-            return (
-                jsonify(
-                    {"error": "new password must be diffrent from existing password"}
-                ),
-                401,
-            )
-
-        if data["new_password"] != data["confirm_password"]:
-            return jsonify({"error": "password and confirm password must be same"}), 400
+        if not user_id:
+            return jsonify({"error": "Invalid or expired token"}), 400
+        
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({"error": "User not found"}), 404
 
         user.set_password(data["new_password"])
         db.session.commit()
+
+        redis_client.delete(redis_key)
+
         return jsonify({"detail": "Password reset successfully"}), 200
+
 
