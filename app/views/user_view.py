@@ -262,15 +262,25 @@ class ResetPasswordSendMail(MethodView):
             user_name=user.username,
         )
         send_mail(user.email, html_message, "Reset Link Password")
+        print(reset_link)
         return jsonify({"detail": "Link sent successfully, please check your email"}), 200
 
 
 class ResetPassword(MethodView):
+    reset_password_schema = ResetPasswordSchema()
     def post(self, token):
         data = request.json
         new_password = data.get("new_password")
-        if not new_password:
-            return jsonify({"error": "Password is required"}), 400
+        confirm_password = data.get("confirm_password")
+        try:
+            user_data = self.reset_password_schema.load(data)
+        except ValidationError as e:
+            first_error = next(iter(e.messages.values()))[0]
+            return jsonify({"error": first_error}), 400
+        
+        if new_password != confirm_password:
+            return jsonify({"error" : "new password and confirm password must be equal"}),400
+
 
         redis_key = f"reset_password:{token}"
         redis_client = current_app.config["REDIS_CLIENT"]

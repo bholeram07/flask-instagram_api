@@ -40,10 +40,9 @@ class User(db.Model):
         return check_password_hash(self.password, raw_password)
 
     def set_password(self, raw_password):
-        self.password = generate_password_hash(raw_password)  # Hash the password
+        self.password = generate_password_hash(raw_password)  
         db.session.commit()
 
 
     def to_dict(self):
-        """Convert user object to a dictionary for JSON serialization."""
         return {"id": self.id, "username": self.username, "email": self.email}
