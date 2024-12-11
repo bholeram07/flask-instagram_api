@@ -10,8 +10,6 @@ from app.models.follower import Follow
 class User(db.Model):
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     username = db.Column(db.String(80), nullable=False, unique=True)
-    first_name = db.Column(db.String(15), nullable=True)
-    last_name = db.Column(db.String(20), nullable=True)
     bio = db.Column(db.String(120), nullable=True)
     profile_pic = db.Column(db.String(255), nullable=True)
     email = db.Column(db.String(120), nullable=False, unique=True)
