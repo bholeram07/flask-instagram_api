@@ -28,7 +28,7 @@ class FollowApi(MethodView):
 
         followers = user.followers.all()
         if not followers:
-            return jsonify({"detail" : "No any follower of this user"})
+            return jsonify({"detail": "No any follower of this user"})
         followers_list = [{
             "id": follower.follower.id,
             "username": follower.follower.username,
@@ -92,7 +92,7 @@ class FollowingApi(MethodView):
 
         following = user.following.all()
         if not following:
-            return jsonify({"detail" : "No any user in following list"})
+            return jsonify({"detail": "No any user in following list"})
         following_list = [
             {
                 "id": follow.following.id,

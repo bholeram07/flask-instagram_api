@@ -11,6 +11,7 @@ from app.extensions import db
 from app.uuid_validator import is_valid_uuid
 from sqlalchemy import desc
 
+
 class CommentApi(MethodView):
     decorators = [jwt_required()]
     comment_schema = CommentSchema()

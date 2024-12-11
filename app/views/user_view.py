@@ -133,12 +133,12 @@ class UserProfile(MethodView):
                 return jsonify(updated_data), 202
             return jsonify({"error": "provide data to update"}), 400
         if "username" in data:
-                username = data.get("username")
-                if username != user.username: 
-                    existing_user = User.query.filter_by(username=username).first()
-                    if existing_user:
-                        return jsonify({"error": "This username is already taken"}), 400
-                    user.username = username
+            username = data.get("username")
+            if username != user.username:
+                existing_user = User.query.filter_by(username=username).first()
+                if existing_user:
+                    return jsonify({"error": "This username is already taken"}), 400
+                user.username = username
         if "bio" in data:
             user.bio = data["bio"]
         if image_path:

@@ -70,7 +70,8 @@ class LikeAPi(MethodView):
         if not post:
             return jsonify({"error": "Post does not exist"}), 404
 
-        likes = Like.query.filter_by(post=post_id).order_by(desc(Like.created_at)).all()
+        likes = Like.query.filter_by(post=post_id).order_by(
+            desc(Like.created_at)).all()
         likes_count = Like.query.filter_by(post=post_id).count()
 
         if likes_count == 0:
