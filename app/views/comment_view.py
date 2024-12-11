@@ -10,6 +10,7 @@ from app.custom_pagination import CustomPagination
 from app.extensions import db
 from app.uuid_validator import is_valid_uuid
 
+
 class CommentApi(MethodView):
     decorators = [jwt_required()]
     comment_schema = CommentSchema()
@@ -59,9 +60,9 @@ class CommentApi(MethodView):
         elif post_id:
             if not is_valid_uuid(post_id):
                 return jsonify({"error": "Invalid uuid format"}), 400
-            post = Post.query.filter_by(id = post_id,is_deleted = False).first()
+            post = Post.query.filter_by(id=post_id, is_deleted=False).first()
             if not post:
-                return jsonify({"error" : "Post not exist"}),404
+                return jsonify({"error": "Post not exist"}), 404
 
             comments = Comment.query.filter_by(
                 post_id=post_id, is_deleted=False).all()
@@ -77,7 +78,7 @@ class CommentApi(MethodView):
         )
         return jsonify(paginated_data), 200
 
-    def put(self,comment_id):
+    def put(self, comment_id):
         current_user_id = get_jwt_identity()
         data = request.json
         if not comment_id:
@@ -103,7 +104,7 @@ class CommentApi(MethodView):
         updated_comment_data = self.comment_schema.dump(comment)
         return jsonify(updated_comment_data), 202
 
-    def delete(self,comment_id):
+    def delete(self, comment_id):
         current_user_id = get_jwt_identity()
         if not comment_id:
             return jsonify({"error": "Please provide comment id"}), 400
@@ -121,5 +122,3 @@ class CommentApi(MethodView):
         comment.is_deleted = True
         db.session.commit()
         return jsonify(), 204
-
-
