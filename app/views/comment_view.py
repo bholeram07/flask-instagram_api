@@ -9,7 +9,7 @@ from app.schemas.comment_schema import CommentSchema
 from app.custom_pagination import CustomPagination
 from app.extensions import db
 from app.uuid_validator import is_valid_uuid
-
+from sqlalchemy import desc
 
 class CommentApi(MethodView):
     decorators = [jwt_required()]
@@ -65,7 +65,7 @@ class CommentApi(MethodView):
                 return jsonify({"error": "Post not exist"}), 404
 
             comments = Comment.query.filter_by(
-                post_id=post_id, is_deleted=False).all()
+                post_id=post_id, is_deleted=False).order_by(desc(Comment.created_at)).all()
             if not comments:
                 return jsonify({"error": "No comments found for this post"}), 404
 

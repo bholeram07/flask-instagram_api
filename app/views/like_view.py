@@ -8,6 +8,7 @@ from app.schemas.like_schema import LikeSchema
 from app.uuid_validator import is_valid_uuid
 from app.extensions import db
 from app.custom_pagination import CustomPagination
+from sqlalchemy import desc
 
 
 class LikeAPi(MethodView):
@@ -69,7 +70,7 @@ class LikeAPi(MethodView):
         if not post:
             return jsonify({"error": "Post does not exist"}), 404
 
-        likes = Like.query.filter_by(post=post_id).all()
+        likes = Like.query.filter_by(post=post_id).order_by(desc(Like.created_at)).all()
         likes_count = Like.query.filter_by(post=post_id).count()
 
         if likes_count == 0:

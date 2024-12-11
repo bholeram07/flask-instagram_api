@@ -1,3 +1,4 @@
+from sqlalchemy import desc
 from flask.views import MethodView
 from flask import jsonify, Blueprint, request, current_app
 from marshmallow import ValidationError
@@ -12,6 +13,7 @@ from app.custom_pagination import CustomPagination
 from werkzeug.utils import secure_filename
 import os
 from app.uuid_validator import is_valid_uuid
+from sqlalchemy import desc
 
 
 class PostApi(MethodView):
@@ -37,7 +39,7 @@ class PostApi(MethodView):
                 data = request.form if request.form else request.json
         except:
             if image_path:
-                return jsonify({"error" : "Missing data for required field"}),400
+                return jsonify({"error": "Missing data for required field"}), 400
             return jsonify({"error": "Provide data"}), 400
         try:
             post_data = self.post_schema.load(data)
@@ -129,12 +131,12 @@ class PostApi(MethodView):
             if user == None:
                 return jsonify({"error": "User not exist"}), 404
 
-            posts = Post.query.filter_by(user=user_id, is_deleted=False).all()
+            posts = Post.query.filter_by(user=user_id, is_deleted=False).order_by(
+                desc(Post.created_at)).all()
 
         else:
-            posts = Post.query.filter_by(
-                user=current_user_id, is_deleted=False).all()
-
+            posts = Post.query.filter_by(user=current_user_id, is_deleted=False).order_by(
+                desc(Post.created_at)).all()
         if not posts:
             return jsonify({"error": "No posts found for the user"}), 404
 
@@ -154,7 +156,6 @@ class PostApi(MethodView):
 
         if not is_valid_uuid(post_id):
             return {"error": "Invalid UUID format"}, 400
-        
 
         post = Post.query.filter_by(
             user=current_user_id, id=post_id, is_deleted=False
