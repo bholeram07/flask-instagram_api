@@ -43,7 +43,7 @@ def register_jwt_handlers(app):
 
     @jwt.revoked_token_loader
     def custom_revoked_token_response(jwt_header, jwt_payload):
-        return jsonify({"error": "You have to login again"}), 401
+        return jsonify({"error": "You have to login first"}), 401
 
     @jwt.token_in_blocklist_loader
     def check_if_token_in_blacklist(jwt_header, jwt_payload):
