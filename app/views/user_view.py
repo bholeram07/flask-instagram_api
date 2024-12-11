@@ -28,6 +28,7 @@ from app.utils.tasks import send_mail
 from app.uuid_validator import is_valid_uuid
 import os
 
+
 class Signup(MethodView):
     user_schema = SignupSchema()
 
@@ -87,8 +88,10 @@ class UserProfile(MethodView):
             user = User.query.get(current_user_id)
 
         try:
-            followers_count = Follow.query.filter_by(following_id=user.id).count()
-            following_count = Follow.query.filter_by(follower_id=user.id).count()
+            followers_count = Follow.query.filter_by(
+                following_id=user.id).count()
+            following_count = Follow.query.filter_by(
+                follower_id=user.id).count()
 
             post_count = Post.query.filter_by(
                 user=user.id, is_deleted=False).count()
@@ -110,7 +113,7 @@ class UserProfile(MethodView):
         if not current_user_id:
             return jsonify({"error": "Unauthorized"}), 403
         user = User.query.get(current_user_id)
-    
+
         image = request.files.get("profile_pic")
         if image and allowed_file(image.filename):
             filename = secure_filename(image.filename)
@@ -119,24 +122,27 @@ class UserProfile(MethodView):
             image.save(image_path)
         else:
             image_path = None
-        
+
         try:
-           data = request.form or request.json
-        except :
+            data = request.form or request.json
+        except:
             if image_path:
                 user.profile_pic = image_path
                 db.session.commit()
                 updated_data = self.profile_schema.dump(user)
                 return jsonify(updated_data), 202
-            return jsonify({"error" : "provide data to update"}),400
-            
+            return jsonify({"error": "provide data to update"}), 400
         if "username" in data:
-            user.username = data["username"]
+                username = data.get("username")
+                if username != user.username: 
+                    existing_user = User.query.filter_by(username=username).first()
+                    if existing_user:
+                        return jsonify({"error": "This username is already taken"}), 400
+                    user.username = username
         if "bio" in data:
             user.bio = data["bio"]
         if image_path:
             user.profile_pic = image_path
-
         db.session.commit()
 
         updated_data = self.profile_schema.dump(user)
@@ -231,7 +237,6 @@ class Logout(MethodView):
         return jsonify(), 204
 
 
-
 class ResetPasswordSendMail(MethodView):
     def post(self):
         data = request.json
@@ -242,7 +247,6 @@ class ResetPasswordSendMail(MethodView):
         user = User.query.filter_by(email=email).first()
         if not user:
             return jsonify({"error": "Not registered"}), 400
-
 
         token = secrets.token_urlsafe(32)
 
@@ -268,14 +272,14 @@ class ResetPassword(MethodView):
         new_password = data.get("new_password")
         if not new_password:
             return jsonify({"error": "Password is required"}), 400
-        
+
         redis_key = f"reset_password:{token}"
         redis_client = current_app.config["REDIS_CLIENT"]
         user_id = redis_client.get(redis_key)
 
         if not user_id:
             return jsonify({"error": "Invalid or expired token"}), 400
-        
+
         user = User.query.get(user_id)
         if not user:
             return jsonify({"error": "User not found"}), 404
@@ -286,5 +290,3 @@ class ResetPassword(MethodView):
         redis_client.delete(redis_key)
 
         return jsonify({"detail": "Password reset successfully"}), 200
-
-
