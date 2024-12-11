@@ -255,7 +255,6 @@ class ResetPasswordSendMail(MethodView):
         redis_client.setex(redis_key, timedelta(minutes=10), str(user.id))
 
         reset_link = f"http://127.0.0.1:5000/api/reset-password/{token}/"
-        print(reset_link)
         html_message = render_template(
             "reset_password_email.html",
             subject="Reset Link Password",
