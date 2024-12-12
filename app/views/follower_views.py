@@ -33,7 +33,7 @@ class FollowApi(MethodView):
             if not user:
                 return jsonify({"error": "User not found"}), 404
         else:
-            user = User.query.get(current_user_id)
+            user = User.query.get(self.current_user_id)
             if not user:
                 return jsonify({"error": "Unauthorized"}), 403
         
@@ -124,7 +124,8 @@ class FollowingApi(MethodView):
                 return jsonify({"error": "User not found"}), 404
             
         #fetch the current user
-        user = User.query.get(self.current_user_id)
+        else:
+            user = User.query.get(self.current_user_id)
 
         if not user:
             return jsonify({"error": "User not found"}), 404

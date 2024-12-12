@@ -14,6 +14,8 @@ class PostSchema(Schema):
     caption = fields.Str()
     title = fields.Str()
     image = fields.Str(required=True)
+    created_at =fields.DateTime(dump_only=True)
+    
 
     @validates("title")
     def validate_title(self, value):
@@ -30,4 +32,4 @@ class PostSchema(Schema):
 
 class UpdatePostSchema(Schema):
     title = fields.Str(validate=validate.Length(min=1), required=False)
-    content = fields.Str(validate=validate.Length(min=1), required=False)
+    caption = fields.Str(validate=validate.Length(min=1), required=False)

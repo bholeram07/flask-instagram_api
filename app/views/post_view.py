@@ -106,8 +106,7 @@ class PostApi(MethodView):
             return jsonify({"error": "Invalid UUID format"}), 400
         
         #fetch the post of the user
-        posts = Post.query.filter_by(user=query_user_id, is_deleted=False).order_by(
-            desc(Post.created_at)).all()
+        posts = Post.query.filter_by(user=query_user_id, is_deleted=False).all()
         if not posts:
             return jsonify({"error": "No posts exist"}), 404
 

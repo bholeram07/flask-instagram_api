@@ -171,7 +171,7 @@ class Login(MethodView):
             return jsonify({"error": "Invalid credentials"}), 401
 
         access_token = create_access_token(
-            identity=user.id,
+            identity=user.id,expires_delta=timedelta(hours=1)
         )
         refresh_token = create_refresh_token(
             identity=user.id, expires_delta=timedelta(days=1)
