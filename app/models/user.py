@@ -5,20 +5,19 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import create_access_token
 import datetime
 from app.models.follower import Follow
+from app.models.base import BaseModel
 
 
-class User(db.Model):
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+class User(BaseModel,db.Model):
+    """
+    A User model that create a user table in the database
+    """
     username = db.Column(db.String(80), nullable=False, unique=True)
     bio = db.Column(db.String(120), nullable=True)
     profile_pic = db.Column(db.String(255), nullable=True)
     email = db.Column(db.String(120), nullable=False, unique=True)
     password = db.Column(db.String(255), nullable=False)
 
-    created_at = db.Column(db.DateTime, server_default=db.func.now())
-    updated_at = db.Column(
-        db.DateTime, server_default=db.func.now(), onupdate=db.func.now()
-    )
     following = db.relationship(
         "Follow",
         foreign_keys=[Follow.follower_id],

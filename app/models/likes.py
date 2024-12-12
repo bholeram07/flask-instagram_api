@@ -7,6 +7,9 @@ import uuid
 
 
 class Like(db.Model):
+    """
+    A like model that creates a like table in the databases 
+    """
     __tablename__ = "like"
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user = db.Column(UUID(as_uuid=True), db.ForeignKey("user.id",ondelete = "CASCADE"))

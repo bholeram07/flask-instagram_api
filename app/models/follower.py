@@ -5,6 +5,9 @@ import datetime
 
 
 class Follow(db.Model):
+    """
+    A follow model that create a follow table in the database
+    """
     __tablename__ = "follows"
     follower_id = db.Column(
         UUID(as_uuid=True), db.ForeignKey("user.id"), primary_key=True
