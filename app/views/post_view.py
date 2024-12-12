@@ -22,29 +22,27 @@ class PostApi(MethodView):
     decorators = [jwt_required()]
 
     def __init__(self):
-        self.current_user_id= get_jwt_identity()
+        self.current_user_id = get_jwt_identity()
 
     def post(self):
         """
         Creates a new post. Requires user authentication.
         This api allows the user to create a post by providing a title, content, and an optional image.
         The image is saved on the server if provided and valid.
+        
         """
         image = request.files.get("image")
-        image_path = save_image(image)
-
-        data = request.form or request.json or {}
-
-        # serialize and validate data
-        post_data, errors = validate_and_load(self.post_schema, data)
-
-        if errors:
-            return jsonify({"errors": errors}), 400
-
+        if image:
+            image = save_image(image)
+        else:
+            return ({"error" : "Please Provide image for post"}),400
+        
+        post_data = request.form
+    
         post = Post(
             title=post_data.get("title"),
-            content=post_data.get("content"),
-            image=image_path,
+            caption=post_data.get("caption"),
+            image=image,
             user=self.current_user_id,
         )
         db.session.add(post)
@@ -58,22 +56,15 @@ class PostApi(MethodView):
 
         if not post_id or not is_valid_uuid(post_id):
             return jsonify({"error": "Invalid or missing post ID"}), 400
-
-        post = Post.query.filter_by(id=post_id, is_deleted=False).first()
-        if not post:
-            return jsonify({"error": "Post not found"}), 404
         
-        if post.user != UUID(self.current_user_id):
-            return jsonify({"error": "No permission to perform this operation"}), 403
+        # Check if the user is owner or not
+        post = Post.query.filter_by(user= self.current_user_id,id=post_id, is_deleted=False).first()
+        if not post:
+            return jsonify({"error": "Post not exist"}), 404
 
-        image = request.files.get("image")
-
-        if image:
-            post.image = save_image(image)
-
-        data = request.form or request.json or {}
-
-        if not data and not image:
+        data = request.json 
+    
+        if not data:
             return jsonify({"error": "provide data to update"}), 400
 
         update_post_schema = UpdatePostSchema()
@@ -96,21 +87,27 @@ class PostApi(MethodView):
         if post_id:
             if not is_valid_uuid(post_id):
                 return jsonify({"error": "Invalid UUID format"}), 400
-
+            
+            #get a post
             post = Post.query.filter_by(id=post_id, is_deleted=False).first()
             if not post:
                 return jsonify({"error": "Post not found"}), 404
 
             return jsonify(self.post_schema.dump(post)), 200
-
+        #takes if user_id else login user
         query_user_id = user_id or self.current_user_id
+        query_user = User.query.get(query_user_id)
+        
+        if not query_user:
+            return jsonify({"error" : "user not exist"}),400
         if not is_valid_uuid(query_user_id):
             return jsonify({"error": "Invalid UUID format"}), 400
-
+        
+        #fetch the post of the user
         posts = Post.query.filter_by(user=query_user_id, is_deleted=False).order_by(
             desc(Post.created_at)).all()
         if not posts:
-            return jsonify({"error": "No posts found"}), 404
+            return jsonify({"error": "No posts exist"}), 404
 
         # pagination on the post
 
@@ -130,12 +127,9 @@ class PostApi(MethodView):
             return jsonify({"error": "Invalid or missing post ID"}), 400
 
         # Check if the post exists, regardless of the user
-        post = Post.query.filter_by(id=post_id, is_deleted=False).first()
+        post = Post.query.filter_by(user = self.current_user_id,id=post_id, is_deleted=False).first()
         if not post:
             return jsonify({"error": "Post not found"}), 404
-
-        if post.user != UUID(self.current_user_id):
-            return jsonify({"error": "No Permission to perform this operation"}), 403
 
         post.is_deleted = True
         db.session.commit()

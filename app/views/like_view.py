@@ -14,46 +14,56 @@ from sqlalchemy import desc
 class LikeAPi(MethodView):
     like_schema = LikeSchema()
     decorators = [jwt_required()]
-    
+
     def __init__(self):
         self.current_user_id = get_jwt_identity()
 
     def post(self, post_id=None):
+        """
+        create a like on the post and if not find like of the user on the post
+        deslike the post 
+        """
         data = request.json
         post_id = data.get("post_id")
 
-        if post_id is None:
-            return jsonify({"error": "Please provide post id"}), 400
-
-        if not is_valid_uuid(post_id):
-            return {"error": "Invalid UUID format"}, 400
-
-        if not current_user_id:
-            return jsonify({"error": "User not found"}), 404
+        if not post_id or not is_valid_uuid(post_id):
+            return jsonify({"error": "Invalid or missing post ID"}), 400
 
         post = Post.query.filter_by(id=post_id, is_deleted=False).first()
         if not post:
             return jsonify({"error": "Post does not exist"}), 404
 
         like = Like.query.filter_by(
-            post=post_id, user=current_user_id, is_deleted=False).first()
+            post=post_id, user=self.current_user_id, is_deleted=False).first()
+        
+        #for dislike
         if like:
             db.session.delete(like)
             db.session.commit()
             return jsonify({"detail": "Post unliked"}), 200
+        
+        #for like
         else:
-            like = Like(post=post_id, user=current_user_id)
+            like = Like(post=post_id, user=self.current_user_id)
         db.session.add(like)
         db.session.commit()
-        post_data = {"id": post.id, "title": post.title,
-                     "content": post.content}
+        
+        #get a post data to the like response
+        post_data = {
+            "id": post.id,
+            "title": post.title,
+            "image": post.image
+        }
         like_data = self.like_schema.dump(like)
-        user = User.query.get(current_user_id)
+        
+        #get a user data to the comment 
+        user = User.query.get(self.current_user_id)
         user_data = {
             "id": user.id,
             "username": user.username,
             "profile_pic": user.profile_pic if user.profile_pic else None,
         }
+        #added a post and user data to the response
         like_data["post"] = post_data
         like_data["user"] = user_data
         like_data["liked_at"] = like.created_at.isoformat()
@@ -61,24 +71,31 @@ class LikeAPi(MethodView):
         return jsonify(like_data), 201
 
     def get(self, post_id):
-        current_user_id = get_jwt_identity()
+        """
+        This api is for get the likes on the post by post_id
+        """
         if not post_id:
             return jsonify({"error": "Please provide post id "}), 400
 
         if not is_valid_uuid(post_id):
             return {"error": "Invalid UUID format"}, 400
-
+        
+        #get a post
         post = Post.query.filter_by(id=post_id, is_deleted=False).first()
         if not post:
             return jsonify({"error": "Post does not exist"}), 404
-
+        
+        #for get all the likes on the post
         likes = Like.query.filter_by(post=post_id).order_by(
             desc(Like.created_at)).all()
+        
+        #count of the likes on the post
         likes_count = Like.query.filter_by(post=post_id).count()
 
         if likes_count == 0:
             return jsonify({"error": "No likes found on this post"}), 404
-
+        
+        #pagination
         page = request.args.get("page", 1, type=int)
         per_page = request.args.get("per_page", 10, type=int)
         paginator = CustomPagination(likes, page, per_page)

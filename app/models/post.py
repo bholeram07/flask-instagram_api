@@ -13,8 +13,8 @@ class Post(BaseModel,db.Model):
     """
     __tablename__ = "post"
     user = db.Column(UUID(as_uuid=True), db.ForeignKey("user.id", ondelete="CASCADE"))
-    title = db.Column(db.String(40), nullable=False)
-    content = db.Column(db.Text, nullable=False)
+    title = db.Column(db.String(40), nullable=True)
+    caption = db.Column(db.Text, nullable=True)
     image = db.Column(db.String(255), nullable=True)
     is_deleted = db.Column(db.Boolean, default=False)
     deleted_at = db.Column(db.DateTime, nullable=True)

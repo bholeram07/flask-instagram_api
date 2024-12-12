@@ -11,9 +11,9 @@ from marshmallow import (
 class PostSchema(Schema):
     id = fields.UUID(dump_only=True)
     user = fields.UUID(dump_only=True)
-    content = fields.Str(required=True)
-    title = fields.Str(required=True)
-    image = fields.Str(dump_only=True)
+    caption = fields.Str()
+    title = fields.Str()
+    image = fields.Str(required=True)
 
     @validates("title")
     def validate_title(self, value):

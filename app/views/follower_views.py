@@ -9,15 +9,27 @@ from app.uuid_validator import is_valid_uuid
 
 
 class FollowApi(MethodView):
+    """
+    A class handle the follow functionality.
+    User can follow and unfollow the user and get the follower or following list
+    """
     decorators = [jwt_required()]
+    
+    def __init__(self):
+        self.current_user_id = get_jwt_identity()
 
     def get(self, user_id=None):
-        current_user_id = get_jwt_identity()
-        user = User.query.get(current_user_id)
-
+        """
+         get the follower list of the current user.
+         if user id is provided than follower list of that user
+        """
+        user = User.query.get(self.current_user_id)
+        
+    
         if user_id:
             if not is_valid_uuid(user_id):
                 return jsonify({"error": "Invalid uuid format"}), 400
+            #fetch user of provided user id
             user = User.query.filter_by(id=user_id).first()
             if not user:
                 return jsonify({"error": "User not found"}), 404
@@ -25,10 +37,13 @@ class FollowApi(MethodView):
             user = User.query.get(current_user_id)
             if not user:
                 return jsonify({"error": "Unauthorized"}), 403
-
+        
+        #fetch the follower
         followers = user.followers.all()
         if not followers:
             return jsonify({"detail": "No any follower of this user"})
+        
+        #added the data of id,username and image in the list of follower
         followers_list = [{
             "id": follower.follower.id,
             "username": follower.follower.username,
@@ -36,6 +51,7 @@ class FollowApi(MethodView):
         }
             for follower in followers
         ]
+        #pagination
         page = request.args.get("page", 1, type=int)
         per_page = request.args.get("per_page", 10, type=int)
         paginator = CustomPagination(followers_list, page, per_page)
@@ -45,27 +61,36 @@ class FollowApi(MethodView):
         return jsonify(paginated_data), 200
 
     def post(self):
-        current_user_id = get_jwt_identity()
-        current_user = User.query.get(current_user_id)
+        """
+        A Api to follow the user
+        """
+ 
+        current_user = User.query.get(self.current_user_id)
         data = request.json
         user_id = data.get("user_id")
+     
         if not user_id:
             return jsonify({"error": "Provide user id"}), 400
         if not is_valid_uuid(user_id):
             return jsonify({"error": "Invalid uuid format"}), 400
-
+        
+        #fetch the user which user want to follow
         user_to_follow = User.query.filter_by(id=user_id).first()
         if not user_to_follow:
             return jsonify({"error": "User does not exist"}), 400
-
+        if self.current_user_id == user_id:
+            return jsonify({"error" : "You cant follow yourself"}),400
+        
+        #check the user is follower or not of the user already
         follow_relationship = Follow.query.filter_by(
             follower_id=current_user_id, following_id=user_to_follow.id).first()
-
+        
+        #if user already follower of user than unfollow the user
         if follow_relationship:
             db.session.delete(follow_relationship)
             db.session.commit()
             return jsonify({"detail": "Unfollowed"}), 200
-
+        #follow the user
         follow = Follow(
             follower_id=current_user.id,
             following_id=user_to_follow.id,
@@ -77,11 +102,22 @@ class FollowApi(MethodView):
 
 
 class FollowingApi(MethodView):
+    """
+    A api to get the following list of the current or the provided user
+    """
     decorators = [jwt_required()]
 
+    def __init__(self):
+        self.current_user_id = get_jwt_identity()
+
+    
+
     def get(self, user_id=None):
-        current_user_id = get_jwt_identity()
-        user = User.query.get(current_user_id)
+        """
+         function to get the following list
+        """
+        
+        user = User.query.get(self.current_user_id)
         if user_id:
             user = User.query.filter_by(id=user_id).first()
             if not user:
@@ -89,10 +125,12 @@ class FollowingApi(MethodView):
 
         if not user:
             return jsonify({"error": "User not found"}), 404
-
+        #fetch the following list of the user
         following = user.following.all()
         if not following:
             return jsonify({"detail": "No any user in following list"})
+        
+        #added the id, username and image of the user in the response
         following_list = [
             {
                 "id": follow.following.id,
@@ -101,7 +139,7 @@ class FollowingApi(MethodView):
             }
             for follow in following
         ]
-
+        #pagination
         page = request.args.get("page", 1, type=int)
         per_page = request.args.get("per_page", 10, type=int)
         paginator = CustomPagination(following_list, page, per_page)
