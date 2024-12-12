@@ -14,6 +14,7 @@ from app.models.user import User
 from app.utils.validation import validate_and_load
 from app.utils.save_image import save_image
 from app.pagination_response import paginate_and_serialize
+from datetime import datetime
 import os
 from uuid import UUID
 
@@ -126,5 +127,6 @@ class PostApi(MethodView):
             return jsonify({"error": "Post not found"}), 404
 
         post.is_deleted = True
+        post.deleted_at = datetime.now()
         db.session.commit()
         return jsonify(), 204

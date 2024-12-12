@@ -91,7 +91,8 @@ class UserProfile(MethodView):
             user = User.query.get(user_id)
             if not user:
                 return jsonify({"error": "User not found"}), 404
-        user = User.query.get(self.current_user_id)
+        else:
+            user = User.query.get(self.current_user_id)
         
         #get the follower ,following and post count of the user
         followers_count = Follow.query.filter_by(

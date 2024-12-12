@@ -13,6 +13,7 @@ from app.utils.validation import validate_and_load
 from sqlalchemy import desc
 from app.pagination_response import paginate_and_serialize
 from uuid import UUID
+from datetime import datetime
 
 
 class CommentApi(MethodView):
@@ -134,6 +135,7 @@ class CommentApi(MethodView):
 
         # soft deletion
         comment.is_deleted = True
+        comment.deleted_at = datetime.now()
         db.session.commit()
 
         return jsonify(), 204
