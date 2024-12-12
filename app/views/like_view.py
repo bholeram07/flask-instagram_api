@@ -14,9 +14,11 @@ from sqlalchemy import desc
 class LikeAPi(MethodView):
     like_schema = LikeSchema()
     decorators = [jwt_required()]
+    
+    def __init__(self):
+        self.current_user_id = get_jwt_identity()
 
     def post(self, post_id=None):
-        current_user_id = get_jwt_identity()
         data = request.json
         post_id = data.get("post_id")
 

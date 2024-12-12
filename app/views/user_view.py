@@ -82,10 +82,7 @@ class UserProfile(MethodView):
             user = User.query.get(user_id)
             if not user:
                 return jsonify({"error": "User not found"}), 404
-        else:
-            if not current_user_id:
-                return jsonify({"error": "Unauthorized"}), 403
-            user = User.query.get(current_user_id)
+        user = User.query.get(current_user_id)
 
         try:
             followers_count = Follow.query.filter_by(
@@ -165,7 +162,7 @@ class Login(MethodView):
             return jsonify({"error": "This email is not registered"}), 400
 
         if not user.check_password(data["password"]):
-            return jsonify({"error": "Incorrect password"}), 401
+            return jsonify({"error": "Invalid credentials"}), 401
 
         access_token = create_access_token(
             identity=user.id,
@@ -212,7 +209,7 @@ class UpdatePassword(MethodView):
             return jsonify({"error": "User Not found"}), 404
 
         if not user.check_password(data["current_password"]):
-            return jsonify({"error": "Incorrect Password"}), 401
+            return jsonify({"error": "Invalid credentials"}), 401
 
         if current_password == new_password:
             return jsonify({"error": "old and new password not be same"}), 400
@@ -262,7 +259,7 @@ class ResetPasswordSendMail(MethodView):
             user_name=user.username,
         )
         send_mail(user.email, html_message, "Reset Link Password")
-        print(reset_link)
+        
         return jsonify({"detail": "Link sent successfully, please check your email"}), 200
 
 

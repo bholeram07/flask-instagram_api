@@ -7,6 +7,7 @@ from app.routes.follower_routes import follower_api
 
 
 def register_blueprints(app):
+    '''The blueprints of the api'''
     api_blueprint = Blueprint("api", __name__, url_prefix="/api")
 
     api_blueprint.register_blueprint(user_api)
