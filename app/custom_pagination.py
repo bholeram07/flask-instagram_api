@@ -9,10 +9,16 @@ class CustomPagination:
         self.per_page = per_page
 
     def paginate(self):
+        #start = (3-1)*5
         start = (self.page - 1) * self.per_page
+        #end = 10+5
         end = start + self.per_page
+        #items_slice[10:15]
         items = self.query[start:end]
+        #total_item = 8
         total_items = len(self.query)
+        #total_pages=(8+3-1)//3
+        #total pages =3
         total_pages = (total_items + self.per_page - 1) // self.per_page
         return {
             "items": items,
