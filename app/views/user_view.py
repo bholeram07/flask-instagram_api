@@ -26,6 +26,8 @@ from flask_jwt_extended import (
 from datetime import datetime, timedelta
 from app.utils.tasks import send_mail
 from app.uuid_validator import is_valid_uuid
+from app.utils.validation import validate_and_load
+from app.utils.save_image import save_image
 import os
 
 
@@ -70,56 +72,58 @@ class Signup(MethodView):
 
 
 class UserProfile(MethodView):
+    """
+    A Api provides profile functionality to the user
+    """
     profile_schema = ProfileSchema()
     decorators = [jwt_required()]
+    
+    def __init__(self):
+        self.current_user_id = get_jwt_identity()
 
     def get(self, user_id=None):
-        current_user_id = get_jwt_identity()
-
+        """
+        Function to get the profile of the user
+        """
         if user_id:
             if not is_valid_uuid(user_id):
                 return jsonify({"error": "Invalid UUID format"}), 400
             user = User.query.get(user_id)
             if not user:
                 return jsonify({"error": "User not found"}), 404
-        user = User.query.get(current_user_id)
-
-        try:
-            followers_count = Follow.query.filter_by(
+        user = User.query.get(self.current_user_id)
+        
+        #get the follower ,following and post count of the user
+        followers_count = Follow.query.filter_by(
                 following_id=user.id).count()
-            following_count = Follow.query.filter_by(
+        following_count = Follow.query.filter_by(
                 follower_id=user.id).count()
 
-            post_count = Post.query.filter_by(
+        post_count = Post.query.filter_by(
                 user=user.id, is_deleted=False).count()
 
-            profile_data = self.profile_schema.dump(user)
-            profile_data.update({
+        profile_data = self.profile_schema.dump(user)
+        profile_data.update({
                 "followers": followers_count,
                 "following": following_count,
                 "posts": post_count,
-            })
-        except ValidationError as e:
-            first_error = next(iter(e.messages.values()))[0]
-            return jsonify({"error": first_error}), 400
-
+        })
+      
         return jsonify(profile_data)
 
-    def put(self):
-        current_user_id = get_jwt_identity()
-        if not current_user_id:
-            return jsonify({"error": "Unauthorized"}), 403
-        user = User.query.get(current_user_id)
+    def patch(self):
+        """
+        Function to update the profile of the user
+        """
+        user = User.query.get(self.current_user_id)
 
         image = request.files.get("profile_pic")
-        if image and allowed_file(image.filename):
-            filename = secure_filename(image.filename)
-            image_path = os.path.join(
-                current_app.config["UPLOAD_FOLDER"], filename)
-            image.save(image_path)
+        if image:
+            image_path = save_image(image)
         else:
             image_path = None
-
+        
+        #handle if the user only provide image to update
         try:
             data = request.form or request.json
         except:
@@ -129,8 +133,10 @@ class UserProfile(MethodView):
                 updated_data = self.profile_schema.dump(user)
                 return jsonify(updated_data), 202
             return jsonify({"error": "provide data to update"}), 400
+        
         if "username" in data:
             username = data.get("username")
+            #check if username is already taken
             if username != user.username:
                 existing_user = User.query.filter_by(username=username).first()
                 if existing_user:
@@ -141,7 +147,6 @@ class UserProfile(MethodView):
         if image_path:
             user.profile_pic = image_path
         db.session.commit()
-
         updated_data = self.profile_schema.dump(user)
         return jsonify(updated_data), 202
 

@@ -46,6 +46,7 @@ class ProfileSchema(Schema):
     bio = fields.Str(required=False)
 
 
+
 class LoginSchema(Schema):
     email = fields.Email(required=True)
     password = fields.Str(required=True)

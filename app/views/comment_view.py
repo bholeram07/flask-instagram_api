@@ -34,8 +34,8 @@ class CommentApi(MethodView):
 
         if not is_valid_uuid(post_id):
             return jsonify({"error": "Invalid uuid format"}), 400
-        
-        #fetch the post through post id
+
+        # fetch the post through post id
         post = Post.query.filter_by(id=post_id, is_deleted=False).first()
         if not post:
             return jsonify({"error": "Post does not exist"}), 404
@@ -77,8 +77,8 @@ class CommentApi(MethodView):
 
             if not comments:
                 return jsonify({"error": "No comments found for this post"}), 404
-            
-            #pagination
+
+            # pagination
             page = request.args.get("page", 1, type=int)
             per_page = request.args.get("per_page", 10, type=int)
             paginator = CustomPagination(comments, page, per_page)
@@ -111,7 +111,7 @@ class CommentApi(MethodView):
             self.comment_schema, data)
         if errors:
             return jsonify({"errors": errors})
-        
+
         comment.content = comment_update_data.get("content")
         db.session.commit()
 
@@ -130,16 +130,15 @@ class CommentApi(MethodView):
 
         if not comment:
             return jsonify({"error": "Comment does not exist"}), 404
-        
-        #get the post through the comment object
+
+        # get the post through the comment object
         post_id = comment.post_id
         post = Post.query.get(post_id)
-
         # check if the user is comment owner or the post owner
         if comment.user_id != UUID(self.current_user_id) and post.user != UUID(self.current_user_id):
             return jsonify({"error": "Comment not exist"}), 404
-        
-        #soft deletion
+
+        # soft deletion
         comment.is_deleted = True
         db.session.commit()
 

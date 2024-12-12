@@ -32,7 +32,7 @@ user_api.add_url_rule(
 )
 
 user_api.add_url_rule(
-    "/users/profile/", view_func=UserProfile.as_view("profile_api"), methods=["PUT", "GET"]
+    "/users/profile/", view_func=UserProfile.as_view("profile_api"), methods=["PATCH", "GET"]
 )
 
 user_api.add_url_rule(
