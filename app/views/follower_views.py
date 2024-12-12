@@ -25,8 +25,6 @@ class FollowApi(MethodView):
          if user id is provided than follower list of that user
         """
         user = User.query.get(self.current_user_id)
-        
-    
         if user_id:
             if not is_valid_uuid(user_id):
                 return jsonify({"error": "Invalid uuid format"}), 400
@@ -84,16 +82,17 @@ class FollowApi(MethodView):
         
         #check the user is follower or not of the user already
         follow_relationship = Follow.query.filter_by(
-            follower_id=current_user_id, following_id=user_to_follow.id).first()
+            follower_id=self.current_user_id, following_id=user_to_follow.id).first()
         
         #if user already follower of user than unfollow the user
         if follow_relationship:
             db.session.delete(follow_relationship)
             db.session.commit()
             return jsonify({"detail": "Unfollowed"}), 200
+        
         #follow the user
         follow = Follow(
-            follower_id=current_user.id,
+            follower_id=self.current_user_id,
             following_id=user_to_follow.id,
         )
         db.session.add(follow)
@@ -111,18 +110,21 @@ class FollowingApi(MethodView):
     def __init__(self):
         self.current_user_id = get_jwt_identity()
 
-    
 
     def get(self, user_id=None):
         """
          function to get the following list
         """
-        
-        user = User.query.get(self.current_user_id)
+    
         if user_id:
+            if not is_valid_uuid(user_id):
+                return jsonify({"error": "Invalid uuid format"}), 400
             user = User.query.filter_by(id=user_id).first()
             if not user:
                 return jsonify({"error": "User not found"}), 404
+            
+        #fetch the current user
+        user = User.query.get(self.current_user_id)
 
         if not user:
             return jsonify({"error": "User not found"}), 404
