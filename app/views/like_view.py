@@ -8,6 +8,7 @@ from app.schemas.like_schema import LikeSchema
 from app.uuid_validator import is_valid_uuid
 from app.extensions import db
 from app.custom_pagination import CustomPagination
+from app.pagination_response import paginate_and_serialize
 from sqlalchemy import desc
 
 
@@ -96,13 +97,9 @@ class LikeAPi(MethodView):
             return jsonify({"error": "No likes found on this post"}), 404
         
         #pagination
-        page = request.args.get("page", 1, type=int)
-        per_page = request.args.get("per_page", 10, type=int)
-        paginator = CustomPagination(likes, page, per_page)
-        paginated_data = paginator.paginate()
+        return paginate_and_serialize(
+            likes,
+            self.like_schema,
+            extra_fields={"likes_count": likes_count}
+        )
 
-        paginated_data["items"] = self.like_schema.dump(
-            paginated_data["items"], many=True)
-        paginated_data["likes_count"] = likes_count
-
-        return jsonify(paginated_data), 200

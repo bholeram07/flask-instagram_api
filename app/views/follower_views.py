@@ -5,6 +5,7 @@ from app.extensions import db
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.models.follower import Follow
 from app.models.user import User
+
 from app.uuid_validator import is_valid_uuid
 
 

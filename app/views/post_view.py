@@ -13,6 +13,7 @@ from app.models.post import Post
 from app.models.user import User
 from app.utils.validation import validate_and_load
 from app.utils.save_image import save_image
+from app.pagination_response import paginate_and_serialize
 import os
 from uuid import UUID
 
@@ -27,8 +28,8 @@ class PostApi(MethodView):
     def post(self):
         """
         Creates a new post. Requires user authentication.
-        This api allows the user to create a post by providing a title, content, and an optional image.
-        The image is saved on the server if provided and valid.
+        This api allows the user to create a post by providing a image an optional content and title.
+        The image is saved in the local folder if provided and valid.
         
         """
         image = request.files.get("image")
@@ -109,15 +110,8 @@ class PostApi(MethodView):
         if not posts:
             return jsonify({"error": "No posts exist"}), 404
 
-        # pagination on the post
-
-        page = request.args.get("page", 1, type=int)
-        per_page = request.args.get("per_page", 10, type=int)
-        paginator = CustomPagination(posts, page, per_page)
-        paginated_data = paginator.paginate()
-        paginated_data["items"] = self.post_schema.dump(
-            paginated_data["items"], many=True)
-        return jsonify(paginated_data), 200
+        # return paginated response
+        return paginate_and_serialize(posts, self.post_schema)
 
     def delete(self, post_id):
         """

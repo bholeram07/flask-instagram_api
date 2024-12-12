@@ -11,6 +11,7 @@ from app.extensions import db
 from app.uuid_validator import is_valid_uuid
 from app.utils.validation import validate_and_load
 from sqlalchemy import desc
+from app.pagination_response import paginate_and_serialize
 from uuid import UUID
 
 
@@ -79,15 +80,8 @@ class CommentApi(MethodView):
                 return jsonify({"error": "No comments found for this post"}), 404
 
             # pagination
-            page = request.args.get("page", 1, type=int)
-            per_page = request.args.get("per_page", 10, type=int)
-            paginator = CustomPagination(comments, page, per_page)
-            paginated_data = paginator.paginate()
-            paginated_data["items"] = self.comment_schema.dump(
-                paginated_data["items"], many=True
-            )
-            return jsonify(paginated_data), 200
 
+            return paginate_and_serialize(comments , self.comment_schema)
         return jsonify({"error": "Post id is required"}), 400
 
     def put(self, comment_id):

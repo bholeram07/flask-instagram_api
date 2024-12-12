@@ -56,7 +56,8 @@ pgdata/
 docker/docker-compose.yml
 docker/volumes/
 docker/*.tar
-
+./uploads
+uploads/
 
 # Ignore Docker logs
 docker/logs/
