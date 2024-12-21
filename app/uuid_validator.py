@@ -5,4 +5,4 @@ def is_valid_uuid(value):
         uuid.UUID(str(value))
         return True
     except ValueError:
-        return False
+        return jsonify({"error":"Not a valid uuid format"})

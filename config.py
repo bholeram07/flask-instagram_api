@@ -19,5 +19,10 @@ class Config:
     REDIS_DB = 0
     BLACKLIST_KEY = "blacklisted_tokens"
     SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URI")
-    
+    S3_ENDPOINT_URL = "http://127.0.0.1:9000"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+    S3_ACCESS_KEY = os.getenv('S3_ACCESS_KEY')
+    S3_SECRET_KEY = os.getenv('S3_SECRET_KEY')
+    S3_BUCKET_NAME = os.getenv('S3_BUCKET_NAME')
+   

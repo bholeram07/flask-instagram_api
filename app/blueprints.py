@@ -4,11 +4,16 @@ from app.routes.post_routes import post_api
 from app.routes.comment_routes import comment_api
 from app.routes.like_routes import like_api
 from app.routes.follower_routes import follower_api
+from app.views.verify_email import auth # Import your blueprint
+
 
 
 def register_blueprints(app):
     '''The blueprints of the api'''
     api_blueprint = Blueprint("api", __name__, url_prefix="/api")
+   
+
+    app.register_blueprint(auth, url_prefix='/auth')
 
     api_blueprint.register_blueprint(user_api)
     api_blueprint.register_blueprint(post_api)

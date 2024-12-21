@@ -13,8 +13,12 @@ class User(BaseModel,db.Model):
     A User model that create a user table in the database
     """
     username = db.Column(db.String(80), nullable=False, unique=True)
-    bio = db.Column(db.String(120), nullable=True)
+    bio = db.Column(db.String(255), nullable=True)
     profile_pic = db.Column(db.String(255), nullable=True)
+    is_verified  = db.Column(db.Boolean, default = False)
+    is_active = db.Column(db.Boolean, default= True)
+    is_deleted = db.Column(db.Boolean, default = False)
+    is_private = db.Column(db.Boolean, default=False)
     email = db.Column(db.String(120), nullable=False, unique=True)
     password = db.Column(db.String(255), nullable=False)
 

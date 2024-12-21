@@ -5,8 +5,15 @@ from app.models.follower import Follow
 from app.models.post import Post
 from app.utils.allowed_file import allowed_file
 from flask_restful import MethodView
+from flask import Flask, jsonify
+from flask import url_for
+
 import secrets
+import boto3
+from config import Config
 from werkzeug.utils import secure_filename
+from app.generate_token import generate_verification_token
+
 import datetime
 from app.schemas.user_schema import (
     SignupSchema,
@@ -29,129 +36,47 @@ from app.uuid_validator import is_valid_uuid
 from app.utils.validation import validate_and_load
 from app.utils.save_image import save_image
 import os
+from app.utils.s3_utils import create_bucket
 
+
+def setup_bucket(bucket_name):
+    s3_client = current_app.s3_client
+    create_bucket(s3_client, bucket_name)
 
 class Signup(MethodView):
     user_schema = SignupSchema()
-
     def post(self):
-        data = request.json
-        try:
-            user_data = self.user_schema.load(data)
-        except ValidationError as e:
-            first_error = next(iter(e.messages.values()))[0]
-            return jsonify({"error": first_error}), 400
-
-        existing_user = User.query.filter(
-            (User.email == data["email"]) | (User.username == data["username"])
-        ).first()
-
-        if existing_user:
-            if existing_user.email == data["email"]:
-                return jsonify({"error": "Email already exists"}), 409
-            if existing_user.username == data["username"]:
-                return jsonify({"error": "Username already exists"}), 409
-
-        new_user = User(
-            username=data["username"], email=data["email"], password=data["password"]
-        )
-        new_user.set_password(user_data["password"])
-        db.session.add(new_user)
-        db.session.commit()
-
-        user_dict = self.user_schema.dump(new_user)
-        user_dict.pop("password", None)
-
-        html_message = render_template(
-            "welcome_email.html",
-            subject="Welcome mail",
-            user_name=data["username"],
-        )
-        send_mail(data["email"], html_message, "Welcome mail")
-        return jsonify(user_dict), 201
 
 
-class UserProfile(MethodView):
-    """
-    A Api provides profile functionality to the user
-    """
-    profile_schema = ProfileSchema()
-    decorators = [jwt_required()]
+        data = request.get_json()
+        email = data.get('email')
+        username = data.get('username')
+        password = data.get('password')
+
+        # Check if the username or email already exists
+        if User.query.filter_by(email=email).first():
+            return jsonify({"error": "Email already exists"}), 400
+        if User.query.filter_by(username=username).first():
+            return jsonify({"error": "Username already exists"}), 400
+
+        # Generate a verification token
+        token = generate_verification_token(
+            email, current_app.config['SECRET_KEY'])
+
+        # Save temporary data (example with Redis or a temp table, you can customize this)
+        temp_data = {"username": username, "email": email, "password": password}
+        # Here, save `temp_data` securely. This could be in Redis or a temporary table.
+
+        # Send verification email
+        verify_url = url_for('auth.verify_email', token=token, _external=True)
+        # send_email(email, 'Verify Your Email',
+        #         f'Click the link to verify your email: {verify_url}')
+        print(verify_url)
+
+        return jsonify({"message": "Verification email sent. Please check your email to complete signup."}), 200
+
+
     
-    def __init__(self):
-        self.current_user_id = get_jwt_identity()
-
-    def get(self, user_id=None):
-        """
-        Function to get the profile of the user
-        """
-        if user_id:
-            if not is_valid_uuid(user_id):
-                return jsonify({"error": "Invalid UUID format"}), 400
-            user = User.query.get(user_id)
-            if not user:
-                return jsonify({"error": "User not found"}), 404
-        else:
-            user = User.query.get(self.current_user_id)
-        
-        #get the follower ,following and post count of the user
-        followers_count = Follow.query.filter_by(
-                following_id=user.id).count()
-        following_count = Follow.query.filter_by(
-                follower_id=user.id).count()
-
-        post_count = Post.query.filter_by(
-                user=user.id, is_deleted=False).count()
-
-        profile_data = self.profile_schema.dump(user)
-        profile_data.update({
-                "followers": followers_count,
-                "following": following_count,
-                "posts": post_count,
-        })
-      
-        return jsonify(profile_data)
-
-    def patch(self):
-        """
-        Function to update the profile of the user
-        """
-        user = User.query.get(self.current_user_id)
-
-        image = request.files.get("profile_pic")
-        if image:
-            image_path = save_image(image)
-        else:
-            image_path = None
-        
-        #handle if the user only provide image to update
-        try:
-            data = request.form or request.json
-        except:
-            if image_path:
-                user.profile_pic = image_path
-                db.session.commit()
-                updated_data = self.profile_schema.dump(user)
-                return jsonify(updated_data), 202
-            return jsonify({"error": "provide data to update"}), 400
-        
-        if "username" in data:
-            username = data.get("username")
-            #check if username is already taken
-            if username != user.username:
-                existing_user = User.query.filter_by(username=username).first()
-                if existing_user:
-                    return jsonify({"error": "This username is already taken"}), 400
-                user.username = username
-        if "bio" in data:
-            user.bio = data["bio"]
-        if image_path:
-            user.profile_pic = image_path
-        db.session.commit()
-        updated_data = self.profile_schema.dump(user)
-        return jsonify(updated_data), 202
-
-
 class Login(MethodView):
     login_schema = LoginSchema()
 

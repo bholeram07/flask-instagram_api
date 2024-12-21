@@ -4,16 +4,22 @@ from flask_uuid import UUIDConverter
 from app.extensions import db, mail, migrate, jwt, redis_client
 from app.blueprints import register_blueprints
 import os
-
+import boto3
+from app.s3_bucket_config import create_s3_client
 
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
+    # Set up the S3 client
+    s3_client = create_s3_client(app)
+    
+
     app.url_map.converters["uuid"] = UUIDConverter
     if not os.path.exists(app.config["UPLOAD_FOLDER"]):
         os.makedirs(folder_path)
         
     app.config["REDIS_CLIENT"] = redis_client
+    app.config['SECRET_KEY'] = 'your-secret-key'
 
     initialize_extensions(app)
     register_blueprints(app)
