@@ -41,7 +41,7 @@ class LikeAPi(MethodView):
         if like:
             db.session.delete(like)
             db.session.commit()
-            return jsonify({"detail": "Post unliked"}), 200
+            return jsonify({"message": "Post unliked"}), 200
         
         #for like
         else:

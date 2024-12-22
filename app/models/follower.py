@@ -10,10 +10,10 @@ class Follow(db.Model):
     """
     __tablename__ = "follows"
     follower_id = db.Column(
-        UUID(as_uuid=True), db.ForeignKey("user.id"), primary_key=True
+        UUID(as_uuid=True), db.ForeignKey("user.id",ondelete = "CASCADE"), primary_key=True
     )
     following_id = db.Column(
-        UUID(as_uuid=True), db.ForeignKey("user.id"), primary_key=True
+        UUID(as_uuid=True), db.ForeignKey("user.id",ondelete="CASCADE"), primary_key=True,
     )
     timestamp = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 

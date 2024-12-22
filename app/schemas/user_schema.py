@@ -1,4 +1,4 @@
-from marshmallow import Schema, fields, ValidationError, validates, validates_schema
+from marshmallow import Schema, fields, ValidationError, validates, validates_schema,EXCLUDE
 import re
 
 
@@ -7,7 +7,7 @@ class SignupSchema(Schema):
     username = fields.Str(required=True)
     email = fields.Email(required=True,unique = True)
     password = fields.Str(required=True)
-
+    
     @validates("password")
     def validate_password(self, password):
         if not password.strip():
@@ -37,6 +37,7 @@ class SignupSchema(Schema):
     def validate_username(self, value):
         if not value.strip():
             raise ValidationError("Username should not be blank.")
+          
 
 
 class ProfileSchema(Schema):
@@ -48,13 +49,22 @@ class ProfileSchema(Schema):
 
 
 class LoginSchema(Schema):
-    email = fields.Email(required=True)
+    email = fields.Email(required = False)
+    username = fields.Email(required = False)
     password = fields.Str(required=True)
+
+    class Meta:
+        unknown = EXCLUDE
     
     @validates("password")
     def validate_password(self, password):
         if not password.strip():
            raise ValidationError("password should not be blank.")
+       
+    @validates_schema
+    def validate_email_or_username(self, data, **kwargs):
+        if not data.get("email") and not data.get("username"):
+            raise ValidationError("Either email or username must be provided.")
 
 
 class UpdatePasswordSchema(Schema):

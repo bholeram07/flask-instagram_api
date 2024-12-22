@@ -40,7 +40,7 @@ class FollowApi(MethodView):
         #fetch the follower
         followers = user.followers.all()
         if not followers:
-            return jsonify({"detail": "No any follower of this user"})
+            return jsonify({"message": "No any follower of this user"})
         
         #added the data of id,username and image in the list of follower
         followers_list = [{
@@ -88,7 +88,7 @@ class FollowApi(MethodView):
         if follow_relationship:
             db.session.delete(follow_relationship)
             db.session.commit()
-            return jsonify({"detail": "Unfollowed"}), 200
+            return jsonify({"message": "Unfollowed"}), 200
         
         #follow the user
         follow = Follow(
@@ -98,7 +98,7 @@ class FollowApi(MethodView):
         db.session.add(follow)
         db.session.commit()
 
-        return jsonify({"detail": f"You are now following {user_to_follow.username}"}), 201
+        return jsonify({"message": f"You are now following {user_to_follow.username}"}), 201
 
 
 class FollowingApi(MethodView):
@@ -132,7 +132,7 @@ class FollowingApi(MethodView):
         #fetch the following list of the user
         following = user.following.all()
         if not following:
-            return jsonify({"detail": "No any user in following list"})
+            return jsonify({"message": "No any user in following list"})
         
         #added the id, username and image of the user in the response
         following_list = [
