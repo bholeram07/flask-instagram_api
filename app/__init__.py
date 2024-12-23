@@ -44,9 +44,7 @@ def setup_logging(app):
     # This will capture all logs of DEBUG level and above
     logger.setLevel(logging.DEBUG)
 
-    # Disable Flask's default logs (Werkzeug)
-    # werkzeug_log = logging.getLogger('werkzeug')
-    # werkzeug_log.setLevel(logging.ERROR)
+
     
 def create_app():
     app = Flask(__name__)
