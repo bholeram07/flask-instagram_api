@@ -1,5 +1,7 @@
 from app import create_app, db
 
+
+
 def create_db():
     with app.app_context():
         db.create_all()

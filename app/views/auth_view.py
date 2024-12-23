@@ -75,9 +75,9 @@ class Signup(MethodView):
 
         # # Generate the verification URL
         verify_url = url_for('auth.verify_email', token=token, _external=True)
-        print(verify_url)
+        current_app.logger.info(verify_url)
 
-        # # Render the email template with the verification URL and username
+        # Render the email template with the verification URL and username
         # html_message = render_template(
         #         'verify_email.html',
         #         username=username,
@@ -105,9 +105,9 @@ class Login(MethodView):
             return jsonify({"errors": errors})
 
         if username:
-            user = User.query.filter_by(username=data["username"]).first()
+            user = User.query.filter_by(username=data["username"],is_verified = True).first()
         if email:
-            user = User.query.filter_by(email=data["email"]).first()
+            user = User.query.filter_by(email=data["email"],is_verified = True).first()
         # check user
         if not user:
             return jsonify({"error": "This email or username is not registered"}), 400

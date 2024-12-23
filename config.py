@@ -1,5 +1,8 @@
-import os
 from flask import jsonify
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 class Config:
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))  # Base directory of the project
     UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')      # Upload folder path
