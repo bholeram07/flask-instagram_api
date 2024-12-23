@@ -8,7 +8,7 @@ from flask_restful import MethodView
 from flask import Flask, jsonify
 from flask import url_for
 import requests
-from utils.get_user_location import get_user_location
+from app.utils.get_user_location import get_user_location
 import secrets
 import boto3
 from config import Config
@@ -106,11 +106,14 @@ class Login(MethodView):
             return jsonify({"errors": errors}),400
 
         if username_or_email:
-            user = User.query.filter((User.username== username_or_email)|(User.email == username_or_email),User.is_verified == True) .first()
+            user = User.query.filter((User.username== username_or_email)|(User.email == username_or_email),User.is_verified == True,User.is_deleted==False) .first()
       
         # check user
         if not user:
             return jsonify({"error": "This email or username is not registered"}), 400
+        if user.is_active == False:
+            user.is_active = True
+            db.session.commit()
         # check the user's password
         if not user.check_password(data["password"]):
             return jsonify({"error": "Invalid credentials"}), 401
@@ -126,13 +129,13 @@ class Login(MethodView):
         refresh_token = create_refresh_token(
             identity=user.id, expires_delta=timedelta(days=1)
         )
-        html_message = render_template(
-            'login_activity.html',
-            username=user.username,
-            location = location,
-            current_year=2024
-        )
-        send_location_mail(user.email,html_message)
+        # html_message = render_template(
+        #     'login_activity.html',
+        #     username=user.username,
+        #     location = location,
+        #     current_year=2024
+        # )
+        # send_location_mail(user.email,html_message)
         # expiration time of refresh and access token
         access_token_expiration = datetime.utcnow() + timedelta(hours=1)
         refresh_token_expiration = datetime.utcnow() + timedelta(days=1)
@@ -278,3 +281,46 @@ class ResetPassword(MethodView):
         redis_client.delete(redis_key)
 
         return jsonify({"message": "Password reset successfully"}), 200
+    
+
+class DeactivateAccount(MethodView):
+    """An api for account deactivation of the user by the user password"""
+    decorators = [jwt_required()]
+    
+    def put(self):
+        data = request.json
+        password = data.get("password")
+        if not password:
+            return jsonify({"error":{"password" : "Missing required field"} }),400
+        current_user_id = get_jwt_identity()
+        #get the user object
+        user = User.query.filter_by(id=current_user_id, is_active=True).first()
+        if not user :
+            return jsonify({"error":"User not found"}),400
+        #check the password
+        if not user.check_password(password):
+            return jsonify({"error":"Invalid Credentials"}),400
+        #database operation
+        user.is_active = False
+        db.session.commit()
+        return jsonify({"message" : "Your account is deactivated ,you can reactivate it by login again"}),202
+
+
+class DeleteAccount(MethodView):
+    """An Api for delete the user account"""
+    decorators = [jwt_required()]
+    
+    def delete(self):
+        #get the user_id by the jwt token
+        current_user_id = get_jwt_identity()
+        #get the user
+        user = User.query.filter_by(id = current_user_id,is_active = True, is_deleted = False).first()
+        if not user:
+            return jsonify({"error" : "User not exist"}),404
+        #database opearation of delete
+        user.is_deleted = True
+        db.session.commit()
+        return jsonify(),204
+        
+    
+    

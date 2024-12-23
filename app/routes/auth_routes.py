@@ -1,5 +1,5 @@
 from flask import Blueprint
-from app.views.auth_view import Signup, Login, ResetPassword, ResetPasswordSendMail, UpdatePassword,Logout
+from app.views.auth_view import Signup, Login, ResetPassword, ResetPasswordSendMail, UpdatePassword,Logout,DeactivateAccount,DeleteAccount
 
 
 user_api = Blueprint("user_api", __name__)
@@ -30,7 +30,14 @@ user_api.add_url_rule(
     view_func=ResetPassword.as_view("reset_password_api"),
     methods=["POST"],
 )
-
+user_api.add_url_rule(
+    "/accounts/deactivate/",
+    view_func=DeactivateAccount.as_view("deactivate_account"),methods =["PUT"]
+)
+user_api.add_url_rule(
+    "/accounts/delete/",
+    view_func=DeleteAccount.as_view("delete_account"),methods =["DELETE"]    
+)
 # user_api.add_url_rule(
 #     "/users/profile/", view_func=UserProfile.as_view("profile_api"), methods=["PATCH", "GET"]
 # )
