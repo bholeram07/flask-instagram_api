@@ -13,3 +13,15 @@ def send_mail(recipient, html_message, subject):
         sender=current_app.config.get("MAIL_DEFAULT_SENDER"),
     )
     mail.send(msg)
+
+
+def send_location_mail(recipient,html_message):
+    
+    msg = Message(
+        subject="Login found",
+        recipients=[recipient],
+        html=html_message,
+        sender=current_app.config.get("MAIL_DEFAULT_SENDER"),
+    )
+    mail.send(msg)
+    

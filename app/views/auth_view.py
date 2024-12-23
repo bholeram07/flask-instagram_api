@@ -7,7 +7,8 @@ from app.utils.allowed_file import allowed_file
 from flask_restful import MethodView
 from flask import Flask, jsonify
 from flask import url_for
-
+import requests
+from utils.get_user_location import get_user_location
 import secrets
 import boto3
 from config import Config
@@ -31,7 +32,7 @@ from flask_jwt_extended import (
     get_jwt,
 )
 from datetime import datetime, timedelta
-from app.utils.tasks import send_mail
+from app.utils.tasks import send_mail,send_location_mail
 from app.uuid_validator import is_valid_uuid
 from app.utils.validation import validate_and_load
 from app.utils.save_image import save_image
@@ -113,6 +114,9 @@ class Login(MethodView):
         # check the user's password
         if not user.check_password(data["password"]):
             return jsonify({"error": "Invalid credentials"}), 401
+
+        user_ip = request.remote_addr
+        location = get_user_location(user_ip)
         # generate the token on valid credentials
         # access token
         access_token = create_access_token(
@@ -122,6 +126,13 @@ class Login(MethodView):
         refresh_token = create_refresh_token(
             identity=user.id, expires_delta=timedelta(days=1)
         )
+        html_message = render_template(
+            'login_activity.html',
+            username=user.username,
+            location = location,
+            current_year=2024
+        )
+        send_location_mail(user.email,html_message)
         # expiration time of refresh and access token
         access_token_expiration = datetime.utcnow() + timedelta(hours=1)
         refresh_token_expiration = datetime.utcnow() + timedelta(days=1)
@@ -136,8 +147,7 @@ class Login(MethodView):
             ),
             200,
         )
-
-
+        
 class UpdatePassword(MethodView):
     """Api for password updation takes a current password and new password"""
     decorators = [jwt_required()]
@@ -151,6 +161,8 @@ class UpdatePassword(MethodView):
         # validate and serialize the data
         user_data, errors = validate_and_load(
             self.update_password_schema, data)
+        if errors:
+            return jsonify({"errors" : errors}),400
         current_password = data["current_password"]
         new_password = data["new_password"]
         # get the user object by user_id
@@ -214,15 +226,16 @@ class ResetPasswordSendMail(MethodView):
         redis_client.setex(redis_key, timedelta(minutes=10), str(user.id))
         # generate the reset link
         reset_link = f"http://127.0.0.1:5000/api/reset-password/{token}/"
+        current_app.logger.info(reset_link)
         # html message for send mail to user email
-        html_message = render_template(
-            "reset_password_email.html",
-            subject="Reset Link Password",
-            reset_link=reset_link,
-            user_name=user.username,
-        )
-        # send email with link
-        send_mail(user.email, html_message, "Reset Link Password")
+        # html_message = render_template(
+        #     "reset_password_email.html",
+        #     subject="Reset Link Password",
+        #     reset_link=reset_link,
+        #     user_name=user.username,
+        # )
+        # # send email with link
+        # send_mail(user.email, html_message, "Reset Link Password")
 
         return jsonify({"message": "Link sent successfully, please check your email"}), 200
 
@@ -237,11 +250,9 @@ class ResetPassword(MethodView):
         new_password = data.get("new_password")
         confirm_password = data.get("confirm_password")
         # validate and loads the data
-        try:
-            user_data = self.reset_password_schema.load(data)
-        except ValidationError as e:
-            first_error = next(iter(e.messages.values()))[0]
-            return jsonify({"error": first_error}), 400
+        user_data = validate_and_load(self.reset_password_schema,data)
+        if errors:
+            return jsonify({"errors": errors})
         # check the password matches with the confirm-password
         if new_password != confirm_password:
             return jsonify({"error": "new password and confirm password must be equal"}), 400
@@ -258,7 +269,7 @@ class ResetPassword(MethodView):
         if not user:
             return jsonify({"error": "User not found"}), 404
         # check the passwoed
-        if user.check_password(data["password"]):
+        if user.check_password(new_password):
             return jsonify({"error": "new and old password not be same"}), 401
         # set the new password entered by the user
         user.set_password(data["new_password"])

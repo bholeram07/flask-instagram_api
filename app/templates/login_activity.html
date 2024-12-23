@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Activity found</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            color: #333;
+            background-color: #f9f9f9;
+            padding: 20px;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .content {
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 14px;
+            color: #888;
+        }
+        .warning {
+            font-weight: bold;
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Your Login Location</h2>
+        </div>
+        <div class="content">
+            <p>Dear {{ username }},</p>
+            <p>We detected your login from the following location:</p>
+            <p><strong>Location: </strong>{{ location }}</p>
+            <p>If this wasn't you, please contact our support immediately.</p>
+            <p>Thank you for using our services!</p>
+        </div>
+        <div class="footer">
+            <p>&copy; {{ current_year }} Your Company Name</p>
+        </div>
+    </div>
+</body>
+</html>
