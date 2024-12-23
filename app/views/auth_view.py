@@ -78,13 +78,13 @@ class Signup(MethodView):
         current_app.logger.info(verify_url)
 
         # Render the email template with the verification URL and username
-        # html_message = render_template(
-        #         'verify_email.html',
-        #         username=username,
-        #         verification_url=verify_url
-        #     )
+        html_message = render_template(
+                'verify_email.html',
+                username=username,
+                verification_url=verify_url
+            )
         # Send the verification email
-        # send_mail(email, html_message, "Please Verify Your Email")
+        send_mail(email, html_message, "Please Verify Your Email")
 
         return jsonify({"message": "Verification email sent. Please check your email to complete signup."}), 200
 
@@ -97,17 +97,16 @@ class Login(MethodView):
     def post(self):
         # get the requested data
         data = request.get_json()
-        email = data.get("email")
-        username = data.get("username")
+        username_or_email = data.get("username_or_email")
+     
         # validate and loads the data
         user_data, errors = validate_and_load(self.login_schema, data)
         if errors:
-            return jsonify({"errors": errors})
+            return jsonify({"errors": errors}),400
 
-        if username:
-            user = User.query.filter_by(username=data["username"],is_verified = True).first()
-        if email:
-            user = User.query.filter_by(email=data["email"],is_verified = True).first()
+        if username_or_email:
+            user = User.query.filter((User.username== username_or_email)|(User.email == username_or_email),User.is_verified == True) .first()
+      
         # check user
         if not user:
             return jsonify({"error": "This email or username is not registered"}), 400
