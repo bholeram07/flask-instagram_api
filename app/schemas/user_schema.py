@@ -45,6 +45,8 @@ class ProfileSchema(Schema):
     username = fields.Str(required=False)
     profile_pic = fields.Str(required=False)
     bio = fields.Str(required=False)
+    other_social = fields.Str(required=False)
+    is_private = fields.Boolean(required=False)
 
 
 

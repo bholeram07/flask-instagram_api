@@ -19,7 +19,7 @@ from app.models.follower import Follow
 from app.models.user import db, User
 from flask import Blueprint, jsonify, request, current_app
 from datetime import timedelta
-
+from app.utils.update_profile_pic import update_profile_pic
 class UserProfile(MethodView):
     """
     A Api provides profile functionality to the user
@@ -66,31 +66,29 @@ class UserProfile(MethodView):
         Function to update the profile of the user
         """
         user = User.query.get(self.current_user_id)
-        image = request.files.get("profile_pic")
-        #Handle the image and upload it to the s3
-        if image:
-            extension = os.path.splitext(image.filename)[1]
-            filename = f"profile_image/{user.id}{extension}"
-            s3_client = get_s3_client()
-            # if image:
+        print("this is files",request.files)
+        file = request.files
+        if file:
+            image = request.files.get("profile_pic")
             try:
-                # Upload the file to MinIO
-                s3_client.upload_fileobj(
-                        Fileobj=image,
-                        Bucket=current_app.config['S3_BUCKET_NAME'],
-                        Key=filename,
-                        ExtraArgs={"ContentType": image.content_type}
-                    )
-
-                # Generate the file URL
-                file_url = f"{current_app.config['S3_ENDPOINT_URL']}/{current_app.config['S3_BUCKET_NAME']}/{filename}"
-                user.profile_pic = file_url
-                return jsonify({"message": f"File uploaded successfully", "file_url": file_url}), 200
-                
+                update_profile_pic(user, image)
             except Exception as e:
-                return jsonify({"error": "Failed to upload image", "details": str(e)}), 500
+                return jsonify({"error": e})
         
         data = request.form or request.json
+    
+        if "is_private" in data:
+            is_private = data.get("is_private")
+            #check the field is boolean or not
+            if isinstance(is_private, bool):
+                user.is_private = is_private
+        
+                
+        if "other_social" in data:
+            other_social = data.get("other_social")
+            #handle the blank string
+            user.other_social = None if not other_social.strip() else other_social
+            
         if "username" in data:
             username = data.get("username")
             #check if username is already taken or blank
