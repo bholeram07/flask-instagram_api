@@ -1,5 +1,5 @@
 
-from app.utils.s3_utils import create_bucket
+from app.utils.s3_utils import get_s3_client
 import os
 from app.utils.validation import validate_and_load
 from app.uuid_validator import is_valid_uuid
@@ -35,7 +35,7 @@ class UserProfile(MethodView):
         Function to get the profile of the user
         """
         if user_id:
-            #check the validation of the user
+            #check the validation of the user_id``
             is_valid_uuid(user_id)
             user = User.query.get(user_id)
             if not user:
@@ -66,44 +66,44 @@ class UserProfile(MethodView):
         Function to update the profile of the user
         """
         user = User.query.get(self.current_user_id)
-
         image = request.files.get("profile_pic")
-        extension = os.path.splitext(image.filename)[1]
-        filename = f"profile_image/{user.id}{extension}"
+        #Handle the image and upload it to the s3
+        if image:
+            extension = os.path.splitext(image.filename)[1]
+            filename = f"profile_image/{user.id}{extension}"
+            s3_client = get_s3_client()
+            # if image:
+            try:
+                # Upload the file to MinIO
+                s3_client.upload_fileobj(
+                        Fileobj=image,
+                        Bucket=current_app.config['S3_BUCKET_NAME'],
+                        Key=filename,
+                        ExtraArgs={"ContentType": image.content_type}
+                    )
 
-        # if image:
-        #     try:
-
-        file_url = f"{app.config['S3_ENDPOINT_URL']}/{app.config['S3_BUCKET_NAME']}/{filename}"
-        return jsonify({"message": "File uploaded"}), 200
-        # except Exception as e:
-        #     if image_path:
-        #     if image_path:
-
-        # handle if the user only provide image to update
-        # try:
-        #     data = request.form or request.json
-        # except:
-        #     if image_path:
-        #         user.profile_pic = image_path
-        #         db.session.commit()
-        #         updated_data = self.profile_schema.dump(user)
-        #         return jsonify(updated_data), 202
-        #     return jsonify({"error": "provide data to update"}), 400
-
-        # if "username" in data:
-        #     username = data.get("username")
-        #     #check if username is already taken
-        #     if username != user.username:
-        #         existing_user = User.query.filter_by(username=username).first()
-        #         if existing_user:
-        #             return jsonify({"error": "This username is already taken"}), 400
-        #         user.username = username
-        # if "bio" in data:
-        #     user.bio = data["bio"]
-        # if image_path:
-        #     user.profile_pic = image_path
-        # db.session.commit()
-        # updated_data = self.profile_schema.dump(user)
-        # return jsonify(updated_data), 202
-        return jsonify("file uploaded succefully")
+                # Generate the file URL
+                file_url = f"{current_app.config['S3_ENDPOINT_URL']}/{current_app.config['S3_BUCKET_NAME']}/{filename}"
+                user.profile_pic = file_url
+                return jsonify({"message": f"File uploaded successfully", "file_url": file_url}), 200
+                
+            except Exception as e:
+                return jsonify({"error": "Failed to upload image", "details": str(e)}), 500
+        
+        data = request.form or request.json
+        if "username" in data:
+            username = data.get("username")
+            #check if username is already taken or blank
+            if username.strip() and username != user.username:
+                existing_user = User.query.filter_by(username=username).first()
+                if existing_user:
+                    return jsonify({"error": "This username is already taken"}), 400
+                user.username = username
+        if "bio" in data:
+            bio = data.get("bio")
+            user.bio = None if not bio.strip() else data["bio"]
+          
+        db.session.commit()
+        updated_data = self.profile_schema.dump(user)
+        return jsonify(updated_data), 202
+       
