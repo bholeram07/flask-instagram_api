@@ -1,12 +1,12 @@
 from app.extensions import db
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import func
 import uuid
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import create_access_token
-import datetime
 from app.models.follower import Follow
 from app.models.base import BaseModel
-
+from datetime import datetime
 
 class User(BaseModel,db.Model):
     """
@@ -22,6 +22,9 @@ class User(BaseModel,db.Model):
     is_private = db.Column(db.Boolean, default=False)
     email = db.Column(db.String(120), nullable=False, unique=True)
     password = db.Column(db.String(255), nullable=False)
+    username_change_count = db.Column(db.Integer)
+    # A list to store the timestamp of the change username
+    username_change_timestamp = db.Column(db.DateTime(timezone=True), onupdate=datetime.now())
 
     following = db.relationship(
         "Follow",

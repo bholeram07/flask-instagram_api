@@ -45,17 +45,23 @@ class Signup(MethodView):
     signup_schema = SignupSchema()
 
     def post(self):
+        print("i am in signup")
         # get the data
         data = request.get_json()
+        print(data)
         email = data.get('email')
         username = data.get('username')
         password = data.get('password')
-
+        # if not password:
+        #     return jsonify({"error": {
+        #         "password":"Missing required field"}
+        #                     }), 400
+            
         # Check if the username or email already exists
         if User.query.filter_by(email=email).first():
             return jsonify({"error": "Another account is using this email"}), 400
         if User.query.filter_by(username=username).first():
-            return jsonify({"error": "This username is not available please try another"}),
+            return jsonify({"error": "This username is not available please try another"}),400
 
         # validate the data
         user_data, errors = validate_and_load(self.signup_schema, data)
@@ -76,16 +82,16 @@ class Signup(MethodView):
 
         # # Generate the verification URL
         verify_url = url_for('auth.verify_email', token=token, _external=True)
-        current_app.logger.info(verify_url)
+        # current_app.logger.info(verify_url)
 
         # Render the email template with the verification URL and username
-        html_message = render_template(
-                'verify_email.html',
-                username=username,
-                verification_url=verify_url
-            )
-        # Send the verification email
-        send_mail(email, html_message, "Please Verify Your Email")
+        # html_message = render_template(
+        #         'verify_email.html',
+        #         username=username,
+        #         verification_url=verify_url
+        #     )
+        # # Send the verification email
+        # send_mail(email, html_message, "Please Verify Your Email")
 
         return jsonify({"message": "Verification email sent. Please check your email to complete signup."}), 200
 
@@ -304,8 +310,8 @@ class DeactivateAccount(MethodView):
         user.is_active = False
         db.session.commit()
         return jsonify({"message" : "Your account is deactivated ,you can reactivate it by login again"}),202
-
-
+    
+    
 class DeleteAccount(MethodView):
     """An Api for delete the user account"""
     decorators = [jwt_required()]
@@ -321,6 +327,3 @@ class DeleteAccount(MethodView):
         user.is_deleted = True
         db.session.commit()
         return jsonify(),204
-        
-    
-    
