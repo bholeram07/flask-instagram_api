@@ -28,7 +28,6 @@ def update_profile_pic(user, file):
     if not file:
         if current_profile_pic:
             file_key = get_image_path(current_profile_pic)
-            print(file_key)
             try:
                 s3_client.delete_object(Bucket=bucket_name, Key=file_key)
             except ClientError as e:
@@ -44,7 +43,6 @@ def update_profile_pic(user, file):
         #delete the old image of the user
         if current_profile_pic:
             file_key = get_image_path(current_profile_pic)
-            print(file_key)
             try:
                 s3_client.delete_object(Bucket=bucket_name, Key=file_key)
             except ClientError as e:

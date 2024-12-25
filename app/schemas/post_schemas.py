@@ -13,8 +13,10 @@ class PostSchema(Schema):
     user = fields.UUID(dump_only=True)
     caption = fields.Str()
     title = fields.Str()
-    image = fields.Str(required=True)
+    # is_enable_comment = fields.Boolean(required = False)
+    image_or_video = fields.Str(required=True)
     created_at =fields.DateTime(dump_only=True)
+    updated_at = fields.DateTime(dump_only=True)
     
 
     @validates("title")
@@ -33,3 +35,4 @@ class PostSchema(Schema):
 class UpdatePostSchema(Schema):
     title = fields.Str(validate=validate.Length(min=1), required=False)
     caption = fields.Str(validate=validate.Length(min=1), required=False)
+    is_enable_comment = fields.Boolean(required=False)

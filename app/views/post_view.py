@@ -12,11 +12,12 @@ from app.schemas.post_schemas import PostSchema, UpdatePostSchema
 from app.models.post import Post
 from app.models.user import User
 from app.utils.validation import validate_and_load
-from app.utils.save_image import save_image
+from app.utils.upload_image_or_video import PostImageVideo
 from app.pagination_response import paginate_and_serialize
 from datetime import datetime
 import os
 from uuid import UUID
+
 
 
 class PostApi(MethodView):
@@ -33,20 +34,24 @@ class PostApi(MethodView):
         The image is saved in the local folder if provided and valid.
         
         """
-        image = request.files.get("image")
-        if image:
-            image = save_image(image)
-        else:
-            return ({"error" : "Please Provide image for post"}),400
-        
+       
         post_data = request.form
-    
         post = Post(
             title=post_data.get("title"),
             caption=post_data.get("caption"),
-            image=image,
             user=self.current_user_id,
         )
+        file = request.files
+        if file:
+            image_or_video = file.get("video_or_image")
+            if image_or_video:
+                post_image_video_obj = PostImageVideo(post, image_or_video, self.current_user_id)
+                post_image_video_obj.upload_image_or_video()
+            else:
+                return ({"error": "Please Provide image for post"}), 400
+        else:
+            return ({"error": "Please Provide image or video for post"}), 400
+
         db.session.add(post)
         db.session.commit()
         return jsonify(self.post_schema.dump(post)), 201
@@ -63,55 +68,52 @@ class PostApi(MethodView):
         post = Post.query.filter_by(user= self.current_user_id,id=post_id, is_deleted=False).first()
         if not post:
             return jsonify({"error": "Post not exist"}), 404
-
-        data = request.json 
-    
+        #get the data
+        data = request.form or request.json
+        file = request.files
+        #handle and save the image in s3 and databasae
+        if file:
+            image_or_video = file.get("image_or_video")
+            if image_or_video :
+                #update the image or video on the s3 
+                try:
+                    post_image_video_obj = PostImageVideo(post, image_or_video, self.current_user_id)
+                    post_image_video_obj.update_image_or_video()
+                except Exception as e:
+                    return jsonify({"error": f"The error occured in uploading {e}"}),400
+                
         if not data:
             return jsonify({"error": "provide data to update"}), 400
-
+        #update post schema
         update_post_schema = UpdatePostSchema()
 
         # serialize and validate the json data
         updated_data, errors = validate_and_load(update_post_schema, data)
         if errors:
             return jsonify({"errors": errors}), 400
-
+         
         for key, value in updated_data.items():
             setattr(post, key, value)
 
         db.session.commit()
         return jsonify(self.post_schema.dump(post)), 202
 
-    def get(self, user_id=None, post_id=None):
+    def get(self, post_id=None):
         """
-        Retrieves posts either by a specific user or a specific post.
+        Retrieves a specific post by post id .
         """
-        if post_id:
-            if not is_valid_uuid(post_id):
-                return jsonify({"error": "Invalid UUID format"}), 400
-            
-            #get a post
-            post = Post.query.filter_by(id=post_id, is_deleted=False).first()
-            if not post:
-                return jsonify({"error": "Post not found"}), 404
-
-            return jsonify(self.post_schema.dump(post)), 200
-        #takes if user_id else login user
-        query_user_id = user_id or self.current_user_id
-        query_user = User.query.get(query_user_id)
+        if not post_id:
+            return jsonify({"error" : "Please provide post id"}),400
         
-        if not query_user:
-            return jsonify({"error" : "user not exist"}),400
-        if not is_valid_uuid(query_user_id):
+        if not is_valid_uuid(post_id):
             return jsonify({"error": "Invalid UUID format"}), 400
-        
-        #fetch the post of the user
-        posts = Post.query.filter_by(user=query_user_id, is_deleted=False).all()
-        if not posts:
-            return jsonify({"error": "No posts exist"}), 404
+        #get a post
+        post = Post.query.filter_by(id=post_id, is_deleted=False).first()
+        if not post:
+            return jsonify({"error": "Post not found"}), 404
 
-        # return paginated response
-        return paginate_and_serialize(posts, self.post_schema)
+        return jsonify(self.post_schema.dump(post)), 200
+       
 
     def delete(self, post_id):
         """
@@ -124,8 +126,37 @@ class PostApi(MethodView):
         post = Post.query.filter_by(user = self.current_user_id,id=post_id, is_deleted=False).first()
         if not post:
             return jsonify({"error": "Post not found"}), 404
-
+        #delete the post_image from the s3
+        post_image_video_obj = PostImageVideo(post, post.image_or_video, self.current_user_id)
+        post_image_video_obj.delete_image_or_video()
+        #database operation
         post.is_deleted = True
         post.deleted_at = datetime.now()
         db.session.commit()
         return jsonify(), 204
+
+
+class UserPostListApi(MethodView):
+    post_schema = PostSchema()
+    decorators = [jwt_required()]
+
+    def __init__(self):
+        self.current_user_id = get_jwt_identity()
+
+    def get(self,user_id=None):
+        # takes if user_id else login user
+        query_user_id = user_id or self.current_user_id
+        query_user = User.query.get(query_user_id)
+        if not query_user:
+            return jsonify({"error": "user not exist"}), 400
+        if not is_valid_uuid(query_user_id):
+            return jsonify({"error": "Invalid UUID format"}), 400
+
+        # fetch the post of the user
+        posts = Post.query.filter_by(
+            user=query_user_id, is_deleted=False).all()
+        if not posts:
+            return jsonify({"error": "No posts exist"}), 404
+
+        # return paginated response
+        return paginate_and_serialize(posts, self.post_schema)

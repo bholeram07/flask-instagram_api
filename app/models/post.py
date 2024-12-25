@@ -1,5 +1,6 @@
 from app.extensions import db
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
 import uuid
 import datetime
 from sqlalchemy import func
@@ -15,9 +16,14 @@ class Post(BaseModel,db.Model):
     user = db.Column(UUID(as_uuid=True), db.ForeignKey("user.id", ondelete="CASCADE"))
     title = db.Column(db.String(40), nullable=True)
     caption = db.Column(db.Text, nullable=True)
-    image = db.Column(db.String(255), nullable=True)
+    image_or_video = db.Column(db.String(255), nullable=True)
+    is_enable_comment = db.Column(db.Boolean, default=True)
     is_deleted = db.Column(db.Boolean, default=False)
     deleted_at = db.Column(db.DateTime, nullable=True)
+    
+    #relationships
+    likes = relationship("Like", backref="post",lazy = "dynamic")
+    comments = relationship("Comment" , backref="post", lazy = "dynamic")
 
     def __str__(self):
         return f"{self.content} by {self.user}"

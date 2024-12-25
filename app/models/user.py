@@ -1,5 +1,6 @@
 from app.extensions import db
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
 from sqlalchemy import func
 import uuid
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -23,8 +24,13 @@ class User(BaseModel,db.Model):
     email = db.Column(db.String(120), nullable=False, unique=True)
     password = db.Column(db.String(255), nullable=False)
     username_change_count = db.Column(db.Integer)
-    # A list to store the timestamp of the change username
     username_change_timestamp = db.Column(db.DateTime(timezone=True), onupdate=datetime.now())
+    
+    #relationships
+    posts = relationship("Post", backref="user",lazy="dynamic")
+    comments = relationship("Comment", backref="user", lazy= "dynamic")
+    likes = relationship("Like",backref="user",lazy="dynamic")
+    
 
     following = db.relationship(
         "Follow",
