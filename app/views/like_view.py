@@ -53,7 +53,7 @@ class LikeAPi(MethodView):
         post_data = {
             "id": post.id,
             "title": post.title,
-            "image": post.image
+           
         }
         like_data = self.like_schema.dump(like)
         

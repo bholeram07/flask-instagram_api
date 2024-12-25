@@ -41,6 +41,10 @@ class CommentApi(MethodView):
         post = Post.query.filter_by(id=post_id, is_deleted=False).first()
         if not post:
             return jsonify({"error": "Post does not exist"}), 404
+        if post.is_enable_comment == False:
+            return jsonify({"error": "Post owner diable the comment on this post"}), 404
+            
+            
 
         comment_data, error = validate_and_load(self.comment_schema, data)
 

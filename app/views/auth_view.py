@@ -3,7 +3,7 @@ from flask import Blueprint, jsonify, request, current_app, render_template
 from app.models.user import db, User
 from app.models.follower import Follow
 from app.models.post import Post
-from app.utils.allowed_file import allowed_file
+
 from flask_restful import MethodView
 from flask import Flask, jsonify
 from flask import url_for
@@ -35,7 +35,6 @@ from datetime import datetime, timedelta
 from app.utils.tasks import send_mail,send_location_mail
 from app.uuid_validator import is_valid_uuid
 from app.utils.validation import validate_and_load
-from app.utils.save_image import save_image
 import os
 from app.utils.validation import validate_and_load
 

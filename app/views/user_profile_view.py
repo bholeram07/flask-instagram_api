@@ -12,7 +12,6 @@ from config import Config
 import boto3
 import secrets
 from flask_restful import MethodView
-from app.utils.allowed_file import allowed_file
 from app.models.post import Post
 from app.models.follower import Follow
 from app.models.user import db, User

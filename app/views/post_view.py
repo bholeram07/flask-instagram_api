@@ -5,7 +5,6 @@ from marshmallow import ValidationError
 from werkzeug.utils import secure_filename
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.extensions import db
-from app.utils.allowed_file import allowed_file
 from app.custom_pagination import CustomPagination
 from app.uuid_validator import is_valid_uuid
 from app.schemas.post_schemas import PostSchema, UpdatePostSchema
@@ -20,13 +19,14 @@ from uuid import UUID
 
 
 
+
 class PostApi(MethodView):
     post_schema = PostSchema()
     decorators = [jwt_required()]
 
     def __init__(self):
         self.current_user_id = get_jwt_identity()
-
+    
     def post(self):
         """
         Creates a new post. Requires user authentication.
@@ -42,6 +42,7 @@ class PostApi(MethodView):
             user=self.current_user_id,
         )
         file = request.files
+        print(file)
         if file:
             image_or_video = file.get("video_or_image")
             if image_or_video:
@@ -55,7 +56,7 @@ class PostApi(MethodView):
         db.session.add(post)
         db.session.commit()
         return jsonify(self.post_schema.dump(post)), 201
-
+    
     def patch(self, post_id):
         """
         Updates an existing post. Only the post owner can update it.
@@ -97,8 +98,8 @@ class PostApi(MethodView):
 
         db.session.commit()
         return jsonify(self.post_schema.dump(post)), 202
-
-    def get(self, post_id=None):
+    # @permission_required("post_id")
+    def get(self, post_id):
         """
         Retrieves a specific post by post id .
         """
@@ -153,10 +154,13 @@ class UserPostListApi(MethodView):
             return jsonify({"error": "Invalid UUID format"}), 400
 
         # fetch the post of the user
-        posts = Post.query.filter_by(
-            user=query_user_id, is_deleted=False).all()
-        if not posts:
-            return jsonify({"error": "No posts exist"}), 404
-
-        # return paginated response
-        return paginate_and_serialize(posts, self.post_schema)
+        page_number = request.args.get('page', default=1, type=int)
+        page_size = request.args.get('size', default=5, type=int)
+        # Calculate offset
+        offset = (page_number - 1) * page_size
+        
+        # Query database with limit and offset
+        posts = Post.query.filter_by(user=query_user_id, is_deleted=False).offset(
+            offset).limit(page_size).all()
+        
+        return paginate_and_serialize(posts, self.post_schema,page_number,page_size)

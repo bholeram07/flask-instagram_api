@@ -13,7 +13,7 @@ class PostSchema(Schema):
     user = fields.UUID(dump_only=True)
     caption = fields.Str()
     title = fields.Str()
-    # is_enable_comment = fields.Boolean(required = False)
+    is_enable_comment = fields.Boolean(required = False)
     image_or_video = fields.Str(required=True)
     created_at =fields.DateTime(dump_only=True)
     updated_at = fields.DateTime(dump_only=True)

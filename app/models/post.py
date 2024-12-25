@@ -22,8 +22,8 @@ class Post(BaseModel,db.Model):
     deleted_at = db.Column(db.DateTime, nullable=True)
     
     #relationships
-    likes = relationship("Like", backref="post",lazy = "dynamic")
-    comments = relationship("Comment" , backref="post", lazy = "dynamic")
+    # likes = relationship("Like", backref="post",lazy = "dynamic")
+    # comments = relationship("Comment" , backref="post", lazy = "dynamic")
 
     def __str__(self):
         return f"{self.content} by {self.user}"
