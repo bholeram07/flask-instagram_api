@@ -16,7 +16,7 @@ class Comment(BaseModel,db.Model):
     user_id = db.Column(UUID(as_uuid=True), db.ForeignKey("user.id",ondelete = "CASCADE"))
     post_id = db.Column(UUID(as_uuid=True), db.ForeignKey("post.id",ondelete = "CASCADE"))
     content = db.Column(db.Text, nullable=False)  # size
-    parent = db.Column(UUID(as_uuid=True),default = uuid.uuid4, nullable = True )
+    parent = db.Column(UUID(as_uuid=True),default = uuid.uuid4, nullable = True)
     is_deleted = db.Column(db.Boolean, default=False)
     deleted_at = db.Column(db.DateTime, nullable=True)
 
