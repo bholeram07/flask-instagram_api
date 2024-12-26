@@ -1,4 +1,5 @@
 import uuid
+from flask import jsonify
 
 def is_valid_uuid(value):
     try:
