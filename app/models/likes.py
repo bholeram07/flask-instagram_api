@@ -13,8 +13,10 @@ class Like(BaseModel,db.Model):
     """
     __tablename__ = "like"
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user = db.Column(UUID(as_uuid=True), db.ForeignKey("user.id",ondelete = "CASCADE"))
-    post = db.Column(UUID(as_uuid=True), db.ForeignKey("post.id",ondelete = "CASCADE"))
+    user = db.Column(UUID(as_uuid=True), db.ForeignKey("user.id",ondelete = "CASCADE"),nullable = False)
+    post = db.Column(UUID(as_uuid=True), db.ForeignKey("post.id",ondelete = "CASCADE"),nullable = True)
+    story = db.Column(UUID(as_uuid=True), db.ForeignKey("story.id",ondelete = "CASCADE"),nullable = True)
+    comment = db.Column(UUID(as_uuid=True), db.ForeignKey("comment.id",ondelete = "CASCADE"), nullable = True)
     is_deleted = db.Column(db.Boolean, default=False)
     deleted_at = db.Column(db.DateTime, nullable=True)
 
