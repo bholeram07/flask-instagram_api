@@ -7,6 +7,7 @@ from app.pagination_response import paginate_and_serialize
 from app.models.user import User
 from app.models.likes import Like
 from app.models.comment import Comment
+
 class UserActivity(MethodView):
     decorators = [jwt_required()]
     like_schema = LikeSchema()

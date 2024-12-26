@@ -42,7 +42,7 @@ class PostApi(MethodView):
             user=self.current_user_id,
         )
         file = request.files
-        print(file)
+      
         if file:
             image_or_video = file.get("video_or_image")
             if image_or_video:

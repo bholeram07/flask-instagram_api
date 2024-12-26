@@ -2,7 +2,8 @@ from flask import request, jsonify
 from app.custom_pagination import CustomPagination
 
 
-def paginate_and_serialize(queryset,schema,page,per_page,extra_fields = None):
+
+def paginate_and_serialize(queryset,page,per_page,schema = None,extra_fields = None):
     """
     Paginate and serialize a queryset.
     
@@ -12,7 +13,8 @@ def paginate_and_serialize(queryset,schema,page,per_page,extra_fields = None):
     """
     paginator = CustomPagination(queryset, page, per_page)
     paginated_data = paginator.paginate()
-    paginated_data["items"] = schema.dump(paginated_data["items"], many=True)
+    if schema:
+        paginated_data["items"] = schema.dump(paginated_data["items"], many=True)
     
     #if extra field is provided in the response
     if extra_fields:

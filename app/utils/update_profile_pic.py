@@ -23,7 +23,7 @@ def update_profile_pic(user, file):
     current_profile_pic = user.profile_pic
     bucket_name = current_app.config['S3_BUCKET_NAME']
     s3_client = get_s3_client()
-    print(file)
+
     # Case 1: User submitted an empty profile picture (delete existing)
     if not file:
         if current_profile_pic:
