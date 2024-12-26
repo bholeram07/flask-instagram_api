@@ -13,6 +13,7 @@ def paginate_and_serialize(queryset,page,per_page,schema = None,extra_fields = N
     """
     paginator = CustomPagination(queryset, page, per_page)
     paginated_data = paginator.paginate()
+
     if schema:
         paginated_data["items"] = schema.dump(paginated_data["items"], many=True)
     
@@ -20,4 +21,6 @@ def paginate_and_serialize(queryset,page,per_page,schema = None,extra_fields = N
     if extra_fields:
         paginated_data.update(extra_fields)
 
-    return jsonify(paginated_data), 200
+        
+
+    return jsonify(paginated_data)

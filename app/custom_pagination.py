@@ -22,7 +22,9 @@ class CustomPagination:
         if isinstance(self.query, list):
             # If it's a list, slice it
             items = self.query[offset:offset + limit]
+            # print(item)
             total_items = len(self.query)
+            
 
         # Calculate total pages
         total_pages = (total_items + self.per_page - 1) // self.per_page
@@ -36,19 +38,3 @@ class CustomPagination:
             "total_pages": total_pages,
         }
 
-        # #total_item = 8
-        # total_items = len(self.query)
-        # #total_pages=(8+3-1)//3
-        # #total pages =3
-        # items = paginated_query.all()  # Fetch the actual items
-
-        # # Total count of items in the query (without pagination)
-        # total_items = self.query.count()
-        # total_pages = (total_items + self.per_page - 1) // self.per_page
-        # return {
-        #     "items": items,
-        #     "current_page": self.page,
-        #     "per_page": self.per_page,
-        #     "total_items": total_items,
-        #     "total_pages": total_pages,
-        # }
