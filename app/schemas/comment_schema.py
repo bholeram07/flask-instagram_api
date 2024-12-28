@@ -7,6 +7,7 @@ class CommentSchema(Schema):
     post_id = fields.UUID(dump_only=True)
     content = fields.String(required=True)
 
+
     class Meta:
         unknown = EXCLUDE
 

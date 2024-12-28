@@ -69,6 +69,12 @@ class LoginSchema(Schema):
 class UpdatePasswordSchema(Schema):
     current_password = fields.Str(required=True)
     new_password = fields.Str(required=True)
+    
+    @validates("current_password")
+    def validate_current_password(self,current_password):
+        if not current_password.strip():
+           raise ValidationError("Current password should not be blank.")
+        
     @validates("new_password")
     def validate_password(self, new_password):
         if not new_password.strip():
