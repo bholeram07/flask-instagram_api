@@ -22,8 +22,12 @@ class Post(BaseModel,db.Model):
     deleted_at = db.Column(db.DateTime, nullable=True)
     
     #relationships
-    # likes = relationship("Like", backref="post",lazy = "dynamic")
-    # comments = relationship("Comment" , backref="post", lazy = "dynamic")
+    likes = relationship("Like", backref="post_likes",lazy = "dynamic")
+    comments = relationship("Comment" , backref="post_commment",lazy= "dynamic")
+    # comments = relationship("Comment" , backref="commented_post", lazy = "dynamic")
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
     def __str__(self):
         return f"{self.content} by {self.user}"
