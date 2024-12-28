@@ -44,10 +44,8 @@ class Signup(MethodView):
     signup_schema = SignupSchema()
 
     def post(self):
-        print("i am in signup")
         # get the data
         data = request.get_json()
-        print(data)
         email = data.get('email')
         username = data.get('username')
         password = data.get('password')
@@ -167,19 +165,17 @@ class UpdatePassword(MethodView):
         # get the data
         data = request.json
         # validate and serialize the data
+        user = User.query.get(user_id)
+        if not user.check_password(data["current_password"]):
+            return jsonify({"error": "Invalid credentials"}), 401
         user_data, errors = validate_and_load(
             self.update_password_schema, data)
         if errors:
             return jsonify({"errors" : errors}),400
         current_password = data["current_password"]
         new_password = data["new_password"]
-        # get the user object by user_id
-        user = User.query.get(user_id)
         if not user:
             return jsonify({"error": "User Not found"}), 404
-        # check the password
-        if not user.check_password(data["current_password"]):
-            return jsonify({"error": "Invalid credentials"}), 401
         # check with current password
         if current_password == new_password:
             return jsonify({"error": "old and new password not be same"}), 400
@@ -202,11 +198,9 @@ class Logout(MethodView):
     decorators = [jwt_required()]
 
     def delete(self):
-        # get the jwt id
         jti = get_jwt()["jti"]
         # set the expiration time of the jwt token
         expires_in = get_jwt()["exp"] - get_jwt()["iat"]
-        # get the redis_client
         redis_client = current_app.config["REDIS_CLIENT"]
         # store the token in the redis
         redis_client.setex(jti, expires_in, "blacklisted")
@@ -222,7 +216,7 @@ class ResetPasswordSendMail(MethodView):
         if not email:
             return jsonify({"error": "Invalid data"}), 400
         # get the user object by email
-        user = User.query.filter_by(email=email).first()
+        user = User.query.filter_by(email=email,is_verified = True, is_active = True, is_deleted = False).first()
         if not user:
             return jsonify({"error": "Not registered"}), 400
         # generate the token
@@ -233,7 +227,7 @@ class ResetPasswordSendMail(MethodView):
         # store the token in the redis with expiration time of 10 minutes
         redis_client.setex(redis_key, timedelta(minutes=10), str(user.id))
         # generate the reset link
-        reset_link = f"http://127.0.0.1:5000/api/reset-password/{token}/"
+        reset_link = f"{request.host_url}api/reset-password/{token}/"
         current_app.logger.info(reset_link)
         # html message for send mail to user email
         # html_message = render_template(
@@ -258,7 +252,7 @@ class ResetPassword(MethodView):
         new_password = data.get("new_password")
         confirm_password = data.get("confirm_password")
         # validate and loads the data
-        user_data = validate_and_load(self.reset_password_schema,data)
+        user_data,errors= validate_and_load(self.reset_password_schema,data)
         if errors:
             return jsonify({"errors": errors})
         # check the password matches with the confirm-password

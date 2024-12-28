@@ -6,6 +6,7 @@ from app.models.user import User
 from app.models.post import Post
 from app.models.comment import Comment
 from app.schemas.comment_schema import CommentSchema
+from app.schemas.comment_reply_schema import ReplyCommentSchema
 from app.custom_pagination import CustomPagination
 from app.extensions import db
 from app.uuid_validator import is_valid_uuid
@@ -14,12 +15,13 @@ from sqlalchemy import desc
 from app.pagination_response import paginate_and_serialize
 from uuid import UUID
 from datetime import datetime
-
+from sqlalchemy import func
+from app.response.comment_response import comment_respose
 
 class CommentApi(MethodView):
     decorators = [jwt_required()]
     comment_schema = CommentSchema()
-
+    reply_comment_schema = ReplyCommentSchema()
     def __init__(self):
         self.current_user_id = get_jwt_identity()
 
@@ -30,62 +32,100 @@ class CommentApi(MethodView):
         """
         data = request.json
         post_id = data.get("post_id")
-
-        if not post_id:
-            return jsonify({"error": "Please provide post id"}), 400
-
-        if not is_valid_uuid(post_id):
-            return jsonify({"error": "Invalid uuid format"}), 400
-
-        # fetch the post through post id
-        post = Post.query.filter_by(id=post_id, is_deleted=False).first()
-        if not post:
-            return jsonify({"error": "Post does not exist"}), 404
-        if post.is_enable_comment == False:
-            return jsonify({"error": "Post owner diable the comment on this post"}), 404
-        
-        comment_data, error = validate_and_load(self.comment_schema, data)
-
+        parent_comment_id = data.get("comment_id")
         content = data.get("content")
-        comment = Comment(
-            post_id=post_id, user_id=self.current_user_id, content=content)
-        db.session.add(comment)
-        db.session.commit()
-        return jsonify(self.comment_schema.dump(comment)), 201
+        # fetch the post through post id
+        if post_id:
+            if not is_valid_uuid(post_id):
+                return jsonify({"error": "Invalid uuid format"}), 400
+            post = Post.query.filter_by(id=post_id, is_deleted=False).first()
+            if not post:
+                return jsonify({"error": "Post does not exist"}), 404
+            if post.is_enable_comment == False:
+                return jsonify({"error": "Post owner diable the comment on this post"}), 404
+
+            comment_data, error = validate_and_load(self.comment_schema, data)
+
+           
+            comment = Comment(
+                post_id=post_id, user_id=self.current_user_id, content=content)
+            db.session.add(comment)
+            db.session.commit()
+            return jsonify(self.comment_schema.dump(comment)), 201
+        
+        if parent_comment_id:
+            if not is_valid_uuid(parent_comment_id):
+                return jsonify({"error":"Not a valid uuid format"}),400
+            comment_data, errors = validate_and_load(
+                self.reply_comment_schema, data)
+            if errors:
+                return jsonify({"errors": errors}), 400
+            comment = Comment.query.filter_by(
+                id=parent_comment_id, is_deleted=False).first()
+            if not comment:
+                return jsonify({"error": "This comment not exist"}), 404
+            if not content:
+                return jsonify({"error": "Provide content for reply"}), 400
+            reply_comment = Comment(
+                parent=parent_comment_id,
+                content=content,
+                user_id=self.current_user_id
+            )
+            db.session.add(reply_comment)
+            db.session.commit()
+            response = {
+                "id": reply_comment.id,
+                "content": "This is the reply on the comment",
+                "replied_by": reply_comment.user_id,
+                "parent_comment": {
+                    "id": comment.id,
+                    "content": comment.content
+                },
+
+            }
+            return jsonify(response),200
+            
+
 
     def get(self, post_id=None, comment_id=None):
         """
-        Retrieves comment on a specific post or by comment id, everyone can perform this operation
+        Retrieves comments on a specific post or by comment ID, with reply counts for each comment.
         """
         if comment_id:
             if not is_valid_uuid(comment_id):
                 return jsonify({"error": "Invalid uuid format"}), 400
-            comment = Comment.query.filter_by(id=comment_id, is_deleted=False).order_by(
-                desc(Comment.created_at)).first()
+            comment = Comment.query.filter_by(
+                id=comment_id, is_deleted=False).first()
             if not comment:
                 return jsonify({"errors": "Comment not exist"}), 404
-            return jsonify(self.comment_schema.dump(comment))
+            # Add reply_count to a single comment
+            reply_count = Comment.query.filter_by(
+                parent=comment_id, is_deleted=False).count()
+            comment_data = self.comment_schema.dump(comment)
+            comment_data["reply_count"] = reply_count
+            return jsonify(comment_data), 200
 
         if post_id:
             if not is_valid_uuid(post_id):
                 return jsonify({"error": "Invalid uuid format"}), 400
-
             post = Post.query.filter_by(id=post_id, is_deleted=False).first()
-
             if not post:
                 return jsonify({"error": "Post does not exist"}), 404
 
+            page_number = request.args.get('page', default=1, type=int)
+            page_size = request.args.get('size', default=5, type=int)
+            offset = (page_number - 1) * page_size
+
+            # Fetch paginated comments
             comments = Comment.query.filter_by(
                 post_id=post_id, is_deleted=False
-            ).order_by(desc(Comment.created_at)).all()
+            ).offset(offset).limit(page_size).all()
+    
+            serialized_comments = comment_respose(comments,self.comment_schema)
+            return paginate_and_serialize(serialized_comments,page_number,page_size)
 
-            if not comments:
-                return jsonify({"error": "No comments found for this post"}), 404
-
-            # pagination
-
-            return paginate_and_serialize(comments , self.comment_schema)
         return jsonify({"error": "Post id is required"}), 400
+
 
     def put(self, comment_id):
         ''' 

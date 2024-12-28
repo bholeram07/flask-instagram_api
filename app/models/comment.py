@@ -4,6 +4,7 @@ import uuid
 from sqlalchemy import func
 from app.models.user import User
 from app.models.post import Post
+from app.models.likes import Like
 from app.models.base import BaseModel
 
 
@@ -19,7 +20,9 @@ class Comment(BaseModel,db.Model):
     parent = db.Column(UUID(as_uuid=True),default = uuid.uuid4, nullable = True)
     is_deleted = db.Column(db.Boolean, default=False)
     deleted_at = db.Column(db.DateTime, nullable=True)
-
-
+    #relationships
+    likes = db.relationship('Like', backref='liked_comment', lazy=True)
+    post = db.relationship("Post", backref = "comment_on_post", lazy = True)
+  
     def __str__(self):
         return f"{self.content} by {self.user_id}"

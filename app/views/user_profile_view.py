@@ -36,8 +36,9 @@ class UserProfile(MethodView):
         """
         if user_id:
             # check the validation of the user_id
-            is_valid_uuid(user_id)
-            user = User.query.get(user_id)
+            if not is_valid_uuid(user_id):
+                return jsonify({"error": "Invalid UUid format"}),400
+            user = User.query.filter_by(id = user_id,is_active =True, is_deleted = False).first()
             if not user:
                 return jsonify({"error": "User not found"}), 404
         else:

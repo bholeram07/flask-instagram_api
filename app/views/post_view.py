@@ -16,6 +16,7 @@ from app.pagination_response import paginate_and_serialize
 from datetime import datetime
 import os
 from uuid import UUID
+from app.response.post_response import post_response
 
 
 
@@ -147,7 +148,7 @@ class UserPostListApi(MethodView):
     def get(self,user_id=None):
         # takes if user_id else login user
         query_user_id = user_id or self.current_user_id
-        query_user = User.query.get(query_user_id)
+        query_user = User.query.filter_by(id = query_user_id, is_active = True, is_deleted = False).first()
         if not query_user:
             return jsonify({"error": "user not exist"}), 400
         if not is_valid_uuid(query_user_id):
@@ -162,5 +163,7 @@ class UserPostListApi(MethodView):
         # Query database with limit and offset
         posts = Post.query.filter_by(user=query_user_id, is_deleted=False).offset(
             offset).limit(page_size).all()
+       
+        serialized_post = post_response(posts,self.post_schema)
         
-        return paginate_and_serialize(posts, self.post_schema,page_number,page_size)
+        return paginate_and_serialize(serialized_post,page_number,page_size)

@@ -120,7 +120,7 @@ class CommentLikeApi(MethodView):
         An function to create the like on the comment
         """
         if not is_valid_uuid(comment_id):
-            return jsonify({"error": "Invalid UUID format"})
+            return jsonify({"error": "Invalid UUID format"}),400
         comment = Comment.query.filter_by(id = comment_id,is_deleted = False).first()
         if not comment:
             return jsonify({"error" : "Comment not exist"}),404
