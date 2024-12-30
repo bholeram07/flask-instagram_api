@@ -1,5 +1,6 @@
 from flask import Blueprint
 from app.views.follower_views import FollowApi,FollowingApi
+from app.views.follow_request_view import FollowrequestAccept,FollowRequestWithdraw
 
 follower_api = Blueprint("follower_api", __name__,url_prefix="/users")
 
@@ -23,4 +24,8 @@ follower_api.add_url_rule(
 follower_api.add_url_rule(
     "/<user_id>/following/", view_func=FollowingApi.as_view("user_following_list"), methods=["GET"]
 )
-
+follower_api.add_url_rule(
+    "/follow-request/",
+    view_func=FollowrequestAccept.as_view("follow_request_accept"),
+    methods=["POST"]
+)
