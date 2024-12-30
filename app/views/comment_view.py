@@ -17,9 +17,9 @@ from uuid import UUID
 from datetime import datetime
 from sqlalchemy import func
 from app.response.comment_response import comment_respose
-
+from app.permissions.permission import Permission
 class CommentApi(MethodView):
-    decorators = [jwt_required()]
+    decorators = [jwt_required(),Permission.user_permission_required]
     comment_schema = CommentSchema()
     reply_comment_schema = ReplyCommentSchema()
     def __init__(self):
