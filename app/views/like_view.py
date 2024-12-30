@@ -12,11 +12,12 @@ from app.extensions import db
 from app.custom_pagination import CustomPagination
 from app.pagination_response import paginate_and_serialize
 from sqlalchemy import desc
+from app.permissions.permission import Permission
 
 
 class PostLikeAPi(MethodView):
     like_schema = LikeSchema()
-    decorators = [jwt_required()]
+    decorators = [jwt_required(),Permission.user_permission_required]
 
     def __init__(self):
         self.current_user_id = get_jwt_identity()

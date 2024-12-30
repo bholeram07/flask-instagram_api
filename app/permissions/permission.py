@@ -37,20 +37,23 @@ class Permission:
     @staticmethod
     def user_permission_required(view_func):
         """Decorator to enforce user access permissions."""
-        print("here in permission class")
 
         @wraps(view_func)
         def wrapped_view(*args, **kwargs):
             # Assuming user_id is passed in the route
             #get the id's from the request data or the routes
-            data = request.json
-            user_id = kwargs.get('user_id')
+            data = {}
+            if request.is_json:
+                data = request.get_json() or {}
+            user_id = data.get('user_id') or kwargs.get('user_id')
             post_id = data.get('post_id') or kwargs.get('post_id')
             comment_id = data.get('comment_id') or kwargs.get('comment_id')
             story_id = data.get('story_id') or kwargs.get("story_id")
 
             target_user = None
             #if post_id is taken
+            if user_id:
+                target_user = User.query.get(user_id)
             if post_id:
                 post = Post.query.filter_by(
                     id=post_id, is_deleted=False).first()
@@ -67,7 +70,6 @@ class Permission:
                     return jsonify({"error": "comment not exist"}), 404
                 #pass the user of the comment
                 target_user = User.query.get(comment.user_id)
-            #if the user not found
             if not target_user:
                 return jsonify({"error": "User not found"}), 404
             #permission denied             

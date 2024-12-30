@@ -18,7 +18,7 @@ import os
 from uuid import UUID
 from app.response.post_response import post_response
 from app.permissions.permission import Permission
-
+from app.utils.get_validate_user import get_user,get_post
 
 class PostApi(MethodView):
     post_schema = PostSchema()
@@ -69,9 +69,8 @@ class PostApi(MethodView):
             return jsonify({"error": "Invalid or missing post ID"}), 400
         
         # Check if the user is owner or not
-        post = Post.query.filter_by(user= self.current_user_id,id=post_id, is_deleted=False).first()
-        if not post:
-            return jsonify({"error": "Post not exist"}), 404
+        post = get_post(post_id)
+
         #get the data
         data = request.form or request.json
         file = request.files
@@ -108,16 +107,10 @@ class PostApi(MethodView):
         """
         Retrieves a specific post by post id .
         """
-        if not post_id:
+        if not post_id or not is_valid_uuid(post_id):
             return jsonify({"error" : "Please provide post id"}),400
-        
-        if not is_valid_uuid(post_id):
-            return jsonify({"error": "Invalid UUID format"}), 400
         #get a post
-        post = Post.query.filter_by(id=post_id, is_deleted=False).first()
-        if not post:
-            return jsonify({"error": "Post not found"}), 404
-
+        post = get_post(post_id)
         return jsonify(self.post_schema.dump(post)), 200
        
 
@@ -152,11 +145,7 @@ class UserPostListApi(MethodView):
     def get(self,user_id=None):
         # takes if user_id else login user
         query_user_id = user_id or self.current_user_id
-        query_user = User.query.filter_by(id = query_user_id, is_active = True, is_deleted = False).first()
-        if not query_user:
-            return jsonify({"error": "user not exist"}), 400
-        if not is_valid_uuid(query_user_id):
-            return jsonify({"error": "Invalid UUID format"}), 400
+        query_user = get_user(query_user_id)
 
         # fetch the post of the user
         page_number = request.args.get('page', default=1, type=int)

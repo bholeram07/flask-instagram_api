@@ -14,6 +14,7 @@ import boto3
 from config import Config
 from werkzeug.utils import secure_filename
 from app.generate_token import generate_verification_token
+from app.utils.get_validate_user import get_user
 
 import datetime
 from app.schemas.user_schema import (
@@ -79,7 +80,7 @@ class Signup(MethodView):
 
         # # Generate the verification URL
         verify_url = url_for('auth.verify_email', token=token, _external=True)
-        # current_app.logger.info(verify_url)
+        current_app.logger.info(verify_url)
 
         # Render the email template with the verification URL and username
         # html_message = render_template(
@@ -165,7 +166,7 @@ class UpdatePassword(MethodView):
         # get the data
         data = request.json
         # validate and serialize the data
-        user = User.query.get(user_id)
+        user = get_user(user_id)
         if not user.check_password(data["current_password"]):
             return jsonify({"error": "Invalid credentials"}), 401
         user_data, errors = validate_and_load(
@@ -214,7 +215,7 @@ class ResetPasswordSendMail(MethodView):
         data = request.json
         email = data.get("email")
         if not email:
-            return jsonify({"error": "Invalid data"}), 400
+            return jsonify({"error": "Invalid credentials"}), 400
         # get the user object by email
         user = User.query.filter_by(email=email,is_verified = True, is_active = True, is_deleted = False).first()
         if not user:
@@ -267,7 +268,7 @@ class ResetPassword(MethodView):
         if not user_id:
             return jsonify({"error": "Invalid or expired token"}), 400
         # get the user object from the user id
-        user = User.query.get(user_id)
+        user = get_user(user_id)
         if not user:
             return jsonify({"error": "User not found"}), 404
         # check the passwoed
@@ -293,9 +294,7 @@ class DeactivateAccount(MethodView):
             return jsonify({"error":{"password" : "Missing required field"} }),400
         current_user_id = get_jwt_identity()
         #get the user object
-        user = User.query.filter_by(id=current_user_id, is_active=True).first()
-        if not user :
-            return jsonify({"error":"User not found"}),400
+        user = get_user(current_user_id)
         #check the password
         if not user.check_password(password):
             return jsonify({"error":"Invalid Credentials"}),400
@@ -313,9 +312,7 @@ class DeleteAccount(MethodView):
         #get the user_id by the jwt token
         current_user_id = get_jwt_identity()
         #get the user
-        user = User.query.filter_by(id = current_user_id,is_active = True, is_deleted = False).first()
-        if not user:
-            return jsonify({"error" : "User not exist"}),404
+        user = get_user(current_user_id)
         #database opearation of delete
         user.is_deleted = True
         db.session.commit()

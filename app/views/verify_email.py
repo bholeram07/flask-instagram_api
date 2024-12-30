@@ -7,6 +7,7 @@ from flask import Blueprint, request, jsonify, current_app
 from flask import Blueprint, jsonify, current_app
 from itsdangerous import URLSafeTimedSerializer, BadTimeSignature, SignatureExpired
 from app.models.user import User
+from app.utils.get_validate_user import get_user
 
 
 auth = Blueprint('auth', __name__)
