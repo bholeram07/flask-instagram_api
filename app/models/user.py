@@ -55,6 +55,18 @@ class User(BaseModel,db.Model):
     def set_password(self, raw_password):
         self.password = generate_password_hash(raw_password)  
         db.session.commit()
+        
+
+    def is_follower(self, target_user):
+        """
+        Check if this user is following the target_user.
+        :param target_user: The User instance to check against.
+        :return: Boolean indicating if self is following target_user.
+        """
+        return (
+            self.following.filter_by(following_id=target_user.id).count() > 0
+        )
+        
 
 
     def to_dict(self):

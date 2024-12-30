@@ -21,8 +21,8 @@ class Comment(BaseModel,db.Model):
     is_deleted = db.Column(db.Boolean, default=False)
     deleted_at = db.Column(db.DateTime, nullable=True)
     #relationships
-    likes = db.relationship('Like', backref='liked_comment', lazy=True)
-    post = db.relationship("Post", backref = "comment_on_post", lazy = True)
+    likes = db.relationship('Like', backref='liked_comment', lazy=True,overlaps="post")
+    post = db.relationship("Post", backref = "comment_on_post", lazy = True, overlaps="likes")
   
     def __str__(self):
         return f"{self.content} by {self.user_id}"
