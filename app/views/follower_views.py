@@ -5,7 +5,7 @@ from app.extensions import db
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.models.follower import Follow
 from app.models.user import User
-
+from app.models.follow_request import FollowRequest
 from app.uuid_validator import is_valid_uuid
 
 
@@ -74,11 +74,17 @@ class FollowApi(MethodView):
             return jsonify({"error": "Invalid uuid format"}), 400
         
         #fetch the user which user want to follow
-        user_to_follow = User.query.filter_by(id=user_id).first()
+        user_to_follow = User.query.filter_by(id=user_id,is_verified = True,is_deleted = False,is_active = True).first()
         if not user_to_follow:
             return jsonify({"error": "User does not exist"}), 400
         if self.current_user_id == user_id:
             return jsonify({"error" : "You cant follow yourself"}),400
+        if user_to_follow.is_private:
+            follow_request = FollowRequest(follower_id = self.current_user_id,following_id = user_id)
+            db.session.add(follow_request)
+            db.session.commit()
+            return jsonify({"message": f"follow request sent to the {user_id}"}), 201
+        
         
         #check the user is follower or not of the user already
         follow_relationship = Follow.query.filter_by(
