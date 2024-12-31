@@ -1,6 +1,7 @@
 from marshmallow import validates,ValidationError,fields,Schema
 
 class StorySchema(Schema):
+    """A schema class to serialize and deserialize the story data using marshmallow"""
     id = fields.UUID(dump_only=True)
     story_owner = fields.UUID(dump_only=True)
     content = fields.String(required=True)
@@ -8,6 +9,7 @@ class StorySchema(Schema):
     
     @validates("content")
     def validate_content(self, value):
+        """A function to validate the content of the story"""
         if not isinstance(value, str):
             raise ValidationError(
                 "Invalid input type. Content must be a string.")

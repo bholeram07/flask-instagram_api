@@ -2,6 +2,7 @@ from marshmallow import Schema, ValidationError, validates, fields, EXCLUDE
 
 
 class CommentSchema(Schema):
+    """A schema to serialize and deserialize the comment data"""
     id = fields.UUID(dump_only=True)
     user_id = fields.UUID(dump_only=True)
     post_id = fields.UUID(dump_only=True)
