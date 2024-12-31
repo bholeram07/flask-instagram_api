@@ -6,15 +6,20 @@ from app.models.user import User
 import uuid
 
 class Story(BaseModel,db.Model):
+    """
+    A story model that creates a story table in the databases
+    """
     __tablename__ = "story"
     story_owner = db.Column(UUID(as_uuid=True), db.ForeignKey("user.id", ondelete="CASCADE"))
     content = db.Column(db.Text,nullable  = False)
     is_deleted = db.Column(db.Boolean, default=False)
     deleted_at = db.Column(db.DateTime(timezone=True), default=None)
     
+    #represantation method
     def __str__(self):
         return f"story {self.content} posted by {self.story_owner}"
     
+    #method to get the username of the story owner
     @staticmethod
     def get_username(story_owner):
         user = User.query.filter_by(id = story_owner).first()
