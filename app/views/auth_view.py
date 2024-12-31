@@ -1,8 +1,10 @@
+from flask_jwt_extended import get_jwt
 from datetime import timedelta
 from flask import Blueprint, jsonify, request, current_app, render_template
 from app.models.user import db, User
 from app.models.follower import Follow
 from app.models.post import Post
+from app.constraints import get_reset_password_url
 from constraints import get_reset_password_url
 from flask_restful import MethodView
 from flask import Flask, jsonify
@@ -15,6 +17,7 @@ from config import Config
 from werkzeug.utils import secure_filename
 from app.generate_token import generate_verification_token
 from app.utils.get_validate_user import get_user
+from app.utils.blacklist_jwt_token import blacklist_jwt_token
 
 import datetime
 from app.schemas.user_schema import (
@@ -165,13 +168,15 @@ class UpdatePassword(MethodView):
         # Get the user_id from the JWT token
         user_id = get_jwt_identity()
         data = request.json
-
         # Fetch user and validate current password
         user = get_user(user_id)
         if not user:
             return jsonify({"error": "User not found"}), 404
+        
+        current_password = data.get("current_password")
+        new_password = data.get("new_password")
 
-        if not user.check_password(data.get("current_password")):
+        if not user.check_password(current_password):
             return jsonify({"error": "Invalid credentials"}), 401
 
         # Validate and serialize the data
@@ -180,8 +185,6 @@ class UpdatePassword(MethodView):
         if errors:
             return jsonify({"errors": errors}), 400
 
-        current_password = data.get("current_password")
-        new_password = data.get("new_password")
         if current_password == new_password:
             return jsonify({"error": "Old and new passwords must not be the same"}), 400
 
@@ -192,10 +195,7 @@ class UpdatePassword(MethodView):
             db.session.add(user)  # Add the updated user to the session
 
             # Blacklist the current JWT
-            jti = get_jwt()["jti"]
-            expires_in = get_jwt()["exp"] - get_jwt()["iat"]
-            redis_client = current_app.config["REDIS_CLIENT"]
-            redis_client.setex(jti, expires_in, "blacklisted")
+            blacklist_jwt_token()
 
             # Commit the transaction
             db.session.commit()
@@ -214,12 +214,7 @@ class Logout(MethodView):
     decorators = [jwt_required()]
 
     def delete(self):
-        jti = get_jwt()["jti"]
-        # set the expiration time of the jwt token
-        expires_in = get_jwt()["exp"] - get_jwt()["iat"]
-        redis_client = current_app.config["REDIS_CLIENT"]
-        # store the token in the redis
-        redis_client.setex(jti, expires_in, "blacklisted")
+        blacklist_jwt_token()
         return jsonify(), 204
 
 
@@ -247,14 +242,14 @@ class ResetPasswordSendMail(MethodView):
         reset_link = get_reset_password_url(token)
         current_app.logger.info(reset_link)
         # html message for send mail to user email
-        # html_message = render_template(
-        #     "reset_password_email.html",
-        #     subject="Reset Link Password",
-        #     reset_link=reset_link,
-        #     user_name=user.username,
-        # )
-        # # send email with link
-        # send_mail(user.email, html_message, "Reset Link Password")
+        html_message = render_template(
+            "reset_password_email.html",
+            subject="Reset Link Password",
+            reset_link=reset_link,
+            user_name=user.username,
+        )
+        # send email with link
+        send_mail.delay(user.email, html_message, "Reset Link Password")
 
         return jsonify({"message": "Link sent successfully, please check your email"}), 200
 
