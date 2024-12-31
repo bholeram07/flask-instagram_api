@@ -2,6 +2,7 @@ from app.utils.s3_utils import get_s3_client
 from flask import current_app
 from botocore.exceptions import ClientError
 from app.extensions import db
+from constraints import get_s3_file_url
 
 
 def get_image_path(url):
@@ -31,9 +32,9 @@ def story_upload(file, story, user_id):
             # upload the content on s3 client
             s3_client.upload_fileobj(file, bucket_name, new_file_key)
             # generate the new file url
-            new_file_url = f"{current_app.config['S3_ENDPOINT_URL']}/{current_app.config['S3_BUCKET_NAME']}/{new_file_key}"
+            new_file_url = get_s3_file_url(new_file_key)
         except ClientError as e:
-            print(e)
+            current_app.logger.info(e)
 
         # Update database: Set profile_pic to None
         story.content = new_file_url

@@ -8,7 +8,7 @@ def comment_respose(comments,schema):
             comment.likes_count = len(comment.likes)
             comment_likes[comment.id] = comment.likes_count
 
-    print(comment_likes)
+   
 
     # Get comment IDs to calculate reply counts
     comment_ids = [comment.id for comment in comments]

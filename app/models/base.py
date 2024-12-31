@@ -13,5 +13,4 @@ class BaseModel(db.Model):
                    default=uuid.uuid4, unique=True, nullable=False)
     created_at = db.Column(
         db.DateTime, default=current_time_ist)
-    updated_at = db.Column(db.DateTime, default=None,
-                           onupdate=current_time_ist)
+    updated_at = db.Column(db.DateTime, default=None)

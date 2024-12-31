@@ -23,7 +23,6 @@ class Story(BaseModel,db.Model):
     @staticmethod
     def get_username(story_owner):
         user = User.query.filter_by(id = story_owner).first()
-        print(user)
         return f"{user.username}"
         
     

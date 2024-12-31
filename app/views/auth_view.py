@@ -3,7 +3,7 @@ from flask import Blueprint, jsonify, request, current_app, render_template
 from app.models.user import db, User
 from app.models.follower import Follow
 from app.models.post import Post
-
+from constraints import get_reset_password_url
 from flask_restful import MethodView
 from flask import Flask, jsonify
 from flask import url_for
@@ -33,11 +33,13 @@ from flask_jwt_extended import (
     get_jwt,
 )
 from datetime import datetime, timedelta
-from app.tasks import send_mail,send_location_mail
+from app.tasks import send_mail, send_location_mail
 from app.uuid_validator import is_valid_uuid
 from app.utils.validation import validate_and_load
 import os
 from app.utils.validation import validate_and_load
+
+
 class Signup(MethodView):
     """Api for user signup takes the username, email, and password"""
     signup_schema = SignupSchema()
@@ -66,30 +68,24 @@ class Signup(MethodView):
             # Set the password
             user.set_password(password)
             db.session.add(user)
-
             # Commit the changes
             db.session.commit()
-
             # Generate a verification token
             token = generate_verification_token(
                 email, current_app.config['SECRET_KEY'])
-
             # Generate the verification URL
-            verify_url = url_for('auth.verify_email', token=token, _external=True)
+            verify_url = url_for('auth.verify_email',
+                                 token=token, _external=True)
             current_app.logger.info(verify_url)
-
             # Render the email template with the verification URL and username
             html_message = render_template(
                 'verify_email.html',
                 username=username,
                 verification_url=verify_url
             )
-
             # Send the verification email asynchronously
             send_mail.delay(email, html_message, "Please Verify Your Email")
-
             return jsonify({"message": "Verification email sent. Please check your email to complete signup."}), 200
-
         except Exception as e:
             # Rollback the transaction if any exception occurs
             db.session.rollback()
@@ -106,18 +102,19 @@ class Login(MethodView):
         # get the requested data
         data = request.get_json()
         username_or_email = data.get("username_or_email")
-     
         # validate and loads the data
         user_data, errors = validate_and_load(self.login_schema, data)
         if errors:
-            return jsonify({"errors": errors}),400
+            return jsonify({"errors": errors}), 400
 
         if username_or_email:
-            user = User.query.filter((User.username== username_or_email)|(User.email == username_or_email),User.is_verified == True,User.is_deleted==False) .first()
-      
+            user = User.query.filter((User.username == username_or_email) | (
+                User.email == username_or_email), User.is_verified == True, User.is_deleted == False) .first()
+
         # check user
         if not user:
             return jsonify({"error": "This email or username is not registered"}), 400
+        
         if user.is_active == False:
             user.is_active = True
             db.session.commit()
@@ -157,7 +154,7 @@ class Login(MethodView):
             ),
             200,
         )
-        
+
 
 class UpdatePassword(MethodView):
     """API for password updation takes a current password and new password"""
@@ -210,8 +207,8 @@ class UpdatePassword(MethodView):
             db.session.rollback()
             current_app.logger.error(f"Error during password update: {str(e)}")
             return jsonify({"error": "An error occurred while updating the password"}), 500
-        
-        
+
+
 class Logout(MethodView):
     """Api for the logout the user by invalidate the jwt token"""
     decorators = [jwt_required()]
@@ -235,7 +232,8 @@ class ResetPasswordSendMail(MethodView):
         if not email:
             return jsonify({"error": "Invalid credentials"}), 400
         # get the user object by email
-        user = User.query.filter_by(email=email,is_verified = True, is_active = True, is_deleted = False).first()
+        user = User.query.filter_by(
+            email=email, is_verified=True, is_active=True, is_deleted=False).first()
         if not user:
             return jsonify({"error": "Not registered"}), 400
         # generate the token
@@ -246,7 +244,7 @@ class ResetPasswordSendMail(MethodView):
         # store the token in the redis with expiration time of 10 minutes
         redis_client.setex(redis_key, timedelta(minutes=10), str(user.id))
         # generate the reset link
-        reset_link = f"{request.host_url}api/reset-password/{token}/"
+        reset_link = get_reset_password_url(token)
         current_app.logger.info(reset_link)
         # html message for send mail to user email
         # html_message = render_template(
@@ -271,7 +269,7 @@ class ResetPassword(MethodView):
         new_password = data.get("new_password")
         confirm_password = data.get("confirm_password")
         # validate and loads the data
-        user_data,errors= validate_and_load(self.reset_password_schema,data)
+        user_data, errors = validate_and_load(self.reset_password_schema, data)
         if errors:
             return jsonify({"errors": errors})
         # check the password matches with the confirm-password
@@ -293,7 +291,7 @@ class ResetPassword(MethodView):
         if user.check_password(new_password):
             return jsonify({"error": "new and old password not be same"}), 401
         # set the new password entered by the user
-        
+
         try:
             user.set_password(data["new_password"])
             db.session.commit()
@@ -301,9 +299,9 @@ class ResetPassword(MethodView):
             redis_client.delete(redis_key)
 
             return jsonify({"message": "Password reset successfully"}), 200
-        
+
         except Exception as e:
-        # Rollback the transaction in case of an error
+            # Rollback the transaction in case of an error
             db.session.rollback()
             current_app.logger.error(f"Error during password update: {str(e)}")
             return jsonify({"error": "An error occurred while updating the password"}), 500
@@ -312,34 +310,34 @@ class ResetPassword(MethodView):
 class DeactivateAccount(MethodView):
     """An api for account deactivation of the user by the user password"""
     decorators = [jwt_required()]
-    
+
     def put(self):
         data = request.json
         password = data.get("password")
         if not password:
-            return jsonify({"error":{"password" : "Missing required field"} }),400
+            return jsonify({"error": {"password": "Missing required field"}}), 400
         current_user_id = get_jwt_identity()
-        #get the user object
+        # get the user object
         user = get_user(current_user_id)
-        #check the password
+        # check the password
         if not user.check_password(password):
-            return jsonify({"error":"Invalid Credentials"}),400
-        #database operation
+            return jsonify({"error": "Invalid Credentials"}), 400
+        # database operation
         user.is_active = False
         db.session.commit()
-        return jsonify({"message" : "Your account is deactivated ,you can reactivate it by login again"}),202
-    
-    
+        return jsonify({"message": "Your account is deactivated ,you can reactivate it by login again"}), 202
+
+
 class DeleteAccount(MethodView):
     """An Api for delete the user account"""
     decorators = [jwt_required()]
-    
+
     def delete(self):
-        #get the user_id by the jwt token
+        # get the user_id by the jwt token
         current_user_id = get_jwt_identity()
-        #get the user
+        # get the user
         user = get_user(current_user_id)
-        #database opearation of delete
+        # database opearation of delete
         user.is_deleted = True
         db.session.commit()
-        return jsonify(),204
+        return jsonify(), 204

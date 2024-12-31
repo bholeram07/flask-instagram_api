@@ -23,7 +23,7 @@ class CustomPagination:
         if isinstance(self.query, list):
             # If it's a list, slice it
             items = self.query[offset:offset + limit]
-            # print(item)
+
             total_items = len(self.query)
 
         # Calculate total pages

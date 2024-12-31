@@ -50,6 +50,4 @@ def hard_delete_old_posts():
         for post in old_posts:
             post.delete()  # Assuming you have a delete() method in your model
         app.db.session.commit()
-
-    print(f"{len(old_posts)} posts hard deleted.")
     

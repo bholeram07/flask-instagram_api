@@ -2,6 +2,7 @@ from botocore.exceptions import ClientError
 from flask import current_app
 from app.extensions import db
 from app.utils.s3_utils import get_s3_client
+from constraints import get_s3_file_url
 import re
 
 def get_image_path(url):
@@ -31,7 +32,7 @@ def update_profile_pic(user, file):
             try:
                 s3_client.delete_object(Bucket=bucket_name, Key=file_key)
             except ClientError as e:
-                print(e)
+                current_app.logger.info(e)
 
         # Update database: Set profile_pic to None
         user.profile_pic = None
@@ -46,19 +47,18 @@ def update_profile_pic(user, file):
             try:
                 s3_client.delete_object(Bucket=bucket_name, Key=file_key)
             except ClientError as e:
-                print("error")
+                current_app.logger.info(e)
         
         #define the path of the new file   
         new_file_key = f"profile_pics/{user.id}/{file.filename}"
         # Upload the new file to S3
         try:
             s3_client.upload_fileobj(file, bucket_name, new_file_key)
-            new_file_url = f"{current_app.config['S3_ENDPOINT_URL']}/{current_app.config['S3_BUCKET_NAME']}/{new_file_key}"
+            new_file_url = get_s3_file_url(new_file_key)
             
             # Update database with the new profile picture URL
             user.profile_pic = new_file_url
             db.session.commit() # Commit the changes to the database
 
         except ClientError as e:
-            print(f"Error uploading file to S3: {e}")
             raise e

@@ -2,6 +2,7 @@ from flask import current_app, jsonify
 from app.extensions import db
 from app.utils.s3_utils import get_s3_client
 from botocore.exceptions import ClientError
+from constraints import get_s3_file_url
 import re
 
 
@@ -34,7 +35,7 @@ class PostImageVideo:
         # define the new file name that are in post folder, in the user_id folder
         new_file_key = f"posts/{self.user_id}/{self.file.filename}"
         # get the file url with the new file key
-        new_file_url = f"{current_app.config['S3_ENDPOINT_URL']}/{self.bucket_name}/{new_file_key}"
+        new_file_url = get_s3_file_url(new_file_key)
 
         try:
             # upload the object to the s3
