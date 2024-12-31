@@ -23,9 +23,6 @@ from app.utils.get_validate_user import get_user,get_post
 class PostApi(MethodView):
     post_schema = PostSchema()
     decorators = [jwt_required()]
-    
-
-    # @Permission.user_permission_required
 
     def __init__(self):
         self.current_user_id = get_jwt_identity()
@@ -55,10 +52,17 @@ class PostApi(MethodView):
                 return ({"error": "Please Provide image for post"}), 400
         else:
             return ({"error": "Please Provide image or video for post"}), 400
-
-        db.session.add(post)
-        db.session.commit()
-        return jsonify(self.post_schema.dump(post)), 201
+        
+        try:
+            db.session.add(post)
+            db.session.commit()
+            return jsonify(self.post_schema.dump(post)), 201
+        except Exception as e:
+            # Rollback the transaction in case of any error
+            db.session.rollback()
+            # Clean up uploaded files if necessary
+                
+            return {"error": "An error occurred while creating the post"}, 500
     
     def patch(self, post_id):
         """
@@ -94,12 +98,17 @@ class PostApi(MethodView):
         updated_data, errors = validate_and_load(update_post_schema, data)
         if errors:
             return jsonify({"errors": errors}), 400
-         
-        for key, value in updated_data.items():
-            setattr(post, key, value)
+        try:
+            for key, value in updated_data.items():
+                setattr(post, key, value)
 
-        db.session.commit()
-        return jsonify(self.post_schema.dump(post)), 202
+            db.session.commit()
+            return jsonify(self.post_schema.dump(post)), 202
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error creating post: {str(e)}")
+            return jsonify({"error": "An error occurred while updating the post"}), 500
+            
     # @permission_required("post_id")
 
     @Permission.user_permission_required
@@ -126,13 +135,19 @@ class PostApi(MethodView):
         if not post:
             return jsonify({"error": "Post not found"}), 404
         #delete the post_image from the s3
-        post_image_video_obj = PostImageVideo(post, post.image_or_video, self.current_user_id)
-        post_image_video_obj.delete_image_or_video()
-        #database operation
-        post.is_deleted = True
-        post.deleted_at = datetime.now()
-        db.session.commit()
-        return jsonify(), 204
+        try:
+            post_image_video_obj = PostImageVideo(post, post.image_or_video, self.current_user_id)
+            post_image_video_obj.delete_image_or_video()
+            #database operation
+            post.is_deleted = True
+            post.deleted_at = datetime.now()
+            db.session.commit()
+            return jsonify(), 204
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error creating post: {str(e)}")
+            return jsonify({"error": "An error occurred while deleting the post"}), 500
+    
 
 
 class UserPostListApi(MethodView):
@@ -154,8 +169,7 @@ class UserPostListApi(MethodView):
         offset = (page_number - 1) * page_size
         
         # Query database with limit and offset
-        posts = Post.query.filter_by(user=query_user_id, is_deleted=False).offset(
-            offset).limit(page_size).all()
+        posts = Post.query.filter_by(user=user_id, is_deleted=False).order_by(desc(Post.created_at)).offset(offset).limit(page_size).all()
        
         serialized_post = post_response(posts,self.post_schema)
         

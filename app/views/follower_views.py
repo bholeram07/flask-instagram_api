@@ -78,8 +78,8 @@ class FollowApi(MethodView):
         if user_to_follow.is_private:
             follow_request = FollowRequest(
                 follower_id=self.current_user_id, following_id=user_id)
+            
             db.session.add(follow_request)
-            db.session.commit()
             return jsonify({"message": f"follow request sent to the {user_id}"}), 201
 
         # check the user is follower or not of the user already

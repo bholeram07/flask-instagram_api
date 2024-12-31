@@ -33,65 +33,68 @@ from flask_jwt_extended import (
     get_jwt,
 )
 from datetime import datetime, timedelta
-from app.utils.tasks import send_mail,send_location_mail
+from app.tasks import send_mail,send_location_mail
 from app.uuid_validator import is_valid_uuid
 from app.utils.validation import validate_and_load
 import os
 from app.utils.validation import validate_and_load
-
-
 class Signup(MethodView):
-    """Api for user signup takes the username ,email and password"""
+    """Api for user signup takes the username, email, and password"""
     signup_schema = SignupSchema()
 
     def post(self):
-        # get the data
+        # Get the data
         data = request.get_json()
         email = data.get('email')
         username = data.get('username')
         password = data.get('password')
-        # if not password:
-        #     return jsonify({"error": {
-        #         "password":"Missing required field"}
-        #                     }), 400
-            
+
+        # Validate the data
+        user_data, errors = validate_and_load(self.signup_schema, data)
+        if errors:
+            return jsonify({"errors": errors}), 400
+
         # Check if the username or email already exists
         if User.query.filter_by(email=email).first():
             return jsonify({"error": "Another account is using this email"}), 400
         if User.query.filter_by(username=username).first():
-            return jsonify({"error": "This username is not available please try another"}),400
+            return jsonify({"error": "This username is not available. Please try another"}), 400
 
-        # validate the data
-        user_data, errors = validate_and_load(self.signup_schema, data)
-        if errors:
-            return jsonify({"errors": errors}), 400
-        # Generate a verification token
-        token = generate_verification_token(
-            email, current_app.config['SECRET_KEY'])
+        try:
+            # Begin transaction
+            user = User(email=email, username=username)
+            # Set the password
+            user.set_password(password)
+            db.session.add(user)
 
-        # Save temporary data
-        user = User(email=email, username=username)
-        # set the password
-        user.set_password(password)
-        db.session.add(user)
+            # Commit the changes
+            db.session.commit()
 
-        # # Commit the changes
-        db.session.commit()
+            # Generate a verification token
+            token = generate_verification_token(
+                email, current_app.config['SECRET_KEY'])
 
-        # # Generate the verification URL
-        verify_url = url_for('auth.verify_email', token=token, _external=True)
-        current_app.logger.info(verify_url)
+            # Generate the verification URL
+            verify_url = url_for('auth.verify_email', token=token, _external=True)
+            current_app.logger.info(verify_url)
 
-        # Render the email template with the verification URL and username
-        # html_message = render_template(
-        #         'verify_email.html',
-        #         username=username,
-        #         verification_url=verify_url
-        #     )
-        # # Send the verification email
-        # send_mail(email, html_message, "Please Verify Your Email")
+            # Render the email template with the verification URL and username
+            html_message = render_template(
+                'verify_email.html',
+                username=username,
+                verification_url=verify_url
+            )
 
-        return jsonify({"message": "Verification email sent. Please check your email to complete signup."}), 200
+            # Send the verification email asynchronously
+            send_mail.delay(email, html_message, "Please Verify Your Email")
+
+            return jsonify({"message": "Verification email sent. Please check your email to complete signup."}), 200
+
+        except Exception as e:
+            # Rollback the transaction if any exception occurs
+            db.session.rollback()
+            current_app.logger.error(f"Error during signup: {str(e)}")
+            return jsonify({"error": "An error occurred during signup. Please try again later."}), 500
 
 
 class Login(MethodView):
@@ -155,45 +158,60 @@ class Login(MethodView):
             200,
         )
         
+
 class UpdatePassword(MethodView):
-    """Api for password updation takes a current password and new password"""
+    """API for password updation takes a current password and new password"""
     decorators = [jwt_required()]
     update_password_schema = UpdatePasswordSchema()
 
     def put(self):
-        # get the user_id from the jwt token
+        # Get the user_id from the JWT token
         user_id = get_jwt_identity()
-        # get the data
         data = request.json
-        # validate and serialize the data
+
+        # Fetch user and validate current password
         user = get_user(user_id)
-        if not user.check_password(data["current_password"]):
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        if not user.check_password(data.get("current_password")):
             return jsonify({"error": "Invalid credentials"}), 401
+
+        # Validate and serialize the data
         user_data, errors = validate_and_load(
             self.update_password_schema, data)
         if errors:
-            return jsonify({"errors" : errors}),400
-        current_password = data["current_password"]
-        new_password = data["new_password"]
-        if not user:
-            return jsonify({"error": "User Not found"}), 404
-        # check with current password
+            return jsonify({"errors": errors}), 400
+
+        current_password = data.get("current_password")
+        new_password = data.get("new_password")
         if current_password == new_password:
-            return jsonify({"error": "old and new password not be same"}), 400
-        # set the new password given by the user
-        user.set_password(data["new_password"])
-        # get the jwt id
-        jti = get_jwt()["jti"]
-        # set the expiration time
-        expires_in = get_jwt()["exp"] - get_jwt()["iat"]
-        # get the redis_client
-        redis_client = current_app.config["REDIS_CLIENT"]
-        # store the token in the redis
-        redis_client.setex(jti, expires_in, "blacklisted")
+            return jsonify({"error": "Old and new passwords must not be the same"}), 400
 
-        return jsonify({"message": "Password Update Successfully"}), 200
+        # Atomic operation
+        try:
+            # Update the user's password
+            user.set_password(new_password)
+            db.session.add(user)  # Add the updated user to the session
 
+            # Blacklist the current JWT
+            jti = get_jwt()["jti"]
+            expires_in = get_jwt()["exp"] - get_jwt()["iat"]
+            redis_client = current_app.config["REDIS_CLIENT"]
+            redis_client.setex(jti, expires_in, "blacklisted")
 
+            # Commit the transaction
+            db.session.commit()
+
+            return jsonify({"message": "Password updated successfully"}), 200
+
+        except Exception as e:
+            # Rollback the transaction in case of an error
+            db.session.rollback()
+            current_app.logger.error(f"Error during password update: {str(e)}")
+            return jsonify({"error": "An error occurred while updating the password"}), 500
+        
+        
 class Logout(MethodView):
     """Api for the logout the user by invalidate the jwt token"""
     decorators = [jwt_required()]
@@ -275,13 +293,21 @@ class ResetPassword(MethodView):
         if user.check_password(new_password):
             return jsonify({"error": "new and old password not be same"}), 401
         # set the new password entered by the user
-        user.set_password(data["new_password"])
-        db.session.commit()
-        # delete the redis key
-        redis_client.delete(redis_key)
+        
+        try:
+            user.set_password(data["new_password"])
+            db.session.commit()
+            # delete the redis key
+            redis_client.delete(redis_key)
 
-        return jsonify({"message": "Password reset successfully"}), 200
-    
+            return jsonify({"message": "Password reset successfully"}), 200
+        
+        except Exception as e:
+        # Rollback the transaction in case of an error
+            db.session.rollback()
+            current_app.logger.error(f"Error during password update: {str(e)}")
+            return jsonify({"error": "An error occurred while updating the password"}), 500
+
 
 class DeactivateAccount(MethodView):
     """An api for account deactivation of the user by the user password"""

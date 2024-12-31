@@ -18,6 +18,9 @@ from datetime import datetime
 from sqlalchemy import func
 from app.response.comment_response import comment_respose
 from app.permissions.permission import Permission
+
+
+
 class CommentApi(MethodView):
     decorators = [jwt_required(),Permission.user_permission_required]
     comment_schema = CommentSchema()
@@ -119,7 +122,7 @@ class CommentApi(MethodView):
             # Fetch paginated comments
             comments = Comment.query.filter_by(
                 post_id=post_id, is_deleted=False
-            ).offset(offset).limit(page_size).all()
+            ).order_by(desc(Comment.created_at)).offset(offset).limit(page_size).all()
     
             serialized_comments = comment_respose(comments,self.comment_schema)
             return paginate_and_serialize(serialized_comments,page_number,page_size)

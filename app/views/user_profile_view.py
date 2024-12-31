@@ -2,7 +2,7 @@ from app.utils.s3_utils import get_s3_client
 import os
 from app.utils.validation import validate_and_load
 from app.uuid_validator import is_valid_uuid
-from app.utils.tasks import send_mail
+from app.tasks import send_mail
 from datetime import datetime, timedelta, timezone
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from marshmallow import ValidationError
@@ -37,8 +37,9 @@ class UserProfile(MethodView):
         if user_id:
             # check the validation of the user_id
             if not is_valid_uuid(user_id):
-                return jsonify({"error": "Invalid UUid format"}),400
-            user = User.query.filter_by(id = user_id,is_active =True, is_deleted = False).first()
+                return jsonify({"error": "Invalid UUid format"}), 400
+            user = User.query.filter_by(
+                id=user_id, is_active=True, is_deleted=False).first()
             if not user:
                 return jsonify({"error": "User not found"}), 404
         else:
@@ -49,10 +50,10 @@ class UserProfile(MethodView):
             following_id=user.id).count()
         following_count = Follow.query.filter_by(
             follower_id=user.id).count()
-
+        #get the post count of the user
         post_count = Post.query.filter_by(
             user=user.id, is_deleted=False).count()
-
+        #serialize and validate the profile data
         profile_data = self.profile_schema.dump(user)
         profile_data.update({
             "followers": followers_count,
@@ -115,6 +116,11 @@ class UserProfile(MethodView):
         if "bio" in data:
             bio = data.get("bio")
             user.bio = None if not bio.strip() else data["bio"]
-        db.session.commit()
-        updated_data = self.profile_schema.dump(user)
-        return jsonify(updated_data), 202
+        try:
+            db.session.commit()
+            updated_data = self.profile_schema.dump(user)
+            return jsonify(updated_data), 202
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error creating post: {str(e)}")
+            return {"error": "An error occurred while creating the post"}, 500
