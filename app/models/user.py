@@ -27,9 +27,9 @@ class User(BaseModel,db.Model):
     username_change_timestamp = db.Column(db.DateTime(timezone=True), onupdate=datetime.now())
     
     #relationships
-    # posts = relationship("Post", backref="user",lazy="dynamic")
-    # comments = relationship("Comment", backref="user", lazy= "dynamic")
-    # likes = relationship("Like",backref="user",lazy="dynamic")
+    posts = relationship("Post", backref="user_post",lazy="dynamic")
+    comments = relationship("Comment", backref="user_comment", lazy= "dynamic")
+    likes = relationship("Like",backref="user_likes",lazy="dynamic")
     
 
     following = db.relationship(
@@ -48,11 +48,12 @@ class User(BaseModel,db.Model):
         cascade="all, delete-orphan",
     )
 
-
+    #method that check the password with existing password by check password hash
     def check_password(self, raw_password):
         return check_password_hash(self.password, raw_password)
 
     def set_password(self, raw_password):
+        """method to set the password of the user in hash"""
         self.password = generate_password_hash(raw_password)  
         db.session.commit()
         

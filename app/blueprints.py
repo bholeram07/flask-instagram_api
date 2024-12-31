@@ -6,18 +6,15 @@ from app.routes.like_routes import like_api
 from app.routes.profile_routes import user_profile
 from app.routes.follower_routes import follower_api
 from app.routes.user_activity_routes import user_activity_view
-from app.views.verify_email import auth # Import your blueprint
+from app.views.verify_email import auth  # Import your blueprint
 from app.routes.story_routes import user_story_api
-
 
 
 def register_blueprints(app):
     '''The blueprints of the api'''
+    # register the base with the prefix of api
     api_blueprint = Blueprint("api", __name__, url_prefix="/api")
-   
-
     app.register_blueprint(auth, url_prefix='/auth')
-
     api_blueprint.register_blueprint(user_api)
     api_blueprint.register_blueprint(post_api)
     api_blueprint.register_blueprint(comment_api)
