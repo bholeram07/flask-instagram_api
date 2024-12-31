@@ -70,11 +70,12 @@ class UserProfile(MethodView):
         user = User.query.get(self.current_user_id)
         file = request.files
         if file:
-            image = request.files.get("profile_pic")
-            try:
-                update_profile_pic(user, image)
-            except Exception as e:
-                return jsonify({"error": e})
+            if "profile_pic" in file:
+                image = request.files.get("profile_pic")
+                try:
+                    update_profile_pic(user, image)
+                except Exception as e:
+                    return jsonify({"error": e})
 
         data = request.form or request.json
         if "is_private" in data:

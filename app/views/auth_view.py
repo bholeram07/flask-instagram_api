@@ -5,21 +5,16 @@ from app.models.user import db, User
 from app.models.follower import Follow
 from app.models.post import Post
 from app.constraints import get_reset_password_url
-from constraints import get_reset_password_url
 from flask_restful import MethodView
 from flask import Flask, jsonify
 from flask import url_for
 import requests
 from app.utils.get_user_location import get_user_location
 import secrets
-import boto3
 from config import Config
-from werkzeug.utils import secure_filename
 from app.generate_token import generate_verification_token
 from app.utils.get_validate_user import get_user
 from app.utils.blacklist_jwt_token import blacklist_jwt_token
-
-import datetime
 from app.schemas.user_schema import (
     SignupSchema,
     LoginSchema,
@@ -40,7 +35,7 @@ from app.tasks import send_mail, send_location_mail
 from app.uuid_validator import is_valid_uuid
 from app.utils.validation import validate_and_load
 import os
-from app.utils.validation import validate_and_load
+
 
 
 class Signup(MethodView):
@@ -242,14 +237,14 @@ class ResetPasswordSendMail(MethodView):
         reset_link = get_reset_password_url(token)
         current_app.logger.info(reset_link)
         # html message for send mail to user email
-        html_message = render_template(
-            "reset_password_email.html",
-            subject="Reset Link Password",
-            reset_link=reset_link,
-            user_name=user.username,
-        )
-        # send email with link
-        send_mail.delay(user.email, html_message, "Reset Link Password")
+        # html_message = render_template(
+        #     "reset_password_email.html",
+        #     subject="Reset Link Password",
+        #     reset_link=reset_link,
+        #     user_name=user.username,
+        # )
+        # # send email with link
+        # send_mail.delay(user.email, html_message, "Reset Link Password")
 
         return jsonify({"message": "Link sent successfully, please check your email"}), 200
 

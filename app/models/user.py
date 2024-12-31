@@ -24,7 +24,7 @@ class User(BaseModel,db.Model):
     email = db.Column(db.String(120), nullable=False, unique=True)
     password = db.Column(db.String(255), nullable=False)
     username_change_count = db.Column(db.Integer)
-    username_change_timestamp = db.Column(db.DateTime(timezone=True), onupdate=datetime.now())
+    username_change_timestamp = db.Column(db.DateTime(timezone=True),default=None)
     
     #relationships
     posts = relationship("Post", backref="user_post",lazy="dynamic")

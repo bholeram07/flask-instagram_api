@@ -38,7 +38,7 @@ class SignupSchema(Schema):
         if not value.strip() or all(char == '_' for char in value):
             raise ValidationError(
                 "Invalid username: should not be blank or contain only underscores.")
-        if not re.search(r"[!@#$%^&*()]", value):
+        if not re.search(r"[^&*]", value):
             raise ValidationError("username must not contain special character")
             
           

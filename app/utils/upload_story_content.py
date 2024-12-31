@@ -2,7 +2,7 @@ from app.utils.s3_utils import get_s3_client
 from flask import current_app
 from botocore.exceptions import ClientError
 from app.extensions import db
-from constraints import get_s3_file_url
+from app.constraints import get_s3_file_url
 
 
 def get_image_path(url):
