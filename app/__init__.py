@@ -2,7 +2,6 @@ from flask import Flask, jsonify
 from config import Config
 from flask_uuid import UUIDConverter
 from app.extensions import db, mail, migrate, jwt, redis_client
-from app.blueprints import register_blueprints
 import os
 import boto3
 from app.s3_bucket_config import create_s3_client
@@ -45,25 +44,30 @@ def setup_logging(app):
     logger.setLevel(logging.DEBUG)
 
 
-    
 def create_app():
+    """A function to create and initialize the flask app"""
+    # initialize the flask app
     app = Flask(__name__)
+    # initialize the configuration define in the config file
     app.config.from_object(Config)
-    
+    # uuid convertewr
     app.url_map.converters["uuid"] = UUIDConverter
-    if not os.path.exists(app.config["UPLOAD_FOLDER"]):
-        os.makedirs(folder_path)
-        
+    # config the redis cliwnt
     app.config["REDIS_CLIENT"] = redis_client
-    app.config['SECRET_KEY'] = 'dvwLc-YxtZ1zquu6hLLn-HfVO7HAl3J4hu5yTa-l0sfgZAoEA7k2inqRwlMRndgYbAY'
+    # set up the logger
     setup_logging(app)
     initialize_extensions(app)
+    # import thre blueprint and register with app
+    from app.blueprints import register_blueprints
     register_blueprints(app)
+    # register the jwt handlers
     register_jwt_handlers(app)
 
     return app
-    
+
+
 def initialize_extensions(app):
+    """An function to initialize the db, mail, jwt and migrate """
     mail.init_app(app)
     jwt.init_app(app)
     db.init_app(app)
@@ -71,6 +75,8 @@ def initialize_extensions(app):
 
 
 def register_jwt_handlers(app):
+    """function to register jwt handlers"""
+    # check the jwt token validation
     @jwt.unauthorized_loader
     def custom_unauthorized_response(error_string):
         return jsonify({"error": "Authorization header is missing or invalid"}), 401
