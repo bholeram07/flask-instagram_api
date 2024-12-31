@@ -48,12 +48,11 @@ class CommentApi(MethodView):
                 return jsonify({"error": "Post owner diable the comment on this post"}), 404
 
             comment_data, error = validate_and_load(self.comment_schema, data)
-
-           
             comment = Comment(
                 post_id=post_id, user_id=self.current_user_id, content=content)
             db.session.add(comment)
             db.session.commit()
+            #retun the serialize data
             return jsonify(self.comment_schema.dump(comment)), 201
         
         if parent_comment_id:
@@ -163,14 +162,11 @@ class CommentApi(MethodView):
         """
         if not is_valid_uuid(comment_id):
             return jsonify({"error": "Invalid uuid format"}), 400
-
         comment = Comment.query.filter_by(
             id=comment_id, is_deleted=False
         ).first()
-
         if not comment:
             return jsonify({"error": "Comment does not exist"}), 404
-
         # get the post through the comment object
         post_id = comment.post_id
         post = Post.query.get(post_id)

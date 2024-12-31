@@ -35,8 +35,12 @@ class SignupSchema(Schema):
     
     @validates("username")
     def validate_username(self, value):
-        if not value.strip():
-            raise ValidationError("Username should not be blank.")
+        if not value.strip() or all(char == '_' for char in value):
+            raise ValidationError(
+                "Invalid username: should not be blank or contain only underscores.")
+        if not re.search(r"[!@#$%^&*()]", value):
+            raise ValidationError("username must not contain special character")
+            
           
 
 
