@@ -25,6 +25,6 @@ class FollowRequest(db.Model):
     follower = db.relationship('User', foreign_keys=[follower_id])
     following = db.relationship('User', foreign_keys=[following_id])
 
-    def __repr__(self):
-        return f"<FollowRequest(follower_id={self.follower_id}, followed_id={self.followed_id}, status={self.status})>"
+    # def __repr__(self):
+    #     return f"<FollowRequest(follower_id={self.follower_id}, followed_id={self.followed_id}, status={self.status})>"
     

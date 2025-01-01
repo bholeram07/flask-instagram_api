@@ -15,17 +15,17 @@ def get_user(user_id):
     #return the user object
     return user
 
-def get_post(post_id):
-    """get the post object and validating it by the post id """
-    if not is_valid_uuid(user_id):
-        return jsonify({"error": "Invalid UUid format"}), 400
-    #get the post object
-    post = Post.query.filter_by(
-        id=post_id, is_deleted=False).first()
-    if not post:
-        return None
-    #return the post
-    return post
+# def get_post(post_id):
+#     """get the post object and validating it by the post id """
+#     if not is_valid_uuid(post_id):
+#         return jsonify({"error": "Invalid UUid format"}), 400
+#     #get the post object
+#     post = Post.query.filter_by(
+#         id=post_id, is_deleted=False).first()
+#     if not post:
+#         return None
+#     #return the post
+#     return post
     
         
     

@@ -8,7 +8,7 @@ from app.models.user import User
 from app.models.follow_request import FollowRequest
 from app.uuid_validator import is_valid_uuid
 from app.utils.get_validate_user import get_user
-from app.permissions.permission import Permission
+# from app.permissions.permission import Permission
 
 
 class FollowApi(MethodView):
@@ -76,11 +76,20 @@ class FollowApi(MethodView):
         if self.current_user_id == user_id:
             return jsonify({"error": "You cant follow yourself"}), 400
         if user_to_follow.is_private:
-            follow_request = FollowRequest(
-                follower_id=self.current_user_id, following_id=user_id)
-            
-            db.session.add(follow_request)
-            return jsonify({"message": f"follow request sent to the {user_id}"}), 201
+            follow_request = FollowRequest.query.filter_by(
+                follower_id=self.current_user_id, following_id=user_id).first()
+            if follow_request:
+                print(follow_request)
+                db.session.delete(follow_request)
+                db.session.commit()
+               
+            else:
+                follow_request = FollowRequest(
+                    follower_id=self.current_user_id, following_id=user_id)
+                db.session.add(follow_request)
+                db.session.commit()
+                return jsonify({"message": f"follow request sent to the user"}),200
+            return jsonify({"message": f"follow request withdraw to the {user_id}"}), 200
 
         # check the user is follower or not of the user already
         follow_relationship = Follow.query.filter_by(

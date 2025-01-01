@@ -29,3 +29,8 @@ follower_api.add_url_rule(
     view_func=FollowrequestAccept.as_view("follow_request_accept"),
     methods=["POST"]
 )
+follower_api.add_url_rule(
+    "/follow-request/",
+    view_func=FollowrequestAccept.as_view("get_follow_request"),
+    methods=["GET"]
+)

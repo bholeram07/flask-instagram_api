@@ -7,6 +7,7 @@ from app.models.follow_request import FollowRequest
 from app.models.follower import Follow
 from app.extensions import db
 from app.utils.get_validate_user import get_user
+from app.pagination_response import paginate_and_serialize
 
 
 class FollowRequestWithdraw(MethodView):
@@ -73,15 +74,26 @@ class FollowrequestAccept(MethodView):
         if action == "reject":
             followrequest = FollowRequest.query.filter_by(
                 following_id=self.current_user_id, follower_id=user_id).first()
+            if not followrequest:
+                return jsonify({"error":"follow request not foud"}),404
             db.session.delete(followrequest)
             db.session.commit()
-            return jsonify({"message": "Follow request rejected"}), 400
+            return jsonify({"message": "Follow request rejected"}), 200
         else:
             return jsonify({"error": "Invalid action"}), 404
 
     def get(self):
+        page_number = request.args.get('page', default=1, type=int)
+        page_size = request.args.get('size', default=5, type=int)
+        offset = (page_number - 1)*page_size
         followrequest = FollowRequest.query.filter_by(
-            following_id=self.current_user_id).all()
-        if not followrequest:
-            return jsonify({"error": "Not any follow request"}), 404
-        return jsonify({"message": "yes"}), 200
+            following_id=self.current_user_id).offset(offset).limit(page_size).all()
+        print(followrequest)
+        result = []
+        result = [
+            {
+                "sender_id": req.follower.id,
+                
+            } for req in followrequest
+        ]
+        return paginate_and_serialize(result, page_number,page_size)

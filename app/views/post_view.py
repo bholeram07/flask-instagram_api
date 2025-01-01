@@ -17,8 +17,10 @@ from datetime import datetime
 import os
 from uuid import UUID
 from app.response.post_response import post_response
-from app.permissions.permission import Permission
-from app.utils.get_validate_user import get_user,get_post
+# from app.permissions.permission import Permission
+from app.utils.get_validate_user import get_user
+from app.decorators.permissions_decorator import permission_required
+from app.decorators.permissions import CanAccessUser
 
 class PostApi(MethodView):
     post_schema = PostSchema()
@@ -73,7 +75,9 @@ class PostApi(MethodView):
             return jsonify({"error": "Invalid or missing post ID"}), 400
         
         # Check if the user is owner or not
-        post = get_post(post_id)
+        post = Post.query.filter_by(id = post_id, user = self.current_user_id,is_deleted = False).first()
+        if not post:
+            return jsonify({"error": "Post not exist"}), 400
 
         #get the data
         data = request.form or request.json
@@ -101,6 +105,8 @@ class PostApi(MethodView):
         try:
             for key, value in updated_data.items():
                 setattr(post, key, value)
+            
+            post.updated_at = datetime.now()   
 
             db.session.commit()
             return jsonify(self.post_schema.dump(post)), 202
@@ -111,7 +117,7 @@ class PostApi(MethodView):
             
     # @permission_required("post_id")
 
-    @Permission.user_permission_required
+    @permission_required(CanAccessUser)
     def get(self, post_id):
         """
         Retrieves a specific post by post id .
@@ -119,7 +125,9 @@ class PostApi(MethodView):
         if not post_id or not is_valid_uuid(post_id):
             return jsonify({"error" : "Please provide post id"}),400
         #get a post
-        post = get_post(post_id)
+        post = Post.query.filter_by(id = post_id,is_deleted = False).first()
+        if not post:
+            return jsonify({"error": "Post not exist"}), 400
         return jsonify(self.post_schema.dump(post)), 200
        
 
@@ -152,16 +160,18 @@ class PostApi(MethodView):
 
 class UserPostListApi(MethodView):
     post_schema = PostSchema()
-    decorators = [jwt_required(),Permission.user_permission_required]
+    decorators = [jwt_required(),permission_required(CanAccessUser)]
 
     def __init__(self):
         self.current_user_id = get_jwt_identity()
 
     def get(self,user_id=None):
         # takes if user_id else login user
+        print("here in get")
         query_user_id = user_id or self.current_user_id
         query_user = get_user(query_user_id)
-
+        if not query_user:
+            return jsonify({"error" : "User not exist"}),404
         # fetch the post of the user
         page_number = request.args.get('page', default=1, type=int)
         page_size = request.args.get('size', default=5, type=int)
@@ -169,8 +179,7 @@ class UserPostListApi(MethodView):
         offset = (page_number - 1) * page_size
         
         # Query database with limit and offset
-        posts = Post.query.filter_by(user=user_id, is_deleted=False).order_by(desc(Post.created_at)).offset(offset).limit(page_size).all()
-       
+        posts = Post.query.filter_by(user=query_user_id, is_deleted=False).order_by(desc(Post.created_at)).offset(offset).limit(page_size).all()
         serialized_post = post_response(posts,self.post_schema)
         
         return paginate_and_serialize(serialized_post,page_number,page_size)
