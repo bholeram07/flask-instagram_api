@@ -17,9 +17,9 @@ from datetime import datetime
 import os
 from uuid import UUID
 from app.response.post_response import post_response
-# from app.permissions.permission import Permission
+from app.permissions.permissions import Permission
 from app.utils.get_validate_user import get_user
-from app.decorators.permissions_decorator import permission_required
+# from app.decorators.permissions_decorato import permission_required
 from app.decorators.permissions import CanAccessUser
 
 class PostApi(MethodView):
@@ -117,7 +117,7 @@ class PostApi(MethodView):
             
     # @permission_required("post_id")
 
-    @permission_required(CanAccessUser)
+    @Permission.user_permission_required()
     def get(self, post_id):
         """
         Retrieves a specific post by post id .
@@ -160,7 +160,7 @@ class PostApi(MethodView):
 
 class UserPostListApi(MethodView):
     post_schema = PostSchema()
-    decorators = [jwt_required(),permission_required(CanAccessUser)]
+    decorators = [jwt_required(),Permission.user_permission_required()]
 
     def __init__(self):
         self.current_user_id = get_jwt_identity()
