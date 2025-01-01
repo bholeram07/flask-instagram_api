@@ -22,7 +22,7 @@ from app.permissions.permissions import Permission
 
 
 class CommentApi(MethodView):
-    decorators = [jwt_required(),Permission.user_permission_required()]
+    decorators = [jwt_required(),Permission.user_permission_required]
     comment_schema = CommentSchema()
     reply_comment_schema = ReplyCommentSchema()
     def __init__(self):

@@ -56,9 +56,9 @@ class Signup(MethodView):
 
         # Check if the username or email already exists
         if User.query.filter_by(email=email).first():
-            return jsonify({"error": "Another account is using this email"}), 400
+            return jsonify({"error": "Another account is using this email"}), 409
         if User.query.filter_by(username=username).first():
-            return jsonify({"error": "This username is not available. Please try another"}), 400
+            return jsonify({"error": "This username is not available. Please try another"}), 409
 
         try:
             # Begin transaction
@@ -195,7 +195,7 @@ class UpdatePassword(MethodView):
             # Commit the transaction
             db.session.commit()
 
-            return jsonify({"message": "Password updated successfully"}), 200
+            return jsonify({"message": "Password updated successfully"}),202
 
         except Exception as e:
             # Rollback the transaction in case of an error
@@ -261,7 +261,7 @@ class ResetPassword(MethodView):
         # validate and loads the data
         user_data, errors = validate_and_load(self.reset_password_schema, data)
         if errors:
-            return jsonify({"errors": errors})
+            return jsonify({"errors": errors}),400
         # check the password matches with the confirm-password
         if new_password != confirm_password:
             return jsonify({"error": "new password and confirm password must be equal"}), 400
@@ -313,8 +313,10 @@ class DeactivateAccount(MethodView):
         if not user.check_password(password):
             return jsonify({"error": "Invalid Credentials"}), 400
         # database operation
+        blacklist_jwt_token()
         user.is_active = False
         db.session.commit()
+       
         return jsonify({"message": "Your account is deactivated ,you can reactivate it by login again"}), 202
 
 
@@ -328,6 +330,7 @@ class DeleteAccount(MethodView):
         # get the user
         user = get_user(current_user_id)
         # database opearation of delete
+        blacklist_jwt_token()
         user.is_deleted = True
         db.session.commit()
         return jsonify(), 204

@@ -11,7 +11,7 @@ from app.utils.upload_story_content import story_upload
 from app.uuid_validator import is_valid_uuid
 from datetime import datetime
 import uuid
-from permissions.permissions import Permission
+from app.permissions.permissions import Permission
 
 
 class UserStory(MethodView):

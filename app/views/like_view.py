@@ -17,7 +17,7 @@ from app.permissions.permissions import Permission
 
 class PostLikeAPi(MethodView):
     like_schema = LikeSchema()
-    decorators = [jwt_required(),Permission.user_permission_required()]
+    decorators = [jwt_required(),Permission.user_permission_required]
 
     def __init__(self):
         self.current_user_id = get_jwt_identity()
@@ -111,7 +111,7 @@ class CommentLikeApi(MethodView):
     """
     An Api to handle the likes on the comment
     """
-    decorators = [jwt_required(), Permission.user_permission_required()]
+    decorators = [jwt_required(), Permission.user_permission_required]
     
     def __init__(self):
         self.current_user_id = get_jwt_identity()
@@ -187,7 +187,7 @@ class StorylikeApi(MethodView):
     """
     An Api to handle the likes on the story 
     """
-    decorators = [jwt_required(), Permission.user_permission_required()]
+    decorators = [jwt_required(), Permission.user_permission_required]
 
     def __init__(self):
         self.current_user_id = get_jwt_identity()
