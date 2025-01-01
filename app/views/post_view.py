@@ -19,8 +19,7 @@ from uuid import UUID
 from app.response.post_response import post_response
 from app.permissions.permissions import Permission
 from app.utils.get_validate_user import get_user
-# from app.decorators.permissions_decorato import permission_required
-from app.decorators.permissions import CanAccessUser
+
 
 class PostApi(MethodView):
     post_schema = PostSchema()
