@@ -11,6 +11,7 @@ from app.utils.upload_story_content import story_upload
 from app.uuid_validator import is_valid_uuid
 from datetime import datetime
 import uuid
+from permissions.permissions import Permission
 
 
 class UserStory(MethodView):
@@ -53,7 +54,7 @@ class UserStory(MethodView):
             db.session.rollback()
             return jsonify({"error" : "some error occured during uploading the story please try again"}),500
             
-
+    @Permission.user_permission_required
     def get(self, story_id):
         """function to get the story of the user by story id"""
         if not story_id:

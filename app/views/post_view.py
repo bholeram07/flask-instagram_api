@@ -116,7 +116,7 @@ class PostApi(MethodView):
             
     # @permission_required("post_id")
 
-    @Permission.user_permission_required()
+    @Permission.user_permission_required
     def get(self, post_id):
         """
         Retrieves a specific post by post id .
@@ -159,7 +159,7 @@ class PostApi(MethodView):
 
 class UserPostListApi(MethodView):
     post_schema = PostSchema()
-    decorators = [jwt_required(),Permission.user_permission_required()]
+    decorators = [jwt_required(),Permission.user_permission_required]
 
     def __init__(self):
         self.current_user_id = get_jwt_identity()
