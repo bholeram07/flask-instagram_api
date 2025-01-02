@@ -17,6 +17,7 @@ def test_signup_success(client, signup_payload):
         '/api/signup/', json=signup_payload)
 
     # Assert the status code is 201 Created
+    print(response.json)
     assert response.status_code == 200
 
 

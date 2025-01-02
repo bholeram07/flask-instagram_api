@@ -111,14 +111,16 @@ class Login(MethodView):
 
         # check user
         if not user:
-            return jsonify({"error": "This email or username is not registered"}), 400
+            return jsonify({"error": "Invalid credentials"}), 400
+        
+        if not user.check_password(data["password"]):
+            return jsonify({"error": "Invalid credentials"}), 401
         
         if user.is_active == False:
             user.is_active = True
             db.session.commit()
         # check the user's password
-        if not user.check_password(data["password"]):
-            return jsonify({"error": "Invalid credentials"}), 401
+        
 
         user_ip = request.remote_addr
         location = get_user_location(user_ip)

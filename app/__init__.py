@@ -44,13 +44,15 @@ def setup_logging(app):
     logger.setLevel(logging.DEBUG)
 
 
-def create_app():
+def create_app(test_config=None):
     """A function to create and initialize the flask app"""
     # initialize the flask app
     app = Flask(__name__)
     # initialize the configuration define in the config file
     app.config.from_object(Config)
     # uuid convertewr
+    if test_config:
+        app.config.update(test_config)
     app.url_map.converters["uuid"] = UUIDConverter
     # config the redis cliwnt
     app.config["REDIS_CLIENT"] = redis_client
