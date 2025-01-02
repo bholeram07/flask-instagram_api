@@ -8,6 +8,7 @@ def post_response(posts,schema):
             post_likes[post.id] = post.like_count
             post_comments[post.id] = post.comment_count
     serialized_post = schema.dump(posts, many=True)
+    # serialized_post.pop(user)
     for post in serialized_post:
             # Assuming comment["id"] is in string format ,convert into uuid
         post_id = UUID(post["id"])

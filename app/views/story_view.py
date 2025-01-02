@@ -120,36 +120,31 @@ class GetStoryView(MethodView):
 
     def __init__(self):
         self.current_user_id = get_jwt_identity()
-
+        
     def get(self, story_id=None):
         # A function to get the story view
-        if story_id:
-            if not is_valid_uuid(story_id):
-                return jsonify({"error": "Invalid UUid Format"})
-            page_number = request.args.get('page', default=1, type=int)
-            page_size = request.args.get('size', default=5, type=int)
-            # Calculate offset
-            offset = (page_number - 1) * page_size
+    
+        if not is_valid_uuid(story_id):
+            return jsonify({"error": "Invalid UUid Format"})
+        
+        total_views_count = StoryView.query.filter_by(story_owner=self.current_user_id, story_id=story_id).count()
+        
+        page_number = request.args.get('page', default=1, type=int)
+        page_size = request.args.get('size', default=5, type=int)
+        # Calculate offset
+        offset = (page_number - 1) * page_size
 
-            # Query database with limit and offset
-            story_views = StoryView.query.filter_by(
-                story_owner=self.current_user_id, story_id=story_id).offset(
-                offset).limit(page_size).all()
-        else:
-            page_number = request.args.get('page', default=1, type=int)
-            page_size = request.args.get('size', default=5, type=int)
-            offset = (page_number - 1) * page_size
-            story_views = StoryView.query.filter_by(
-                story_owner=self.current_user_id).offset(
-                offset).limit(page_size).all()
+        # Query database with limit and offset
+        story_views = StoryView.query.filter_by(
+            story_owner=self.current_user_id, story_id=story_id).offset(
+            offset).limit(page_size).all()
 
         story_view_data = []
         for view in story_views:
             story_view_data.append({
-                "story_id": view.story_id,
                 "viewer_id": view.viewer_id,
                 "viewer_name": StoryView.get_username(view.viewer_id),
                 "content": StoryView.get_content(view.story_id)
             })
-
-        return paginate_and_serialize(story_view_data, page_number, page_size)
+            
+        return paginate_and_serialize(story_view_data, page_number, page_size, views_count = total_views_count,story_id = story_id)

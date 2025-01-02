@@ -169,6 +169,8 @@ class UserPostListApi(MethodView):
         self.current_user_id = get_jwt_identity()
 
     def get(self,user_id=None):
+        if not is_valid_uuid(user_id):
+            return jsonify({"error": "Invalid user id format"}),400
         # takes if user_id else login user
         query_user_id = user_id or self.current_user_id
         query_user = get_user(query_user_id)

@@ -22,14 +22,14 @@ class PostLikeAPi(MethodView):
     def __init__(self):
         self.current_user_id = get_jwt_identity()
 
-    def post(self, post_id=None):
+    def post(self):
         """
         create a like on the post and if not find like of the user on the post
         deslike the post 
         """
         data = request.json
         post_id = data.get("post_id")
-
+        e = is_valid_uuid(post_id)
         if not post_id or not is_valid_uuid(post_id):
             return jsonify({"error": "Invalid or missing post ID"}), 400
 
@@ -73,16 +73,18 @@ class PostLikeAPi(MethodView):
         like_data["liked_at"] = like.created_at.isoformat()
 
         return jsonify(like_data), 201
+        return jsonify({"error": "error"}),400
 
     def get(self, post_id):
         """
         This api is for get the likes on the post by post_id
         """
+        
         if not post_id:
             return jsonify({"error": "Please provide post id "}), 400
 
         if not is_valid_uuid(post_id):
-            return {"error": "Invalid UUID format"}, 400
+            return jsonify({"error": "Invalid UUID format"}), 400
         
         #get a post
         post = Post.query.filter_by(id=post_id, is_deleted=False).first()
@@ -116,10 +118,14 @@ class CommentLikeApi(MethodView):
     def __init__(self):
         self.current_user_id = get_jwt_identity()
         
-    def post(self,comment_id):
+    def post(self):
         """ 
         An function to create the like on the comment
         """
+        data = request.json
+        comment_id = data.get("comment_id")
+        if not comment_id:
+            return jsonify({"error" : "please provide comment id"}),400
         if not is_valid_uuid(comment_id):
             return jsonify({"error": "Invalid UUID format"}),400
         comment = Comment.query.filter_by(id = comment_id,is_deleted = False).first()
@@ -149,17 +155,20 @@ class CommentLikeApi(MethodView):
         }
         return jsonify(result),201
     
-    def get(self,comment_id):
+    def get(self,comment_id=None):
         """ 
         An function to get the likes on the comment by comment id
         """
-        if not is_valid_uuid(comment_id):
-            return jsonify({"error": "Invalid UUID format"}),400
         #get the comment 
+        if not comment_id:
+            return jsonify({"error": "Provide comment id"}), 404
+        if not is_valid_uuid(comment_id):
+            return jsonify({"error": "Invalid UUID format"}), 400
+        
         comment = Comment.query.filter_by(
-            id=comment_id, is_deleted=False).first()
+                id=comment_id, is_deleted=False).first()
         if not comment:
-            return jsonify({"error": "Comment not exist"}), 404
+            return jsonify({"errors" : "Comment not exist"}),400
      
         #get the page size and page_number given by the user
         page_number = request.args.get('page', default=1, type=int)
@@ -174,7 +183,8 @@ class CommentLikeApi(MethodView):
         for like in likes:
             like_data.append({
                 "comment_id": comment_id,
-                "author": comment.user_id
+                "author": comment.user_id,
+                "liked_by": like.user
             })
         #apply the pagination
         item = paginate_and_serialize(
@@ -191,11 +201,16 @@ class StorylikeApi(MethodView):
 
     def __init__(self):
         self.current_user_id = get_jwt_identity()
-    def post(self,story_id):
+    def post(self):
+        data = request.json
+        story_id = data.get("story_id")
+
         if not is_valid_uuid(story_id):
             return jsonify({"error": "Invalid UUID format"}),400
         story= Story.query.filter_by(
                 id=story_id, is_deleted=False).first()
+        if story.story_owner == self.current_user_id:
+            return jsonify({"error" : "You can't like your own story"}),400
         if not story:
             return jsonify({"error": "Story not exist"}), 400
         like = Like.query.filter_by(

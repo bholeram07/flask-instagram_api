@@ -4,6 +4,7 @@ from functools import wraps  # Correctly import wraps
 from flask import request, jsonify
 from app.models.post import Post
 from app.models.comment import Comment
+from app.uuid_validator import is_valid_uuid
 global target_user
 
 
@@ -56,6 +57,8 @@ class Permission:
             if user_id:
                 target_user = User.query.get(user_id)
             if post_id:
+                if not is_valid_uuid(post_id):
+                    return jsonify({"error": "Invalid uuid format"}),400
                 post = Post.query.filter_by(
                     id=post_id, is_deleted=False).first()
                 if not post:
