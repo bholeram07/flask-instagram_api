@@ -11,36 +11,32 @@ class SignupSchema(Schema):
     @validates("password")
     def validate_password(self, password):
         if not password.strip():
-           raise ValidationError(" password should not be blank.")
+           raise ValidationError("Password should not be blank")
         if len(password) < 8:
-            raise ValidationError("Password must be at least 8 characters long.")
+            raise ValidationError("Password must be at least 8 characters long")
         if not re.search(r"[!@#$%^&*()_]", password):
             raise ValidationError(
-                "Password must contain at least one special character."
+                "Password must contain at least one special character"
             )
         if not re.search(r"[1-9]", password):
             raise ValidationError("Password must contain at least one numerical value")
 
         if not re.search(r"[a-z]", password):
             raise ValidationError(
-                "Password must contain at least one lowercase letter."
+                "Password must contain at least one lowercase letter"
             )
 
         if not re.search(r"[A-Z]", password):
             raise ValidationError(
-                "Password must contain at least one uppercase letter."
+                "Password must contain at least one uppercase letter"
             )
 
         return password
     
     @validates("username")
     def validate_username(self, value):
-        if not value.strip() or all(char == '_' for char in value):
-            raise ValidationError(
-                "Invalid username: should not be blank or contain only underscores.")
-        if not re.search(r"[^&*]", value):
-            raise ValidationError("username must not contain special character")
-            
+        if not value.strip():
+            raise ValidationError("Username should not be blank")
           
 
 
@@ -62,7 +58,7 @@ class LoginSchema(Schema):
     @validates("password")
     def validate_password(self, password):
         if not password.strip():
-           raise ValidationError("password should not be blank.")
+           raise ValidationError("password should not be blank")
        
     @validates("username_or_email")
     def validate_username_or_email(self, username_or_email):
