@@ -8,7 +8,7 @@ from app.models.follower import Follow
 from app.extensions import db
 from app.utils.get_validate_user import get_user
 from app.pagination_response import paginate_and_serialize
-
+from app.utils.get_limit_offset import get_limit_offset
 
 class FollowRequestWithdraw(MethodView):
     decorators = [jwt_required()]
@@ -25,6 +25,8 @@ class FollowRequestWithdraw(MethodView):
             return jsonify({"error": "Invalid UUid format"}), 400
         # fetch the user
         user = get_user(user_id)
+        if not user:
+            return jsonify("user not exist"),404
         # fetch the follow request
         followrequest = FollowRequest.query.filter_by(
             follower_id=self.current_user_id, following_id=user_id).first()
@@ -59,10 +61,9 @@ class FollowrequestAccept(MethodView):
             if not followrequest:
                 return jsonify({"errors":"Follow request not found"}),404
             db.session.delete(followrequest)
-            db.session.commit()#atomicity
+            db.session.commit()
            
              # follow the user
-
             follow = Follow(
                 follower_id=user_id,
                 following_id=self.current_user_id,
@@ -83,12 +84,10 @@ class FollowrequestAccept(MethodView):
             return jsonify({"error": "Invalid action"}), 404
 
     def get(self):
-        page_number = request.args.get('page', default=1, type=int)
-        page_size = request.args.get('size', default=5, type=int)
-        offset = (page_number - 1)*page_size
+        page_number,offset,page_size = get_limit_offset()
         followrequest = FollowRequest.query.filter_by(
             following_id=self.current_user_id).offset(offset).limit(page_size).all()
-        print(followrequest)
+       
         result = []
         result = [
             {

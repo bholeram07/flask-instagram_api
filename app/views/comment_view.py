@@ -18,7 +18,7 @@ from datetime import datetime
 from sqlalchemy import func
 from app.response.comment_response import comment_respose
 from app.permissions.permissions import Permission
-
+from app.utils.get_limit_offset import get_limit_offset
 
 
 class CommentApi(MethodView):
@@ -89,42 +89,23 @@ class CommentApi(MethodView):
             
 
 
-    def get(self, post_id=None, comment_id=None):
+    def get(self, comment_id):
         """
         Retrieves comments on a specific post or by comment ID, with reply counts for each comment.
         """
-        if comment_id:
-            if not is_valid_uuid(comment_id):
-                return jsonify({"error": "Invalid uuid format"}), 400
-            comment = Comment.query.filter_by(
-                id=comment_id, is_deleted=False).first()
-            if not comment:
-                return jsonify({"errors": "Comment not exist"}), 404
-            # Add reply_count to a single comment
-            reply_count = Comment.query.filter_by(
-                parent=comment_id, is_deleted=False).count()
-            comment_data = self.comment_schema.dump(comment)
-            comment_data["reply_count"] = reply_count
-            return jsonify(comment_data), 200
-
-        if post_id:
-            if not is_valid_uuid(post_id):
-                return jsonify({"error": "Invalid uuid format"}), 400
-            post = Post.query.filter_by(id=post_id, is_deleted=False).first()
-            if not post:
-                return jsonify({"error": "Post does not exist"}), 404
-
-            page_number = request.args.get('page', default=1, type=int)
-            page_size = request.args.get('size', default=5, type=int)
-            offset = (page_number - 1) * page_size
-
-            # Fetch paginated comments
-            comments = Comment.query.filter_by(
-                post_id=post_id, is_deleted=False
-            ).order_by(desc(Comment.created_at)).offset(offset).limit(page_size).all()
-    
-            serialized_comments = comment_respose(comments,self.comment_schema)
-            return paginate_and_serialize(serialized_comments,page_number,page_size)
+       
+        if not is_valid_uuid(comment_id):
+            return jsonify({"error": "Invalid uuid format"}), 400
+        comment = Comment.query.filter_by(
+            id=comment_id, is_deleted=False).first()
+        if not comment:
+            return jsonify({"errors": "Comment not exist"}), 404
+        # Add reply_count to a single comment
+        reply_count = Comment.query.filter_by(
+            parent=comment_id, is_deleted=False).count()
+        comment_data = self.comment_schema.dump(comment)
+        comment_data["reply_count"] = reply_count
+        return jsonify(comment_data), 200
 
         return jsonify({"error": "Post id is required"}), 400
 
@@ -149,7 +130,7 @@ class CommentApi(MethodView):
         comment_update_data, errors = validate_and_load(
             self.comment_schema, data)
         if errors:
-            return jsonify({"errors": errors})
+            return jsonify({"errors": errors}),400
 
         comment.content = comment_update_data.get("content")
         db.session.commit()
@@ -180,3 +161,26 @@ class CommentApi(MethodView):
         db.session.commit()
 
         return jsonify(), 204
+
+class CommentListApi(MethodView):
+    """An Api to get all the comments on the post take the postid and list all the comments on the post"""
+    decorators = [jwt_required(),Permission.user_permission_required]
+    
+    def get(self,post_id):
+        if not is_valid_uuid(post_id):
+            return jsonify({"error": "Invalid uuid format"}), 400
+        post = Post.query.filter_by(id=post_id, is_deleted=False).first()
+        if not post:
+            return jsonify({"error": "Post does not exist"}), 404
+
+        page_number,offset,page_size = get_limit_offset()
+
+        # Fetch paginated comments
+        comments = Comment.query.filter_by(
+            post_id=post_id, is_deleted=False
+        ).order_by(desc(Comment.created_at)).offset(offset).limit(page_size).all()
+
+        serialized_comments = comment_respose(
+            comments, self.comment_schema)
+        return paginate_and_serialize(serialized_comments, page_number, page_size)
+    

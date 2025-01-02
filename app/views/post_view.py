@@ -19,6 +19,7 @@ from uuid import UUID
 from app.response.post_response import post_response
 from app.permissions.permissions import Permission
 from app.utils.get_validate_user import get_user
+from app.utils.get_limit_offset import get_limit_offset
 
 
 class PostApi(MethodView):
@@ -76,10 +77,9 @@ class PostApi(MethodView):
         # Check if the user is owner or not
         post = Post.query.filter_by(id = post_id, user = self.current_user_id,is_deleted = False).first()
         if not post:
-            return jsonify({"error": "Post not exist"}), 400
+            return jsonify({"error": "Post not exist"}), 404
 
         #get the data
-        data = request.form or request.json
         file = request.files
         #handle and save the image in s3 and databasae
         if file:
@@ -91,9 +91,13 @@ class PostApi(MethodView):
                     post_image_video_obj.update_image_or_video()
                 except Exception as e:
                     return jsonify({"error": f"The error occured in uploading {e}"}),400
-                
-        if not data:
-            return jsonify({"error": "provide data to update"}), 400
+        data = None
+        try:  
+            data = request.form or request.json
+        except Exception as e:
+            if not file:
+                return jsonify({"error" : "provide data to update"}),400
+      
         #update post schema
         update_post_schema = UpdatePostSchema()
 
@@ -166,19 +170,16 @@ class UserPostListApi(MethodView):
 
     def get(self,user_id=None):
         # takes if user_id else login user
-        print("here in get")
         query_user_id = user_id or self.current_user_id
         query_user = get_user(query_user_id)
         if not query_user:
             return jsonify({"error" : "User not exist"}),404
         # fetch the post of the user
-        page_number = request.args.get('page', default=1, type=int)
-        page_size = request.args.get('size', default=5, type=int)
+       
+        page,offset,page_size = get_limit_offset()
         # Calculate offset
-        offset = (page_number - 1) * page_size
-        
         # Query database with limit and offset
         posts = Post.query.filter_by(user=query_user_id, is_deleted=False).order_by(desc(Post.created_at)).offset(offset).limit(page_size).all()
         serialized_post = post_response(posts,self.post_schema)
         
-        return paginate_and_serialize(serialized_post,page_number,page_size)
+        return paginate_and_serialize(serialized_post,page,page_size)

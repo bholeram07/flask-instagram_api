@@ -76,8 +76,13 @@ class UserProfile(MethodView):
                     update_profile_pic(user, image)
                 except Exception as e:
                     return jsonify({"error": e})
-
-        data = request.form or request.json
+        data = {}
+        try:  
+            data = request.form or request.json
+        except Exception as e:
+            if not file:
+                return jsonify({"error" : "provide data to update"}),400
+        # except as exeption:
         if "is_private" in data:
             is_private = data.get("is_private")
             # check the field is boolean or not

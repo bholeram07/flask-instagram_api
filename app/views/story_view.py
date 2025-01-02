@@ -64,6 +64,8 @@ class UserStory(MethodView):
             return jsonify({"error": "Invalid uuid format"}), 400
         # get the story
         story = Story.query.filter_by(id=story_id, is_deleted=False).first()
+        if not story:
+            return jsonify({"error": "story not exist"}),404
 
         if str(story.story_owner) != str(self.current_user_id):
             story_view = StoryView.query.filter_by(

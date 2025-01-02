@@ -48,6 +48,8 @@ class Permission:
             post_id = data.get('post_id') or kwargs.get('post_id')
             comment_id = data.get('comment_id') or kwargs.get('comment_id')
             story_id = data.get('story_id') or kwargs.get("story_id")
+            current_user_id = Permission.get_current_user_id()
+         
 
             target_user = None
             # if post_id is taken
@@ -57,7 +59,7 @@ class Permission:
                 post = Post.query.filter_by(
                     id=post_id, is_deleted=False).first()
                 if not post:
-                    return jsonify({"error": "Post not found"}), 400
+                    return jsonify({"error": "Post not found"}), 404
                 # pass the user of the post
                 target_user = User.query.get(post.user)
             # if the comment id is taken
@@ -69,8 +71,10 @@ class Permission:
                     return jsonify({"error": "comment not exist"}), 404
                 # pass the user of the comment
                 target_user = User.query.get(comment.user_id)
-            if not target_user:
-                return jsonify({"error": "User not found"}), 404
+            # if not target_user:
+            #     return jsonify({"error": "User not found"}), 404
+            if target_user == None:
+                return view_func(*args, **kwargs)
             # permission denied
             if not Permission.can_access_user(target_user):
                 return jsonify({"error": "Can't access user account is private"}), 403
