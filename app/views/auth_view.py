@@ -169,21 +169,25 @@ class UpdatePassword(MethodView):
         user = get_user(user_id)
         if not user:
             return jsonify({"error": "User not found"}), 404
+          # Validate and serialize the data
+        
+
         
         current_password = data.get("current_password")
         new_password = data.get("new_password")
+        if not current_password:
+            return jsonify({"errors":{"current_password" : "Missing data for required field"}}),400
 
         if not user.check_password(current_password):
             return jsonify({"error": "Invalid credentials"}), 401
 
-        # Validate and serialize the data
+      
+        if current_password == new_password:
+            return jsonify({"error": "Old and new passwords must not be the same"}), 400
         user_data, errors = validate_and_load(
             self.update_password_schema, data)
         if errors:
             return jsonify({"errors": errors}), 400
-
-        if current_password == new_password:
-            return jsonify({"error": "Old and new passwords must not be the same"}), 400
 
         # Atomic operation
         try:
@@ -264,10 +268,6 @@ class ResetPassword(MethodView):
         user_data, errors = validate_and_load(self.reset_password_schema, data)
         if errors:
             return jsonify({"errors": errors}),400
-        # check the password matches with the confirm-password
-        if new_password != confirm_password:
-            return jsonify({"error": "new password and confirm password must be equal"}), 400
-
         redis_key = f"reset_password:{token}"
         redis_client = current_app.config["REDIS_CLIENT"]
         # get the user_id from the redis
@@ -281,7 +281,12 @@ class ResetPassword(MethodView):
             return jsonify({"error": "User not found"}), 404
         # check the passwoed
         if user.check_password(new_password):
-            return jsonify({"error": "new and old password not be same"}), 401
+            return jsonify({"error": "new and old password not be same"}), 400
+        # check the password matches with the confirm-password
+        if new_password != confirm_password:
+            return jsonify({"error": "new password and confirm password must be equal"}), 400
+
+       
         # set the new password entered by the user
 
         try:

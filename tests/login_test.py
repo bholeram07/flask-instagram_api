@@ -8,7 +8,6 @@ from werkzeug.security import generate_password_hash
 @pytest.fixture
 def user_data(app):
     """Fixture to create a sample user for testing."""
-    # Create a user object or any other object you want for testing
     user = User(
         username="testuser",
         email="test@example.com",
@@ -104,6 +103,8 @@ def test_password_not_blank(client):
     response = client.post('api/login/', json=login_payload)
     assert response.status_code == 400
     assert response.json['errors']['password'] == 'password should not be blank'
+    
+
 
 
 

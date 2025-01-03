@@ -2,6 +2,7 @@ import pytest
 from app import create_app
 from app.extensions import db
 from flask import Flask
+from unittest.mock import MagicMock
 
 
 
@@ -13,6 +14,7 @@ def app():
         'SQLALCHEMY_DATABASE_URI': 'postgresql://flask_user:1234@localhost/flask_test_db',
         'SQLALCHEMY_TRACK_MODIFICATIONS': False,
     })
+    app.config['REDIS_CLIENT'] = MagicMock()
 
     # Initialize database and set testing configurations
 
@@ -26,7 +28,7 @@ def app():
 
     # Yield the app instance for testing
     yield app
-    
+
     with app.app_context():
         db.session.remove()
         db.drop_all()
