@@ -46,7 +46,7 @@ class PostApi(MethodView):
         file = request.files
       
         if file:
-            image_or_video = file.get("video_or_image")
+            image_or_video = file.get("image_or_video")
             if image_or_video:
                 post_image_video_obj = PostImageVideo(post, image_or_video, self.current_user_id)
                 post_image_video_obj.upload_image_or_video()
@@ -56,6 +56,7 @@ class PostApi(MethodView):
             return ({"error": "Please Provide image or video for post"}), 400
         
         try:
+    
             db.session.add(post)
             db.session.commit()
             return jsonify(self.post_schema.dump(post)), 201
@@ -71,7 +72,7 @@ class PostApi(MethodView):
         Updates an existing post. Only the post owner can update it.
         """
 
-        if not post_id or not is_valid_uuid(post_id):
+        if not is_valid_uuid(post_id):
             return jsonify({"error": "Invalid or missing post ID"}), 400
         
         # Check if the user is owner or not
@@ -80,23 +81,34 @@ class PostApi(MethodView):
             return jsonify({"error": "Post not exist"}), 404
 
         #get the data
-        file = request.files
+      
         #handle and save the image in s3 and databasae
-        if file:
-            image_or_video = file.get("image_or_video")
-            if image_or_video :
-                #update the image or video on the s3 
-                try:
-                    post_image_video_obj = PostImageVideo(post, image_or_video, self.current_user_id)
-                    post_image_video_obj.update_image_or_video()
-                except Exception as e:
-                    return jsonify({"error": f"The error occured in uploading {e}"}),400
+        
+         
+        file = request.files
         data = None
+        image_or_video = None
         try:  
             data = request.form or request.json
         except Exception as e:
             if not file:
                 return jsonify({"error" : "provide data to update"}),400
+        if not data and not file:
+            return jsonify({"error": "provide data to update"}), 400
+        if file:
+            image_or_video = file.get("image_or_video")
+
+            if image_or_video:
+                post_image_video_obj = PostImageVideo(
+                    post, image_or_video, self.current_user_id)
+                post_image_video_obj.update_image_or_video()
+            else :
+                return jsonify({"error": "provide data to update"}), 400
+                
+        
+        if image_or_video and not data:
+            return jsonify(self.post_schema.dump(post)),202
+        
       
         #update post schema
         update_post_schema = UpdatePostSchema()
@@ -105,18 +117,20 @@ class PostApi(MethodView):
         updated_data, errors = validate_and_load(update_post_schema, data)
         if errors:
             return jsonify({"errors": errors}), 400
-        try:
-            for key, value in updated_data.items():
-                setattr(post, key, value)
-            
-            post.updated_at = datetime.now()   
+        
+        # try:
 
-            db.session.commit()
-            return jsonify(self.post_schema.dump(post)), 202
-        except Exception as e:
-            db.session.rollback()
-            current_app.logger.error(f"Error creating post: {str(e)}")
-            return jsonify({"error": "An error occurred while updating the post"}), 500
+        for key, value in updated_data.items():
+            setattr(post, key, value)
+        
+        post.updated_at = datetime.now()   
+
+        db.session.commit()
+        return jsonify(self.post_schema.dump(post)), 202
+        # except Exception as e:
+        #     db.session.rollback()
+        #     current_app.logger.error(f"Error creating post: {str(e)}")
+        #     return jsonify({"error": "An error occurred while updating the post"}), 500
             
     # @permission_required("post_id")
 
@@ -144,7 +158,7 @@ class PostApi(MethodView):
         # Check if the post exists, regardless of the user
         post = Post.query.filter_by(user = self.current_user_id,id=post_id, is_deleted=False).first()
         if not post:
-            return jsonify({"error": "Post not found"}), 404
+            return jsonify({"error": "Post not exist"}), 404
         #delete the post_image from the s3
         try:
             post_image_video_obj = PostImageVideo(post, post.image_or_video, self.current_user_id)

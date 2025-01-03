@@ -36,6 +36,7 @@ class PostSchema(Schema):
 
 class UpdatePostSchema(Schema):
     """A schema class to serialize and deserialize the post data provide for update using marshmallow"""
-    title = fields.Str(validate=validate.Length(min=1), required=False)
-    caption = fields.Str(validate=validate.Length(min=1), required=False)
+    title = fields.Str(required=False)
+    caption = fields.Str(required=False)
+    image_or_video = fields.Str(required= False)
     is_enable_comment = fields.Boolean(required=False)

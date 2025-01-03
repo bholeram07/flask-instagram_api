@@ -8,40 +8,40 @@ from app.s3_bucket_config import create_s3_client
 import logging
 
 
-def setup_logging(app):
-    # Create logs directory inside instance folder if it doesn't exist
-    log_dir = os.path.join(app.instance_path, 'logs')
-    os.makedirs(log_dir, exist_ok=True)
+# def setup_logging(app):
+#     # Create logs directory inside instance folder if it doesn't exist
+#     log_dir = os.path.join(app.instance_path, 'logs')
+#     os.makedirs(log_dir, exist_ok=True)
 
-    # Define log file path
-    log_file = os.path.join(log_dir, 'flask_api.log')
+#     # Define log file path
+#     log_file = os.path.join(log_dir, 'flask_api.log')
 
-    # Set up logging configuration
-    logger = logging.getLogger()  # Root logger
+#     # Set up logging configuration
+#     logger = logging.getLogger()  # Root logger
 
-    # StreamHandler for printing logs to console (print all logs to the terminal)
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.DEBUG)  # Print all logs to the console
+#     # StreamHandler for printing logs to console (print all logs to the terminal)
+#     console_handler = logging.StreamHandler()
+#     console_handler.setLevel(logging.DEBUG)  # Print all logs to the console
 
-    # FileHandler for storing logs in the file (only info and above)
-    file_handler = logging.FileHandler(log_file)
-    # Store info and above logs in the file
-    file_handler.setLevel(logging.INFO)
+#     # FileHandler for storing logs in the file (only info and above)
+#     file_handler = logging.FileHandler(log_file)
+#     # Store info and above logs in the file
+#     file_handler.setLevel(logging.INFO)
 
-    # Define log format
-    formatter = logging.Formatter('%(levelname)s - %(message)s')
+#     # Define log format
+#     formatter = logging.Formatter('%(levelname)s - %(message)s')
 
-    # Apply formatter to both handlers
-    console_handler.setFormatter(formatter)
-    file_handler.setFormatter(formatter)
+#     # Apply formatter to both handlers
+#     console_handler.setFormatter(formatter)
+#     file_handler.setFormatter(formatter)
 
-    # Add handlers to the logger
-    logger.addHandler(console_handler)
-    logger.addHandler(file_handler)
+#     # Add handlers to the logger
+#     logger.addHandler(console_handler)
+#     logger.addHandler(file_handler)
 
-    # Set the default logging level for the root logger
-    # This will capture all logs of DEBUG level and above
-    logger.setLevel(logging.DEBUG)
+#     # Set the default logging level for the root logger
+#     # This will capture all logs of DEBUG level and above
+#     logger.setLevel(logging.DEBUG)
 
 
 def create_app(test_config=None):
@@ -57,7 +57,7 @@ def create_app(test_config=None):
     # config the redis cliwnt
     app.config["REDIS_CLIENT"] = redis_client
     # set up the logger
-    setup_logging(app)
+    # setup_logging(app)
     initialize_extensions(app)
     # import thre blueprint and register with app
     from app.blueprints import register_blueprints

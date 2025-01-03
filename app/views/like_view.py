@@ -13,6 +13,7 @@ from app.custom_pagination import CustomPagination
 from app.pagination_response import paginate_and_serialize
 from sqlalchemy import desc
 from app.permissions.permissions import Permission
+from app.utils.get_limit_offset import get_limit_offset
 
 
 class PostLikeAPi(MethodView):
@@ -92,20 +93,19 @@ class PostLikeAPi(MethodView):
             return jsonify({"error": "Post does not exist"}), 404
         
         #for get all the likes on the post
-        likes = Like.query.filter_by(post=post_id).order_by(
-            desc(Like.created_at)).all()
+        page_number, offset, page_size = get_limit_offset()
+        likes = (Like.query.filter_by(post=post_id).order_by(desc(Like.created_at)).offset(offset).limit(page_size).all())
         
         #count of the likes on the post
         likes_count = Like.query.filter_by(post=post_id).count()
 
         if likes_count == 0:
             return jsonify({"error": "No likes found on this post"}), 404
+     
         
         #pagination
         return paginate_and_serialize(
-            likes,
-            self.like_schema,
-            extra_fields={"likes_count": likes_count}
+            likes, page_number, page_size, self.like_schema,likes_count= likes_count
         )
 
 
@@ -171,9 +171,7 @@ class CommentLikeApi(MethodView):
             return jsonify({"errors" : "Comment not exist"}),400
      
         #get the page size and page_number given by the user
-        page_number = request.args.get('page', default=1, type=int)
-        page_size = request.args.get('size', default=5, type=int)
-        offset = (page_number - 1) * page_size
+        page_number, offset, page_size = get_limit_offset()
         #fetch the likes on the comment 
         likes = Like.query.filter_by(
             comment=comment_id).offset(
@@ -209,6 +207,8 @@ class StorylikeApi(MethodView):
             return jsonify({"error": "Invalid UUID format"}),400
         story= Story.query.filter_by(
                 id=story_id, is_deleted=False).first()
+        if not story:
+            return jsonify({"error": "story not exist"}),404
         if story.story_owner == self.current_user_id:
             return jsonify({"error" : "You can't like your own story"}),400
         if not story:

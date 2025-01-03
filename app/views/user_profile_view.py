@@ -103,8 +103,8 @@ class UserProfile(MethodView):
                     return jsonify({"error": "This username is already taken"}), 400
 
                 if user.username_change_timestamp is None:
-                    user.username_change_timestamp = datetime.now()
-                    user.username.change_count = 0
+                    user.username_change_timestamp = datetime.now(timezone.utc)
+                    user.username_change_count = 0
 
                 # make the json seralizable
                 now = datetime.now(timezone.utc)

@@ -68,6 +68,8 @@ class Permission:
             # if the comment id is taken
             if comment_id:
                 # fetch the comment
+                if not is_valid_uuid(comment_id):
+                    return jsonify({"error": "Invalid uuid format"}), 400
                 comment = Comment.query.filter_by(
                     id=comment_id, is_deleted=False).first()
                 if not comment:

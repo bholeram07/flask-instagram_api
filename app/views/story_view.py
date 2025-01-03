@@ -49,7 +49,7 @@ class UserStory(MethodView):
         try:
             db.session.add(story)
             db.session.commit()
-            return jsonify(self.story_schema.dump(story)), 200
+            return jsonify(self.story_schema.dump(story)), 201
         except Exception as e:
             db.session.rollback()
             return jsonify({"error" : "some error occured during uploading the story please try again"}),500
