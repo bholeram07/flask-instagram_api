@@ -1,12 +1,13 @@
 import pytest
 import uuid
-from app.models.user import  User
+from app.models.user import User
 from app.models.comment import Comment
 from app.models.likes import Like
 from flask_jwt_extended import create_access_token
 from werkzeug.security import generate_password_hash
 from app.extensions import db
 import uuid
+
 
 @pytest.fixture
 def user_data(app):
@@ -24,6 +25,7 @@ def user_data(app):
         db.session.commit()
         db.session.refresh(user)
     return user
+
 
 @pytest.fixture
 def comment_data(app, user_data):
@@ -96,7 +98,6 @@ class TestCommentLikeApi:
         )
 
         assert response.status_code == 201
-  
 
     def test_unlike_comment(self):
         """
@@ -146,7 +147,7 @@ class TestCommentLikeApi:
 
         assert response.status_code == 404
         assert response.json["error"] == "comment not exist"
-    
+
     def test_get_likes_valid_post(self, create_comment_likes):
         """Test fetching likes for a valid post with likes."""
         response = self.client.get(
@@ -154,7 +155,7 @@ class TestCommentLikeApi:
             headers=self.headers
         )
         assert response.status_code == 200
-        
+
     def test_get_likes_invalid_post_id(self):
         """Test fetching likes without providing a post ID."""
         response = self.client.get(
@@ -163,7 +164,7 @@ class TestCommentLikeApi:
         )
         assert response.status_code == 400
         assert response.json["error"] == "Invalid uuid format"
-        
+
     def test_get_likes_nonexistent_post(self):
         """Test fetching likes for a non-existent post."""
         response = self.client.get(
@@ -172,7 +173,3 @@ class TestCommentLikeApi:
         )
         assert response.status_code == 404
         assert response.json["error"] == "comment not exist"
-        
-    
-    
-    

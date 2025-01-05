@@ -43,10 +43,13 @@ class TestStoryApi:
 
         response = self.client.post(
             '/api/story/',
-            data=data,
+            json=data,
             headers=self.headers
         )
-        return response.json['id']
+        response_json = response.get_json()
+        print(response_json)
+
+        return response_json['id']
 
     def test_create_story(self):
         """Test creating a story with text content."""
@@ -98,6 +101,7 @@ class TestStoryApi:
             f'/api/story/{story_id}/',
             headers=self.headers
         )
+        print(response.json)
         assert response.status_code == 200
         assert response.json["id"] == story_id
 
@@ -109,7 +113,7 @@ class TestStoryApi:
             headers=self.headers
         )
         assert response.status_code == 400
-        assert response.json["error"] == "Invalid uuid format"
+        assert response.json["error"] == "Invalid UUID format"
 
     def test_get_nonexistent_story(self):
         """Test retrieving a non-existent story."""
@@ -119,11 +123,12 @@ class TestStoryApi:
             headers=self.headers
         )
         assert response.status_code == 404
-        assert response.json["error"] == "story not exist"
+        assert response.json["error"] == "Story does not exist"
 
     def test_delete_story(self):
         """Test deleting a story by its ID."""
         story_id = self.create_story()
+        print(story_id)
 
         response = self.client.delete(
             f'/api/story/{story_id}/',
@@ -139,14 +144,13 @@ class TestStoryApi:
             headers=self.headers
         )
         assert response.status_code == 404
-        assert response.json["error"] == "Story not exist"
+        assert response.json["error"] == "Story does not exist"
 
     def test_delete_invalid_story_id(self):
         """Test deleting a story with an invalid ID."""
         response = self.client.delete(
-            '/api/story/{story_id}/',
+            '/api/story/invalid-uuid/',
             headers=self.headers
         )
         assert response.status_code == 400
-        assert response.json["error"] == "Invalid uuid format"
- 
+        assert response.json["error"] == "Invalid UUID format"

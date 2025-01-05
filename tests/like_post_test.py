@@ -8,6 +8,7 @@ from app.models.post import Post
 from app.models.likes import Like
 import uuid
 
+
 @pytest.fixture
 def user_data(app):
     """Fixture to create a sample user for testing."""
@@ -27,12 +28,12 @@ def user_data(app):
 
 
 @pytest.fixture
-def post_data(app,user_data):
+def post_data(app, user_data):
     """Fixture to create a sample user for testing."""
     post = Post(
         title="test_user",
         image_or_video="bhole.jpg",
-        caption = "this is the post",
+        caption="this is the post",
         is_deleted=False,
     )
     with app.app_context():
@@ -66,6 +67,7 @@ def create_likes(user_data, post_data):
     db.session.commit()
     return likes
 
+
 class TestPostLikeApi:
     """Class-based tests for Post Like API operations."""
 
@@ -97,7 +99,8 @@ class TestPostLikeApi:
         """Test unliking a previously liked post."""
         # Like the post first
         data = {"post_id": str(self.post_data.id)}
-        self.client.post('/api/posts/toggle-like/', json=data, headers=self.headers)
+        self.client.post('/api/posts/toggle-like/',
+                         json=data, headers=self.headers)
 
         # Unlike the post
         response = self.client.post(
@@ -131,7 +134,7 @@ class TestPostLikeApi:
 
         assert response.status_code == 404
         assert response.json["error"] == "Post not found"
-    
+
     def test_get_likes_valid_post(self, create_likes):
         """Test fetching likes for a valid post with likes."""
         response = self.client.get(
@@ -141,7 +144,7 @@ class TestPostLikeApi:
         assert response.status_code == 200
         assert "likes_count" in response.json
         assert response.json["items"][0]["post"] == str(self.post_data.id)
-        
+
     def test_get_likes_invalid_post_id(self):
         """Test fetching likes without providing a post ID."""
         response = self.client.get(
@@ -150,7 +153,7 @@ class TestPostLikeApi:
         )
         assert response.status_code == 400
         assert response.json["error"] == "Invalid uuid format"
-    
+
     def test_get_likes_nonexistent_post(self):
         """Test fetching likes for a non-existent post."""
         response = self.client.get(
@@ -159,8 +162,3 @@ class TestPostLikeApi:
         )
         assert response.status_code == 404
         assert response.json["error"] == "Post not found"
-        
-    
-      
-
-   

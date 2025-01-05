@@ -24,12 +24,14 @@ def user_data(app):
         db.session.commit()
         db.session.refresh(user)
 
-    return user
-       
+    yield user
+    with app.app_context():
+        db.session.rollback()
+        db.session.close()
 
-def test_update_password_success(client,user_data):
+def test_update_password_success(client, user_data):
     """Test successful password update."""
-        # Generate a valid access token for the test user
+    # Generate a valid access token for the test user
     access_token = create_access_token(identity=user_data.id)
     response = client.put(
         "/api/update-password/",
@@ -40,9 +42,10 @@ def test_update_password_success(client,user_data):
         headers={"Authorization": f"Bearer {access_token}"},
     )
     assert response.status_code == 202
-   
+
     assert response.json["message"] == "Password updated successfully"
-    
+
+
 def test_incorrect_password(client, user_data):
     access_token = create_access_token(identity=user_data.id)
     response = client.put(
@@ -57,7 +60,8 @@ def test_incorrect_password(client, user_data):
     assert response.status_code == 401
     assert response.json["error"] == "Invalid credentials"
 
-def test_missing_field(client,user_data):
+
+def test_missing_field(client, user_data):
     access_token = create_access_token(identity=user_data.id)
     response = client.put(
         "/api/update-password/",
@@ -70,7 +74,7 @@ def test_missing_field(client,user_data):
     assert response.json["errors"]["current_password"] == "Missing data for required field"
 
 
-def test_password_not_same(client,user_data):
+def test_password_not_same(client, user_data):
     access_token = create_access_token(identity=user_data.id)
     response = client.put(
         "/api/update-password/",
@@ -89,11 +93,10 @@ def test_missing_field_new_password(client, user_data):
     response = client.put(
         "/api/update-password/",
         json={
-            "current_password" : "Bhole057p@1",
-            
+            "current_password": "Bhole057p@1",
+
         },
         headers={"Authorization": f"Bearer {access_token}"},
     )
     assert response.status_code == 400
     assert response.json["errors"]["new_password"] == "Missing data for required field."
-

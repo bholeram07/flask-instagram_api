@@ -72,26 +72,26 @@ def test_new_password_same(client, mock_redis, user_data):
     assert response.json["error"] == "new and old password not be same"
 
 
-def test_confirm_password_equal(client, mock_redis,user_data):
+def test_confirm_password_equal(client, mock_redis, user_data):
     data = {
         "new_password": "Bhole057p@",
         "confirm_password": "Bhole057p@1"
     }
     token = secrets.token_urlsafe(32)
     response = client.post('/api/reset-password/{token}/', json=data)
-    
+
     assert response.status_code == 400
     assert response.json["error"] == "new password and confirm password must be equal"
 
 
-def test_missing_field(client,mock_redis, user_data):
+def test_missing_field(client, mock_redis, user_data):
     data = {
-        
+
         "confirm_password": "Bhole057p@1"
     }
     token = secrets.token_urlsafe(32)
     response = client.post('/api/reset-password/{token}/', json=data)
-    
+
     assert response.status_code == 400
     assert response.json["errors"]["new_password"] == "Missing data for required field."
 
@@ -106,9 +106,9 @@ def test_missing_field_confirm_password(client, mock_redis, user_data):
 
     assert response.status_code == 400
     assert response.json["errors"]["confirm_password"] == "Missing data for required field."
-    
-    
-def test_blank_field(client,mock_redis,user_data):
+
+
+def test_blank_field(client, mock_redis, user_data):
     data = {
 
         "new_password": "",
@@ -119,7 +119,3 @@ def test_blank_field(client,mock_redis,user_data):
 
     assert response.status_code == 400
     assert response.json["errors"]["new_password"] == "new password should not be blank."
-    
-
-    
-    

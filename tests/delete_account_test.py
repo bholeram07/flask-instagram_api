@@ -36,4 +36,3 @@ def test_delete_account(client, user_data):
         headers={"Authorization": f"Bearer {access_token}"},
     )
     assert response.status_code == 204
-   

@@ -1,5 +1,5 @@
 import pytest
-from flask import url_for,request
+from flask import url_for, request
 
 
 @pytest.fixture
@@ -31,11 +31,13 @@ def test_username_already_exists(client, signup_payload):
     assert response.status_code == 409
     # assert response.json['error'] == 'Username already exists'
 
-def test_exist_email(client,signup_payload):
-    client.post('api/signup/',json = signup_payload)
+
+def test_exist_email(client, signup_payload):
+    client.post('api/signup/', json=signup_payload)
     # Try to signup with the same username again
     response = client.post('/api/signup/', json=signup_payload)
     assert response.status_code == 409
+
 
 def test_password_blank(client):
     signup_payload = {
@@ -44,18 +46,20 @@ def test_password_blank(client):
         "password": ""
     }
     response = client.post('/api/signup/', json=signup_payload)
-    assert response.status_code ==400
+    assert response.status_code == 400
     assert response.json['errors']['password'] == "Password should not be blank"
-    
+
+
 def test_email(client):
-    signup_payload ={
-        "username" : "testuser",
-        "email" : "testexample",
-        "password" : "Bhole057p@"
+    signup_payload = {
+        "username": "testuser",
+        "email": "testexample",
+        "password": "Bhole057p@"
     }
     response = client.post('/api/signup/', json=signup_payload)
     assert response.status_code == 400
     assert response.json['errors']['email'] == "Not a valid email address."
+
 
 def test_missing_username(client):
     signup_payload = {
@@ -70,7 +74,7 @@ def test_missing_username(client):
 def test_missing_password(client):
     signup_payload = {
         "email": "testexample",
-        "username" : "testuser"
+        "username": "testuser"
     }
     response = client.post('/api/signup/', json=signup_payload)
     assert response.status_code == 400
@@ -80,7 +84,7 @@ def test_missing_password(client):
 def test_missing_email(client):
     signup_payload = {
         "username": "testuser",
-        "password" : "Bhole@057p@"
+        "password": "Bhole@057p@"
     }
     response = client.post('/api/signup/', json=signup_payload)
     assert response.status_code == 400

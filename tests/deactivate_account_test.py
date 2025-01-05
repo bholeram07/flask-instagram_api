@@ -34,27 +34,22 @@ def test_deactivate_account(client, user_data):
         "/api/accounts/deactivate/",
         json={
             "password": "Bhole057p@1",
-            
         },
         headers={"Authorization": f"Bearer {access_token}"},
     )
     assert response.status_code == 202
-
     assert response.json["message"] == "Your account is deactivated ,you can reactivate it by login again"
 
 
-def test_incorrect_password(client,user_data):
+def test_incorrect_password(client, user_data):
     access_token = create_access_token(identity=user_data.id)
     response = client.put(
         "/api/accounts/deactivate/",
         json={
             "password": "Bhole057p@",
-            
+
         },
         headers={"Authorization": f"Bearer {access_token}"},
     )
     assert response.status_code == 400
-
     assert response.json["error"] == "Invalid Credentials"
-
-

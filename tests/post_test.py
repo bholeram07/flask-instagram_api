@@ -34,7 +34,7 @@ class TestPostApi:
         self.user_data = user_data
         self.access_token = create_access_token(identity=self.user_data.id)
         self.headers = {"Authorization": f"Bearer {self.access_token}"}
-    
+
     def create_post(self):
         data = {
             "title": "Test Title",
@@ -54,8 +54,6 @@ class TestPostApi:
         )
 
         return response.json["id"]
-    
-    
 
     def test_create_post_success(self):
         """Test creating a post with valid data and file."""
@@ -80,7 +78,6 @@ class TestPostApi:
         assert response.status_code == 201
         assert response.json["title"] == "Test Title"
         assert response.json["caption"] == "Test Caption"
-     
 
     def test_missing_image_or_video(self):
         """Test creating a post without providing an image or video."""
@@ -120,8 +117,7 @@ class TestPostApi:
         print(response.json)
         assert response.status_code == 400
         assert response.json["error"] == 'Please Provide image or video for post'
-    
-    
+
     def test_update_post(self):
         post_id = self.create_post()
         updated_data = {
@@ -137,7 +133,7 @@ class TestPostApi:
         assert response.status_code == 202
         assert response.json["title"] == "Updated Title"
         assert response.json["caption"] == "Updated Caption"
-    
+
     def test_update_post_not_found(self):
         post_id = '2ed0a99e-54ea-46f2-aded-2e8230ecb203'
         updated_data = {
@@ -151,15 +147,16 @@ class TestPostApi:
         )
         assert response.status_code == 404
         assert response.json["error"] == "Post not exist"
-    
+
     def test_update_post_no_permission(self):
         """Test updating a post created by another user."""
         # Assuming you have a mechanism to simulate another user's token
-        another_user_token = create_access_token(identity=999999)  # Simulate another user
+        another_user_token = create_access_token(
+            identity=999999)  # Simulate another user
         print(another_user_token)
         headers = {"Authorization": f"Bearer {another_user_token}"}
 
-        post_id = self.create_post() 
+        post_id = self.create_post()
        # Create a post as the current user
 
         updated_data = {
@@ -175,11 +172,11 @@ class TestPostApi:
 
         # print(response.json)
         assert response.status_code == 404
-        
+
     def test_provide_data_for_update(self):
         post_id = self.create_post()
         updated_data = {
-          
+
         }
         response = self.client.patch(
             f'/api/posts/{post_id}',
@@ -188,7 +185,7 @@ class TestPostApi:
         )
         assert response.status_code == 400
         assert response.json["error"] == "provide data to update"
-        
+
     def test_only_image_data_for_update(self):
         post_id = self.create_post()
         print(post_id)
@@ -209,14 +206,13 @@ class TestPostApi:
         assert response.status_code == 202
         assert response.json["title"] == "Test Title"
         assert response.json["caption"] == "Test Caption"
-    
+
     def test_only_data_for_update(self):
         post_id = self.create_post()
         data = {
-            "title" : "this is title",
-            "caption" : "this is caption"
+            "title": "this is title",
+            "caption": "this is caption"
         }
-       
 
         response = self.client.patch(
             f'/api/posts/{post_id}',
@@ -226,26 +222,25 @@ class TestPostApi:
         )
 
         assert response.status_code == 202
-        
+
     def test_delete_post_success(self):
         post_id = self.create_post()
-       
 
         response = self.client.delete(
             f'/api/posts/{post_id}',
             headers=self.headers
         )
         assert response.status_code == 204
-    
+
     def test_delete_post_no_permission(self):
-          
-        another_user_token = create_access_token(identity=999999)  # Simulate another user
+
+        another_user_token = create_access_token(
+            identity=999999)  # Simulate another user
         print(another_user_token)
         headers = {"Authorization": f"Bearer {another_user_token}"}
 
-        post_id = self.create_post() 
+        post_id = self.create_post()
        # Create a post as the current user
-
 
         response = self.client.delete(
             f'/api/posts/{post_id}/',
@@ -254,17 +249,17 @@ class TestPostApi:
 
         # print(response.json)
         assert response.status_code == 404
-    
+
     def test_delete_post_not_exist(self):
         post_id = '2ed0a99e-54ea-46f2-aded-2e8230ecb203'
-      
+
         response = self.client.delete(
             f'/api/posts/{post_id}',
             headers=self.headers
         )
         assert response.status_code == 404
         assert response.json["error"] == "Post not exist"
-    
+
     def test_get_post_success(self):
         post_id = self.create_post()
         response = self.client.get(
@@ -275,23 +270,11 @@ class TestPostApi:
         assert response.status_code == 200
         assert "title" in response.json
         assert response.json["id"] == post_id
-    
+
     def test_get_post_not_exist(self):
-        post_id = '2ed0a99e-54ea-46f2-aded-2e8230ecb203'
+        post_id = '2ed0a99e-54ea-46f2-aded-2e8230ecb202'
         response = self.client.get(
             f'/api/posts/{post_id}',
             headers=self.headers
         )
         assert response.status_code == 404
-    
-    
-    
-    
-    
-        
-
-
-
-
-
-
