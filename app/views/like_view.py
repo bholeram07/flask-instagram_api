@@ -30,7 +30,6 @@ class PostLikeAPi(MethodView):
         """
         data = request.json
         post_id = data.get("post_id")
-        e = is_valid_uuid(post_id)
         if not post_id or not is_valid_uuid(post_id):
             return jsonify({"error": "Invalid or missing post ID"}), 400
 
@@ -50,8 +49,8 @@ class PostLikeAPi(MethodView):
         #for like
         else:
             like = Like(post=post_id, user=self.current_user_id)
-        db.session.add(like)
-        db.session.commit()
+            db.session.add(like)
+            db.session.commit()
         
         #get a post data to the like response
         post_data = {
@@ -74,7 +73,6 @@ class PostLikeAPi(MethodView):
         like_data["liked_at"] = like.created_at.isoformat()
 
         return jsonify(like_data), 201
-        return jsonify({"error": "error"}),400
 
     def get(self, post_id):
         """
@@ -102,7 +100,6 @@ class PostLikeAPi(MethodView):
         if likes_count == 0:
             return jsonify({"error": "No likes found on this post"}), 404
      
-        
         #pagination
         return paginate_and_serialize(
             likes, page_number, page_size, self.like_schema,likes_count= likes_count
@@ -153,7 +150,7 @@ class CommentLikeApi(MethodView):
             "liked_by": like.user,
             
         }
-        return jsonify(result),201
+        return jsonify(result), 201
     
     def get(self,comment_id=None):
         """ 
@@ -233,7 +230,8 @@ class StorylikeApi(MethodView):
                 "liked_by": like.user,
                 
             }
-        return jsonify(result),201
+        return jsonify(result), 201
+        
     
         
     def get(self,story_id):
@@ -249,9 +247,8 @@ class StorylikeApi(MethodView):
             return jsonify({"error": "Story not exist"}), 404
      
         #get the page size and page_number given by the user
-        page_number = request.args.get('page', default=1, type=int)
-        page_size = request.args.get('size', default=5, type=int)
-        offset = (page_number - 1) * page_size
+        page_number,offset,page_size = get_limit_offset()
+
         #fetch the likes on the comment 
         likes = Like.query.filter_by(
             story=story_id).offset(
@@ -269,6 +266,3 @@ class StorylikeApi(MethodView):
             like_data, page_number, page_size), 200
         
         return item
-        
-    
-        

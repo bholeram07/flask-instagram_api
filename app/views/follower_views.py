@@ -66,6 +66,8 @@ class FollowApi(MethodView):
         if not user_id:
             return jsonify({"error": "Provide user id"}), 400
         # fetch the user which user want to follow
+        if not is_valid_uuid(user_id):
+            return jsonify({"error": "Invalid uuid format"}), 400
         user_to_follow = get_user(user_id)
         #if user not exist
         if not user_to_follow:
@@ -91,7 +93,7 @@ class FollowApi(MethodView):
                 db.session.commit()
                 return jsonify({"message": f"follow request sent to the user"}),200
             #return statement 
-            return jsonify({"message": f"follow request withdraw to the {user_id}"}), 200
+            return jsonify({"message": f"follow request withdraw from the {user_id}"}), 200
 
         # for public account : check the user is follower or not of the user already
         follow_relationship = Follow.query.filter_by(
@@ -111,7 +113,7 @@ class FollowApi(MethodView):
         db.session.add(follow)
         db.session.commit()
 
-        return jsonify({"message": f"You are now following {user_to_follow.username}"}), 
+        return jsonify({"message": f"You are now following {user_to_follow.username}"}),201
     
 class FollowingApi(MethodView):
     """

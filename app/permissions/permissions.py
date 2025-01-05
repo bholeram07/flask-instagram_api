@@ -50,7 +50,6 @@ class Permission:
             comment_id = data.get('comment_id') or kwargs.get('comment_id')
             story_id = data.get('story_id') or kwargs.get("story_id")
             current_user_id = Permission.get_current_user_id()
-         
 
             target_user = None
             # if post_id is taken
@@ -58,7 +57,7 @@ class Permission:
                 target_user = User.query.get(user_id)
             if post_id:
                 if not is_valid_uuid(post_id):
-                    return jsonify({"error": "Invalid uuid format"}),400
+                    return jsonify({"error": "Invalid uuid format"}), 400
                 post = Post.query.filter_by(
                     id=post_id, is_deleted=False).first()
                 if not post:

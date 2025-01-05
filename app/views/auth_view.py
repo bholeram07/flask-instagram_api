@@ -37,7 +37,6 @@ from app.utils.validation import validate_and_load
 import os
 
 
-
 class Signup(MethodView):
     """Api for user signup takes the username, email, and password"""
     signup_schema = SignupSchema()
@@ -117,8 +116,9 @@ class Login(MethodView):
             return jsonify({"error": "Invalid credentials"}), 401
         
         if user.is_active == False:
-            user.is_active = True
-            db.session.commit()
+            with db.session.begin():
+                user.is_active = True
+                db.session.commit()
         # check the user's password
         
 
@@ -290,6 +290,7 @@ class ResetPassword(MethodView):
         # set the new password entered by the user
 
         try:
+           
             user.set_password(data["new_password"])
             db.session.commit()
             # delete the redis key
@@ -320,11 +321,17 @@ class DeactivateAccount(MethodView):
         if not user.check_password(password):
             return jsonify({"error": "Invalid Credentials"}), 400
         # database operation
-        blacklist_jwt_token()
-        user.is_active = False
-        db.session.commit()
-       
-        return jsonify({"message": "Your account is deactivated ,you can reactivate it by login again"}), 202
+        try:
+
+            blacklist_jwt_token()
+            user.is_active = False
+            db.session.commit()
+    
+            return jsonify({"message": "Your account is deactivated ,you can reactivate it by login again"}), 202
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error during account deactivation: {str(e)}")
+            return jsonify({"error": "An error occurred while deactivating the account"}), 500
 
 
 class DeleteAccount(MethodView):
@@ -337,7 +344,13 @@ class DeleteAccount(MethodView):
         # get the user
         user = get_user(current_user_id)
         # database opearation of delete
-        blacklist_jwt_token()
-        user.is_deleted = True
-        db.session.commit()
-        return jsonify(), 204
+        try:
+          
+            blacklist_jwt_token()
+            user.is_deleted = True
+            db.session.commit()
+            return jsonify(), 204
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error during account deletion: {str(e)}")
+            return jsonify({"error": "An error occurred while deleting the account"}), 500

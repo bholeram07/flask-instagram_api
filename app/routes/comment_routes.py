@@ -15,8 +15,5 @@ comment_api.add_url_rule(
     "/posts/<post_id>/comments/", view_func=CommentListApi.as_view("list_comment"), methods=["GET"]
 )
 
-comment_api.add_url_rule(
-     "/comments/<comment_id>/reply", view_func=ReplyCommentApi.as_view("reply_comment"), methods=["GET"]
-)
 
 
