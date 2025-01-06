@@ -32,6 +32,8 @@ class UserStory(MethodView):
         )
         # Get the file data from the request
         file = request.files
+
+        # if the file is provided
         if file:
             content = file.get("content")
             if content:
@@ -40,6 +42,7 @@ class UserStory(MethodView):
             else:
                 # Handle missing content in the file upload
                 return jsonify({"errors": {"content": "Missing required field"}}), 400
+
         # If the content is text, retrieve it from the request data
         else:
             data = request.form or request.json
@@ -48,6 +51,7 @@ class UserStory(MethodView):
                 # Return error if no content is provided
                 return jsonify({"errors": {"content": "Missing required field"}}), 400
             story.content = content
+
         # Save the story to the database
         try:
             db.session.add(story)
@@ -61,14 +65,19 @@ class UserStory(MethodView):
     @Permission.user_permission_required
     def get(self, story_id):
         """Function to get the story of the user by story ID"""
+        # if not story_id is provided
         if not story_id:
             return jsonify({"error": "story_id is required"}), 400
 
+        # if the story_id is not valid
         if not is_valid_uuid(story_id):
             # Ensure the provided story ID is a valid UUID
             return jsonify({"error": "Invalid UUID format"}), 400
 
+        # Retrieve the story by ID
         story = Story.query.filter_by(id=story_id, is_deleted=False).first()
+
+        # if story not exist
         if not story:
             # Handle case where the story doesn't exist
             return jsonify({"error": "Story does not exist"}), 404
@@ -106,16 +115,18 @@ class UserStory(MethodView):
         if not story_id:
             return jsonify({"error": "story_id is required"}), 400
 
+        # Ensure the provided story ID is a valid UUID
         if not is_valid_uuid(story_id):
-            # Ensure the provided story ID is a valid UUID
             return jsonify({"error": "Invalid UUID format"}), 400
 
+        # Retrieve the story by ID
         story = Story.query.filter_by(
             id=story_id, is_deleted=False, story_owner=self.current_user_id).first()
         if not story:
             # Handle case where the story doesn't exist
             return jsonify({"error": "Story does not exist"}), 404
 
+        # atomic transactions
         try:
             # Delete the story from the database
             db.session.delete(story)
@@ -143,18 +154,23 @@ class GetStoryView(MethodView):
             return jsonify({"error": "Invalid UUID format"}), 400
 
         # Retrieve the total count of views for the story
-        
+
         total_views_count = StoryView.query.filter_by(
             story_owner=self.current_user_id, story_id=story_id).count()
         page_number = request.args.get('page', default=1, type=int)
         page_size = request.args.get('size', default=5, type=int)
         offset = (page_number - 1) * page_size
 
-        # Paginate the views for the story
+        # Retrieve the story by ID
         story = Story.query.filter_by(
             id=story_id, is_deleted=False, story_owner=self.current_user_id).first()
+
+        # if story not exist
         if not story:
-            return jsonify({"error": "Story does not exist"}), 404  # Handle case where the story doesn't exist
+            # Handle case where the story doesn't exist
+            return jsonify({"error": "Story does not exist"}), 404
+
+        # Retrieve the views for the story
         story_views = StoryView.query.filter_by(
             story_owner=self.current_user_id, story_id=story_id).offset(offset).limit(page_size).all()
 

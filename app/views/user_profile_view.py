@@ -24,15 +24,12 @@ class UserProfile(MethodView):
     A RESTful API class providing profile functionality to the user.
     This includes retrieving and updating user profile information.
     """
-
     # Use the ProfileSchema for serializing and deserializing profile data
     profile_schema = ProfileSchema()
-
-    # Apply JWT authentication to all methods in this class
     decorators = [jwt_required()]
 
+    # Get the ID of the currently logged-in user from the JWT token
     def __init__(self):
-        # Get the ID of the currently logged-in user from the JWT token
         self.current_user_id = get_jwt_identity()
 
     def get(self, user_id=None):
@@ -51,13 +48,16 @@ class UserProfile(MethodView):
                 id=user_id, is_active=True, is_deleted=False).first()
             if not user:
                 return jsonify({"error": "User not found"}), 404
+
+         # Retrieve the currently logged-in user's profile
         else:
-            # Retrieve the currently logged-in user's profile
             user = User.query.get(self.current_user_id)
 
         # Count followers, following, and posts for the user
         followers_count = Follow.query.filter_by(following_id=user.id).count()
         following_count = Follow.query.filter_by(follower_id=user.id).count()
+
+        # get the post count of the user
         post_count = Post.query.filter_by(
             user=user.id, is_deleted=False).count()
 
@@ -81,6 +81,8 @@ class UserProfile(MethodView):
 
         # Handle file uploads, specifically the profile picture
         file = request.files
+
+        # if the file is provided
         if file and "profile_pic" in file:
             image = request.files.get("profile_pic")
             try:
@@ -98,7 +100,8 @@ class UserProfile(MethodView):
         if not data and not file:
             return jsonify({"error": "Provide data to update"}), 400
         if file and not data:
-            return jsonify(self.profile_schema.dump(user)),202
+            return jsonify(self.profile_schema.dump(user)), 202
+
         # Update the `is_private` field if provided and is a boolean
         if "is_private" in data:
             is_private = data.get("is_private")

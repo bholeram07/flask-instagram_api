@@ -11,6 +11,7 @@ from app.utils.get_validate_user import get_user
 from app.pagination_response import paginate_and_serialize
 from app.utils.get_limit_offset import get_limit_offset
 
+
 class FollowRequestWithdraw(MethodView):
     decorators = [jwt_required()]
 
@@ -27,12 +28,15 @@ class FollowRequestWithdraw(MethodView):
         # fetch the user
         user = get_user(user_id)
         if not user:
-            return jsonify("user not exist"),404
+            return jsonify("user not exist"), 404
+
         # fetch the follow request
         followrequest = FollowRequest.query.filter_by(
             follower_id=self.current_user_id, following_id=user_id).first()
         if not followrequest:
             return jsonify({"error": "you not send  any follow request to this user"}), 400
+
+        # database operation to delete the follow request
         db.session.delete(follow_request)
         db.session.commit()
 
@@ -52,14 +56,14 @@ class FollowrequestAccept(MethodView):
             return jsonify({"error": "Invalid UUID format"}), 400
         if not user:
             return jsonify({"error": "User not found"}), 404
-      
+
         current_user = get_user(self.current_user_id)
 
         # Check that user account is private
         if not current_user.is_private:
             return jsonify({"error": "You can't implement this request; your account is public"}), 400
-        
-        if user_id == self.current_user_id:     
+
+        if user_id == self.current_user_id:
             return jsonify({"error": "You can't accept your own follow request follow request to yourself"}), 400
 
         # Take the action from query params
@@ -88,11 +92,12 @@ class FollowrequestAccept(MethodView):
                 follower_id=user_id,
                 following_id=self.current_user_id,
             )
+            # Add the follow to the database atomic operation
             try:
                 db.session.add(follow)
                 db.session.commit()
                 return jsonify({"message": "Follow request accepted; now the user is your follower"}), 201
-            except IntegrityError:
+            except Exception as e:
                 db.session.rollback()
                 return jsonify({"error": "Could not add follower due to database error"}), 500
 
@@ -108,17 +113,20 @@ class FollowrequestAccept(MethodView):
 
         return jsonify({"error": "Invalid action"}), 400
 
-
     def get(self):
-        page_number,offset,page_size = get_limit_offset()
+        """A function to get the follow request"""
+        # page_number,offset,page_size
+        page_number, offset, page_size = get_limit_offset()
+
+        # fetch the follow request
         followrequest = FollowRequest.query.filter_by(
             following_id=self.current_user_id).offset(offset).limit(page_size).all()
-       
+        # serialize the follow request
         result = []
         result = [
             {
                 "sender_id": req.follower.id,
-                
+
             } for req in followrequest
         ]
-        return paginate_and_serialize(result, page_number,page_size)
+        return paginate_and_serialize(result, page_number, page_size)

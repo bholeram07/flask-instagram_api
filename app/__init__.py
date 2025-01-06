@@ -71,6 +71,7 @@ def create_app(test_config=None):
     # config the redis client
     app.config["REDIS_CLIENT"] = redis_client
     # set up the logger
+    setup_logging(app)
     # setup_logging(app)
     initialize_extensions(app)
     # import the blueprint and register with app

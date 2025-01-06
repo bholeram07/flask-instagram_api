@@ -12,8 +12,7 @@ class UserActivity(MethodView):
     """
     An API to get the activity of the user, such as likes and comments.
     """
-    decorators = [jwt_required(
-    )]  # Ensure the user is authenticated before accessing this endpoint.
+    decorators = [jwt_required()]  # Ensure the user is authenticated before accessing this endpoint.
     like_schema = LikeSchema()  # Schema for serializing like data.
     comment_schema = CommentSchema()  # Schema for serializing comment data.
 
@@ -23,17 +22,22 @@ class UserActivity(MethodView):
         If 'type=likes', the user's liked posts are returned.
         If 'type=comments', the user's comments are returned.
         """
-        current_user_id = get_jwt_identity()  # Get the currently authenticated user's ID.
+        current_user_id = get_jwt_identity()  
+        
         # Get the activity type from query parameters.
         activity_type = request.args.get('type', default='likes', type=str)
+        
         # Retrieve pagination parameters.
-        offset, page_size, page_number = get_limit_offset(request)
+        offset, page_size, page_number = get_limit_offset()
 
         # Determine the type of activity to fetch.
         if activity_type == 'likes':
             return self.get_likes(current_user_id, offset, page_size, page_number)
+        
+        #if activity type is comments
         elif activity_type == 'comments':
             return self.get_comments(current_user_id, offset, page_size, page_number)
+        
         else:
             # Return error for invalid activity type.
             return jsonify({"error": "Invalid activity type"}), 400
@@ -54,7 +58,9 @@ class UserActivity(MethodView):
         :param user_id: ID of the current user.
         :param offset: Offset for pagination.
         """
+        # Query comments by the user.
         comments = Comment.query.filter_by(user_id=user_id, is_deleted=False).offset(
-            offset).limit(limit).all()  # Query active comments by the user.
+            offset).limit(limit).all()  
+        
         # Serialize and return the paginated data.
         return paginate_and_serialize(comments, self.comment_schema, page_number, limit)

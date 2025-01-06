@@ -25,7 +25,6 @@ from app.utils.get_limit_offset import get_limit_offset
 class PostApi(MethodView):
     # Schema for serializing post data
     post_schema = PostSchema()
-    # Apply JWT authentication decorator to all methods
     decorators = [jwt_required()]
 
     def __init__(self):
@@ -39,23 +38,34 @@ class PostApi(MethodView):
         - Accepts form data for title, caption, and an optional image or video.
         - Saves the uploaded media and creates a database record.
         """
+        # Extract post data from the request
         post_data = request.form
+
+        # create the post instance
         post = Post(
             title=post_data.get("title"),
             caption=post_data.get("caption"),
             user=self.current_user_id,
         )
+
+        # get the image or video from the request
         file = request.files
 
         if file:
             # Handle file upload if provided
             image_or_video = file.get("image_or_video")
+
             if image_or_video:
+                # call the PostImageVideo class to upload the image or video
                 post_image_video_obj = PostImageVideo(
                     post, image_or_video, self.current_user_id)
                 post_image_video_obj.upload_image_or_video()
+
+            # if image or video is not provided
             else:
                 return ({"error": "Please provide an image or video for post"}), 400
+
+        # if file is not provided
         else:
             return ({"error": "Please provide an image or video for post"}), 400
 
@@ -73,11 +83,15 @@ class PostApi(MethodView):
         Update an existing post.
         Only the post owner can perform updates.
         """
+        # Validate the post ID
         if not is_valid_uuid(post_id):
             return jsonify({"error": "Invalid or missing post ID"}), 400
 
+        # Fetch the post by ID
         post = Post.query.filter_by(
             id=post_id, user=self.current_user_id, is_deleted=False).first()
+
+        # if post does not exist
         if not post:
             return jsonify({"error": "Post does not exist"}), 404
 
@@ -88,17 +102,24 @@ class PostApi(MethodView):
             # Extract request data (form or JSON)
             data = request.form or request.json
         except Exception as e:
+            # if file is not provided
             if not file:
                 return jsonify({"error": "Provide data to update"}), 400
+
+        # if no data or file is provided
         if not data and not file:
             return jsonify({"error": "Provide data to update"}), 400
         if file:
             # Handle media update if provided
             image_or_video = file.get("image_or_video")
+
+            # if image or video is provided
             if image_or_video:
                 post_image_video_obj = PostImageVideo(
                     post, image_or_video, self.current_user_id)
                 post_image_video_obj.update_image_or_video()
+
+            # if image or video is not provided
             else:
                 return jsonify({"error": "Provide data to update"}), 400
 
@@ -108,9 +129,11 @@ class PostApi(MethodView):
         update_post_schema = UpdatePostSchema()
         # Validate and load updated data
         updated_data, errors = validate_and_load(update_post_schema, data)
+
         if errors:
             return jsonify({"errors": errors}), 400
 
+        # atomic transactions
         try:
             # Apply updates to the post and save changes
             for key, value in updated_data.items():
@@ -128,11 +151,16 @@ class PostApi(MethodView):
         Retrieve a specific post by its ID.
         Requires appropriate user permissions.
         """
+        # if not post_id or not valid uuid
         if not post_id or not is_valid_uuid(post_id):
             return jsonify({"error": "Please provide a valid post ID"}), 400
+
+        # fetch the post by post_id
         post = Post.query.filter_by(id=post_id, is_deleted=False).first()
+        # if post does not exist
         if not post:
             return jsonify({"error": "Post does not exist"}), 400
+
         return jsonify(self.post_schema.dump(post)), 200
 
     def delete(self, post_id):
@@ -140,14 +168,19 @@ class PostApi(MethodView):
         Soft-delete a post by marking it as deleted.
         Only the post owner can perform this operation.
         """
+        # Validate the post ID
         if not post_id or not is_valid_uuid(post_id):
             return jsonify({"error": "Invalid or missing post ID"}), 400
 
+        # Fetch the post by ID
         post = Post.query.filter_by(
             user=self.current_user_id, id=post_id, is_deleted=False).first()
+
+        # if post not exist
         if not post:
             return jsonify({"error": "Post does not exist"}), 404
 
+        # atomic transactions
         try:
             # Delete associated media and mark the post as deleted
             post_image_video_obj = PostImageVideo(
@@ -157,6 +190,7 @@ class PostApi(MethodView):
             post.deleted_at = datetime.now()
             db.session.commit()
             return jsonify(), 204
+
         except Exception as e:
             current_app.logger.error(f"Error deleting post: {str(e)}")
             return jsonify({"error": "An error occurred while deleting the post"}), 500
@@ -177,8 +211,10 @@ class UserPostListApi(MethodView):
         Retrieve a list of posts for a specific user.
         If no user ID is provided, fetch posts for the current user.
         """
+        # if user_id is provided
         if not is_valid_uuid(user_id):
             return jsonify({"error": "Invalid user ID format"}), 400
+
         query_user_id = user_id or self.current_user_id
         query_user = get_user(query_user_id)
         if not query_user:
@@ -186,8 +222,11 @@ class UserPostListApi(MethodView):
 
         # Paginate the results
         page, offset, page_size = get_limit_offset()
+
         posts = Post.query.filter_by(user=query_user_id, is_deleted=False).order_by(
             desc(Post.created_at)).offset(offset).limit(page_size).all()
+
+        # serialize the posts
         serialized_post = post_response(posts, self.post_schema)
 
         return paginate_and_serialize(serialized_post, page, page_size)

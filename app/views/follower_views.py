@@ -22,25 +22,31 @@ class FollowApi(MethodView):
 
     def __init__(self):
         self.current_user_id = get_jwt_identity()
-    
+
     @Permission.user_permission_required
     def get(self, user_id=None):
         """
          get the follower list of the current user.
          if user id is provided than follower list of that user
         """
+        # if user_id is provided than get the follower list of that user
         if user_id:
+            # get the user
             user = get_user(user_id)
+            # if user not exist
             if not user:
-                return jsonify({"error":"User does not exist"}),404
+                return jsonify({"error": "User does not exist"}), 404
 
+        # if user_id is not provided than get the follower list of the current user
         else:
             user = User.query.get(self.current_user_id)
-            
-        page,offset,page_size = get_limit_offset()
+
+        # get the page,offset and page_size
+        page, offset, page_size = get_limit_offset()
+
         # fetch the follower
         followers = user.followers.offset(offset).limit(page).all()
-    
+
         # added the data of id,username and image in the list of follower
         followers_list = [{
             "id": follower.follower.id,
@@ -50,7 +56,7 @@ class FollowApi(MethodView):
             for follower in followers
         ]
         # pagination
-        return paginate_and_serialize(followers_list,page,page_size)
+        return paginate_and_serialize(followers_list, page, page_size)
 
     def post(self):
         """
@@ -60,45 +66,62 @@ class FollowApi(MethodView):
         unfolllow
         takes the user_id which user want to folllow
         """
+        # get the current user
         current_user = User.query.get(self.current_user_id)
+
+        # get the data from the request
         data = request.json
         user_id = data.get("user_id")
+
+        # if user_id is not provided
         if not user_id:
             return jsonify({"error": "Provide user id"}), 400
-        # fetch the user which user want to follow
+
+        # if user_id is not valid
         if not is_valid_uuid(user_id):
             return jsonify({"error": "Invalid uuid format"}), 400
+
+        # get the user to follow
         user_to_follow = get_user(user_id)
-        #if user not exist
+
+        # if user not exist
         if not user_to_follow:
             return jsonify({"error": "User does not exist"}), 400
-        
+
+        # user can't follow himself
         if self.current_user_id == user_id:
             return jsonify({"error": "You cant follow yourself"}), 400
-        #if user account is private than send the follow request
+
+        # if user account is private than send the follow request
         if user_to_follow.is_private:
+            # fetch the follow request
             follow_request = FollowRequest.query.filter_by(
                 follower_id=self.current_user_id, following_id=user_id).first()
-           
+
+            # if follow request already exist than withdraw the follow request
             if follow_request:
                 db.session.delete(follow_request)
                 db.session.commit()
-                
-            #if not send the follow request
+
+            # send the follow request
             else:
                 follow_relationship = Follow.query.filter_by(
                     follower_id=self.current_user_id, following_id=user_to_follow.id).first()
 
-            # if follow request already exist than withdraw the follow request
+            # if user follow the user already than not send the request
                 if follow_relationship:
                     return jsonify({"message": "You are already following the user,request not sent"}), 400
+
+                # send the follow request
                 else:
                     follow_request = FollowRequest(
                         follower_id=self.current_user_id, following_id=user_id)
+
+                    # database operation
                     db.session.add(follow_request)
                     db.session.commit()
-                    return jsonify({"message": f"follow request sent to the user"}),200
-            #return statement 
+                    return jsonify({"message": f"follow request sent to the user"}), 200
+            # return statement
             return jsonify({"message": f"follow request withdraw from the {user_id}"}), 200
 
         # for public account : check the user is follower or not of the user already
@@ -119,13 +142,14 @@ class FollowApi(MethodView):
         db.session.add(follow)
         db.session.commit()
 
-        return jsonify({"message": f"You are now following {user_to_follow.username}"}),201
-    
+        return jsonify({"message": f"You are now following {user_to_follow.username}"}), 201
+
+
 class FollowingApi(MethodView):
     """
     A api to get the following list of the current or the provided user
     """
-    decorators = [jwt_required(),Permission.user_permission_required]
+    decorators = [jwt_required(), Permission.user_permission_required]
 
     def __init__(self):
         self.current_user_id = get_jwt_identity()
@@ -136,9 +160,9 @@ class FollowingApi(MethodView):
         """
 
         if user_id:
-           user = get_user(user_id)
-           if not user:
-               return jsonify({"error":"User not exist"}),404
+            user = get_user(user_id)
+            if not user:
+                return jsonify({"error": "User not exist"}), 404
 
         # fetch the current user
         else:
@@ -147,10 +171,10 @@ class FollowingApi(MethodView):
         if not user:
             return jsonify({"error": "User not found"}), 404
         # fetch the following list of the user
-        #get the page_number,page_size and offset
-        page_number,offset,page_size = get_limit_offset()
+        # get the page_number,page_size and offset
+        page_number, offset, page_size = get_limit_offset()
         following = user.following.offset(offset).limit(page_size).all()
-       
+
         # added the id, username and image of the user in the response
         following_list = [
             {
@@ -160,4 +184,4 @@ class FollowingApi(MethodView):
             }
             for follow in following
         ]
-        return paginate_and_serialize(following_list,page_number,page_size)
+        return paginate_and_serialize(following_list, page_number, page_size)
