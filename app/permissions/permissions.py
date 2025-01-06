@@ -63,7 +63,7 @@ class Permission:
                 if not post:
                     return jsonify({"error": "Post not found"}), 404
                 # pass the user of the post
-                target_user = User.query.get(post.user)
+                target_user = User.query.filter_by(id = post.user)
             # if the comment id is taken
             if comment_id:
                 # fetch the comment
@@ -71,6 +71,7 @@ class Permission:
                     return jsonify({"error": "Invalid uuid format"}), 400
                 comment = Comment.query.filter_by(
                     id=comment_id, is_deleted=False).first()
+                post_id = comment.post_id
                 if not comment:
                     return jsonify({"error": "comment not exist"}), 404
                 # pass the user of the comment

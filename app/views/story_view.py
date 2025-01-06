@@ -143,6 +143,7 @@ class GetStoryView(MethodView):
             return jsonify({"error": "Invalid UUID format"}), 400
 
         # Retrieve the total count of views for the story
+        
         total_views_count = StoryView.query.filter_by(
             story_owner=self.current_user_id, story_id=story_id).count()
         page_number = request.args.get('page', default=1, type=int)
@@ -150,6 +151,10 @@ class GetStoryView(MethodView):
         offset = (page_number - 1) * page_size
 
         # Paginate the views for the story
+        story = Story.query.filter_by(
+            id=story_id, is_deleted=False, story_owner=self.current_user_id).first()
+        if not story:
+            return jsonify({"error": "Story does not exist"}), 404  # Handle case where the story doesn't exist
         story_views = StoryView.query.filter_by(
             story_owner=self.current_user_id, story_id=story_id).offset(offset).limit(page_size).all()
 
