@@ -5,6 +5,7 @@ from flask import request, jsonify
 from app.models.post import Post
 from app.models.comment import Comment
 from app.uuid_validator import is_valid_uuid
+from app.models.story import Story
 global target_user
 
 
@@ -79,11 +80,11 @@ class Permission:
             if story_id:
                 # fetch the story
                 if not is_valid_uuid(story_id):
-                    return jsonify({"error": "Invalid uuid format"}), 400
+                    return jsonify({"error": "Invalid UUID format"}), 400
                 story = Story.query.filter_by(
                     id=story_id, is_deleted=False).first()
                 if not story:
-                    return jsonify({"error": "story not exist"}), 404
+                    return jsonify({"error": "Story does not exist"}), 404
                 # pass the user of the story
                 target_user = User.query.get(story.story_owner)
                 

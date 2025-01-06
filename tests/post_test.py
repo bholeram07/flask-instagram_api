@@ -93,7 +93,6 @@ class TestPostApi:
             headers=self.headers
         )
 
-        print(response.json)
         assert response.status_code == 400
         assert response.json["error"] == "Please provide an image or video for post"
 
@@ -114,7 +113,6 @@ class TestPostApi:
             headers=self.headers
         )
 
-        print(response.json)
         assert response.status_code == 400
         assert response.json["error"] == "Please provide an image or video for post"
 

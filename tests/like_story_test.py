@@ -126,7 +126,7 @@ class TestStoryLikeApi:
         )
 
         assert response.status_code == 404
-        assert response.json["error"] == "story not exist"
+        assert response.json["error"] == "Story does not exist"
 
     def test_get_likes_valid_post(self, create_likes):
         """Test fetching likes for a valid post with likes."""
@@ -152,7 +152,7 @@ class TestStoryLikeApi:
             headers=self.headers
         )
         assert response.status_code == 404
-        assert response.json["error"] == "Story not exist"
+        assert response.json["error"] == "Story does not exist"
 
     def test_like_already_liked_story(self):
         """Test liking a story that is already liked."""
