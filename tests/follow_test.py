@@ -93,7 +93,6 @@ def test_follow_private_user(client, user_data, another_user):
 
     # Verify that the user is marked as private
     assert another_user.is_private is True
-    print(another_user.is_private)
 
     access_token = create_access_token(identity=user_data.id)
     response = client.post(

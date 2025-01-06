@@ -55,9 +55,9 @@ class PostApi(MethodView):
                     post, image_or_video, self.current_user_id)
                 post_image_video_obj.upload_image_or_video()
             else:
-                return ({"error": "Please provide an image or video for the post"}), 400
+                return ({"error": "Please provide an image or video for post"}), 400
         else:
-            return ({"error": "Please provide an image or video for the post"}), 400
+            return ({"error": "Please provide an image or video for post"}), 400
 
         try:
             # Add the new post to the database

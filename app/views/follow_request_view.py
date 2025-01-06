@@ -1,3 +1,4 @@
+from sqlalchemy.exc import IntegrityError
 from flask import jsonify, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from flask_restful import MethodView
@@ -43,45 +44,70 @@ class FollowrequestAccept(MethodView):
         self.current_user_id = get_jwt_identity()
 
     def post(self):
-        """"A function to accept or reject the follow request"""
-        # get the user_id from the request
+        """A function to accept or reject the follow request"""
+        # Get the user_id from the request
         user_id = request.json.get("user_id")
         user = get_user(user_id)
+        if not is_valid_uuid(user_id):
+            return jsonify({"error": "Invalid UUID format"}), 400
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+      
         current_user = get_user(self.current_user_id)
-    
-        # check that user account is private or not
+
+        # Check that user account is private
         if not current_user.is_private:
-            return jsonify({"error": "You can't implement this request your account is public"}), 400
-        # take the action from query params
-        action = request.args.get("action", default="accept")
-        # accept the request
+            return jsonify({"error": "You can't implement this request; your account is public"}), 400
+        
+        if user_id == self.current_user_id:     
+            return jsonify({"error": "You can't accept your own follow request follow request to yourself"}), 400
+
+        # Take the action from query params
+        action = request.args.get("action", default="accept").lower()
+
+        # Accept the request
         if action == "accept":
             followrequest = FollowRequest.query.filter_by(
                 following_id=self.current_user_id, follower_id=user_id).first()
             if not followrequest:
-                return jsonify({"errors":"Follow request not found"}),404
+                return jsonify({"error": "Follow request not found"}), 404
+
             db.session.delete(followrequest)
             db.session.commit()
-           
-             # follow the user
+
+            # Check if follow relationship already exists
+            existing_follow = Follow.query.filter_by(
+                follower_id=user_id,
+                following_id=self.current_user_id
+            ).first()
+            if existing_follow:
+                return jsonify({"message": "User is already your follower"}), 200
+
+            # Follow the user
             follow = Follow(
                 follower_id=user_id,
                 following_id=self.current_user_id,
             )
-            db.session.add(follow)
-            db.session.commit()
-            return jsonify({"message": "Follow request accepted now user is your follower"}), 201
-        # reject the request
+            try:
+                db.session.add(follow)
+                db.session.commit()
+                return jsonify({"message": "Follow request accepted; now the user is your follower"}), 201
+            except IntegrityError:
+                db.session.rollback()
+                return jsonify({"error": "Could not add follower due to database error"}), 500
+
+        # Reject the request
         if action == "reject":
             followrequest = FollowRequest.query.filter_by(
                 following_id=self.current_user_id, follower_id=user_id).first()
             if not followrequest:
-                return jsonify({"error":"follow request not foud"}),404
+                return jsonify({"error": "Follow request not found"}), 404
             db.session.delete(followrequest)
             db.session.commit()
             return jsonify({"message": "Follow request rejected"}), 200
-        else:
-            return jsonify({"error": "Invalid action"}), 404
+
+        return jsonify({"error": "Invalid action"}), 400
+
 
     def get(self):
         page_number,offset,page_size = get_limit_offset()

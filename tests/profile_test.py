@@ -120,4 +120,4 @@ class TestProfile:
         )
 
         assert response.status_code == 400
-        assert response.json["error"] == "provide data to update"
+        assert response.json["error"] == "Provide data to update"

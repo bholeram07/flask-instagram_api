@@ -79,19 +79,25 @@ class FollowApi(MethodView):
         if user_to_follow.is_private:
             follow_request = FollowRequest.query.filter_by(
                 follower_id=self.current_user_id, following_id=user_id).first()
-            
-            # if follow request already exist than withdraw the follow request
+           
             if follow_request:
                 db.session.delete(follow_request)
                 db.session.commit()
                 
             #if not send the follow request
             else:
-                follow_request = FollowRequest(
-                    follower_id=self.current_user_id, following_id=user_id)
-                db.session.add(follow_request)
-                db.session.commit()
-                return jsonify({"message": f"follow request sent to the user"}),200
+                follow_relationship = Follow.query.filter_by(
+                    follower_id=self.current_user_id, following_id=user_to_follow.id).first()
+
+            # if follow request already exist than withdraw the follow request
+                if follow_relationship:
+                    return jsonify({"message": "You are already following the user,request not sent"}), 400
+                else:
+                    follow_request = FollowRequest(
+                        follower_id=self.current_user_id, following_id=user_id)
+                    db.session.add(follow_request)
+                    db.session.commit()
+                    return jsonify({"message": f"follow request sent to the user"}),200
             #return statement 
             return jsonify({"message": f"follow request withdraw from the {user_id}"}), 200
 
@@ -144,9 +150,7 @@ class FollowingApi(MethodView):
         #get the page_number,page_size and offset
         page_number,offset,page_size = get_limit_offset()
         following = user.following.offset(offset).limit(page_size).all()
-        if not following:
-            return jsonify({"message": "No any user in following list"})
-
+       
         # added the id, username and image of the user in the response
         following_list = [
             {

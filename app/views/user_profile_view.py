@@ -89,10 +89,16 @@ class UserProfile(MethodView):
                 return jsonify({"error": str(e)})
 
         # Load request data (from form or JSON)
-        data = request.form or request.json or {}
+        data = None
+        try:
+            data = request.form or request.json or {}
+        except Exception as e:
+            if not file:
+                return jsonify({"error": "Provide data to update"}), 400
         if not data and not file:
             return jsonify({"error": "Provide data to update"}), 400
-
+        if file and not data:
+            return jsonify(self.profile_schema.dump(user)),202
         # Update the `is_private` field if provided and is a boolean
         if "is_private" in data:
             is_private = data.get("is_private")

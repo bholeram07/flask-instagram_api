@@ -95,7 +95,7 @@ class TestPostApi:
 
         print(response.json)
         assert response.status_code == 400
-        assert response.json["error"] == 'Please Provide image or video for post'
+        assert response.json["error"] == "Please provide an image or video for post"
 
     def test_blank_image_or_video(self):
         """Test creating a post with an empty image or video field."""
@@ -116,7 +116,7 @@ class TestPostApi:
 
         print(response.json)
         assert response.status_code == 400
-        assert response.json["error"] == 'Please Provide image or video for post'
+        assert response.json["error"] == "Please provide an image or video for post"
 
     def test_update_post(self):
         post_id = self.create_post()
@@ -146,11 +146,10 @@ class TestPostApi:
             headers=self.headers
         )
         assert response.status_code == 404
-        assert response.json["error"] == "Post not exist"
+        assert response.json["error"] == "Post does not exist"
 
     def test_update_post_no_permission(self):
         """Test updating a post created by another user."""
-        # Assuming you have a mechanism to simulate another user's token
         another_user_token = create_access_token(
             identity=999999)  # Simulate another user
         print(another_user_token)
@@ -184,7 +183,7 @@ class TestPostApi:
             headers=self.headers
         )
         assert response.status_code == 400
-        assert response.json["error"] == "provide data to update"
+        assert response.json["error"] == "Provide data to update"
 
     def test_only_image_data_for_update(self):
         post_id = self.create_post()
@@ -258,7 +257,7 @@ class TestPostApi:
             headers=self.headers
         )
         assert response.status_code == 404
-        assert response.json["error"] == "Post not exist"
+        assert response.json["error"] == "Post does not exist"
 
     def test_get_post_success(self):
         post_id = self.create_post()
