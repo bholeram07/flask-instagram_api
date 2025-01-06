@@ -63,7 +63,7 @@ class Permission:
                 if not post:
                     return jsonify({"error": "Post not found"}), 404
                 # pass the user of the post
-                target_user = User.query.filter_by(id = post.user)
+                target_user = User.query.get(post.user)
             # if the comment id is taken
             if comment_id:
                 # fetch the comment
@@ -71,13 +71,22 @@ class Permission:
                     return jsonify({"error": "Invalid uuid format"}), 400
                 comment = Comment.query.filter_by(
                     id=comment_id, is_deleted=False).first()
-                post_id = comment.post_id
                 if not comment:
                     return jsonify({"error": "comment not exist"}), 404
                 # pass the user of the comment
                 target_user = User.query.get(comment.user_id)
-            # if not target_user:
-            #     return jsonify({"error": "User not found"}), 404
+            # if the story id is taken
+            if story_id:
+                # fetch the story
+                if not is_valid_uuid(story_id):
+                    return jsonify({"error": "Invalid uuid format"}), 400
+                story = Story.query.filter_by(
+                    id=story_id, is_deleted=False).first()
+                if not story:
+                    return jsonify({"error": "story not exist"}), 404
+                # pass the user of the story
+                target_user = User.query.get(story.story_owner)
+                
             if target_user == None:
                 return view_func(*args, **kwargs)
             # permission denied
