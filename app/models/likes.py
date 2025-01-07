@@ -17,8 +17,7 @@ class Like(BaseModel,db.Model):
     post = db.Column(UUID(as_uuid=True), db.ForeignKey("post.id",ondelete = "CASCADE"),nullable = True)
     story = db.Column(UUID(as_uuid=True), db.ForeignKey("story.id",ondelete = "CASCADE"),nullable = True)
     comment = db.Column(UUID(as_uuid=True), db.ForeignKey("comment.id",ondelete = "CASCADE"), nullable = True)
-    is_deleted = db.Column(db.Boolean, default=False)
-    deleted_at = db.Column(db.DateTime, nullable=True)
+  
 
     def __str__(self):
         return f"liked on {self.post} by {self.user}"

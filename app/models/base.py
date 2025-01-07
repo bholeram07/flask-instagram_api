@@ -14,3 +14,5 @@ class BaseModel(db.Model):
     created_at = db.Column(
         db.DateTime(timezone=True), default=current_time_ist)
     updated_at = db.Column(db.DateTime(timezone = True), default=None)
+    is_deleted = db.Column(db.Boolean, default=False)
+    deleted_at = db.Column(db.DateTime(timezone=True), nullable=True)

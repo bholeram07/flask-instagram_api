@@ -1,5 +1,5 @@
 from flask_jwt_extended import get_jwt
-from datetime import timedelta
+from datetime import timedelta,datetime
 from flask import Blueprint, jsonify, request, current_app, render_template
 from app.models.user import db, User
 from app.models.follower import Follow
@@ -338,6 +338,7 @@ class DeleteAccount(MethodView):
 
             blacklist_jwt_token()
             user.is_deleted = True
+            user.deleted_at = datetime.now()
             db.session.commit()
             return jsonify(), 204
         except Exception as e:

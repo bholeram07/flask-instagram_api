@@ -12,8 +12,7 @@ class Story(BaseModel,db.Model):
     __tablename__ = "story"
     story_owner = db.Column(UUID(as_uuid=True), db.ForeignKey("user.id", ondelete="CASCADE"))
     content = db.Column(db.Text,nullable  = False)
-    is_deleted = db.Column(db.Boolean, default=False)
-    deleted_at = db.Column(db.DateTime(timezone=True), default=None)
+ 
     
     #represantation method
     def __str__(self):

@@ -18,8 +18,7 @@ class Post(BaseModel,db.Model):
     caption = db.Column(db.Text, nullable=True)
     image_or_video = db.Column(db.String(255), nullable=True)
     is_enable_comment = db.Column(db.Boolean, default=True)
-    is_deleted = db.Column(db.Boolean, default=False)
-    deleted_at = db.Column(db.DateTime, nullable=True)
+  
     
     #relationships
     likes = relationship("Like", backref="post_likes",

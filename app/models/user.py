@@ -18,7 +18,6 @@ class User(BaseModel,db.Model):
     profile_pic = db.Column(db.String(255), nullable=True)
     is_verified  = db.Column(db.Boolean, default = False)
     is_active = db.Column(db.Boolean, default= True)
-    is_deleted = db.Column(db.Boolean, default = False)
     other_social = db.Column(db.Text,nullable = True)
     is_private = db.Column(db.Boolean, default=False)
     email = db.Column(db.String(120), nullable=False, unique=True)

@@ -129,7 +129,8 @@ class UserStory(MethodView):
         # atomic transactions
         try:
             # Delete the story from the database
-            db.session.delete(story)
+            story.is_deleted = True
+            story.deleted_at = datetime.now()
             db.session.commit()
             return jsonify(), 204
         except Exception as e:

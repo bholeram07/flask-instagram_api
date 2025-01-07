@@ -18,8 +18,6 @@ class FollowRequest(db.Model):
     status = db.Column(db.String(20), nullable=False, default='pending')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     # Soft delete columns
-    is_deleted = db.Column(db.Boolean, default=False, nullable=False)
-    deleted_at = db.Column(db.DateTime, nullable=True)
 
     # Relationships
     follower = db.relationship('User', foreign_keys=[follower_id])
