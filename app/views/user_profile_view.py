@@ -17,6 +17,7 @@ from app.models.follower import Follow
 from app.models.user import db, User
 from flask import Blueprint, jsonify, request, current_app
 from app.utils.update_profile_pic import update_profile_pic
+from app.utils.ist_time import current_time_ist
 
 
 class UserProfile(MethodView):
@@ -150,6 +151,7 @@ class UserProfile(MethodView):
 
         # Commit changes to the database
         try:
+            user.updated_at = current_time_ist()
             db.session.commit()
             updated_data = self.profile_schema.dump(user)
             return jsonify(updated_data), 202

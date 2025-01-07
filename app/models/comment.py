@@ -17,7 +17,7 @@ class Comment(BaseModel,db.Model):
     user_id = db.Column(UUID(as_uuid=True), db.ForeignKey("user.id",ondelete = "CASCADE"))
     post_id = db.Column(UUID(as_uuid=True), db.ForeignKey("post.id",ondelete = "CASCADE"))
     content = db.Column(db.Text, nullable=False)  # size
-    parent = db.Column(UUID(as_uuid=True),default = uuid.uuid4, nullable = True)
+    parent = db.Column(UUID(as_uuid=True), nullable = True)
 
     #relationships
     likes = db.relationship('Like', backref='liked_comment', lazy=True,overlaps="post")

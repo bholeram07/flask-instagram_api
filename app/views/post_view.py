@@ -20,6 +20,7 @@ from app.response.post_response import post_response
 from app.permissions.permissions import Permission
 from app.utils.get_validate_user import get_user
 from app.utils.get_limit_offset import get_limit_offset
+from app.utils.ist_time import current_time_ist
 
 
 class PostApi(MethodView):
@@ -138,7 +139,7 @@ class PostApi(MethodView):
             # Apply updates to the post and save changes
             for key, value in updated_data.items():
                 setattr(post, key, value)
-                post.updated_at = datetime.now()
+                post.updated_at = current_time_ist()
                 db.session.commit()
             return jsonify(self.post_schema.dump(post)), 202
         except Exception as e:
@@ -187,7 +188,7 @@ class PostApi(MethodView):
                 post, post.image_or_video, self.current_user_id)
             post_image_video_obj.delete_image_or_video()
             post.is_deleted = True
-            post.deleted_at = datetime.now()
+            post.deleted_at = current_time_ist()
             db.session.commit()
             return jsonify(), 204
 

@@ -18,7 +18,7 @@ from datetime import datetime
 from app.response.comment_response import comment_respose
 from app.permissions.permissions import Permission
 from app.utils.get_limit_offset import get_limit_offset
-
+from app.utils.ist_time import current_time_ist
 
 class CommentApi(MethodView):
     """
@@ -175,8 +175,15 @@ class CommentApi(MethodView):
         if errors:
             return jsonify({"errors": errors}), 400
         # update the content of the comment
+        
         comment.content = comment_update_data.get("content")
-        db.session.commit()
+        try:
+            comment.updated_at = current_time_ist()
+            db.session.commit()
+        except:
+            db.session.rollback()
+            return jsonify({"error": "Some error occurred during updating the comment"}), 500
+            
 
         return jsonify(self.comment_schema.dump(comment)), 202
 
@@ -202,9 +209,13 @@ class CommentApi(MethodView):
             return jsonify({"error": "You do not have permission to delete this comment"}), 403
 
         # database operations
-        comment.is_deleted = True
-        comment.deleted_at = datetime.now()
-        db.session.commit()
+        try:
+            comment.is_deleted = True
+            comment.deleted_at = current_time_ist()
+            db.session.commit()
+        except:
+            db.session.rollback()
+            return jsonify({"error": "Some error occurred while deleting the comment"}), 500
 
         return jsonify({"message": "Comment deleted successfully"}), 204
 

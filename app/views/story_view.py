@@ -130,7 +130,7 @@ class UserStory(MethodView):
         try:
             # Delete the story from the database
             story.is_deleted = True
-            story.deleted_at = datetime.now()
+            story.deleted_at = current_time_ist()
             db.session.commit()
             return jsonify(), 204
         except Exception as e:
