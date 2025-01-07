@@ -24,6 +24,7 @@ class Config:
     SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URI")
     SQLALCHEMY_TEST_DATABASE_URI = os.getenv("TEST_DATABASE_URI")
     S3_ENDPOINT_URL = "http://127.0.0.1:9000"
+    TIMEZONE = 'Asia/Kolkata'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SECRET_KEY = os.getenv('SECRET_KEY')
     S3_ACCESS_KEY = os.getenv('S3_ACCESS_KEY')

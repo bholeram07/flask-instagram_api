@@ -64,7 +64,9 @@ def create_app(test_config=None):
     app.static_folder = 'static'
     # initialize the configuration define in the config file
     app.config.from_object(Config)
-    # uuid converter
+    # Set timezone
+    os.environ['TZ'] = app.config['TIMEZONE']
+    #for testing
     if test_config:
         app.config.update(test_config)
     app.url_map.converters["uuid"] = UUIDConverter
