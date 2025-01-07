@@ -7,6 +7,8 @@ import boto3
 from app.s3_bucket_config import create_s3_client
 import logging
 from flask_swagger_ui import get_swaggerui_blueprint
+from app.tasks import hard_delete_old_posts
+
 
 # Swagger UI configuration
 SWAGGER_URL = '/api/docs'  # URL for exposing Swagger UI (without trailing '/')

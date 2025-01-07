@@ -2,6 +2,10 @@ from flask import render_template, current_app
 from flask_mail import Message
 from app.extensions import mail
 from app.celery_app import celery_app
+from datetime import datetime, timedelta
+from app.models.post import Post
+from app.extensions import db
+import pytz
 
 
 
@@ -35,19 +39,22 @@ def send_location_mail(recipient,html_message):
 def hard_delete_old_posts():
     """Hard delete posts marked for deletion."""
     from app import create_app
-    from app.models import Post  # Adjust based on your model location
-    from datetime import datetime, timedelta
-
     app = create_app()
 
     with app.app_context():
-        # Fetch posts marked as "soft deleted" and older than 15 days
-        threshold_date = datetime.utcnow() - timedelta(days=15)
+        # Get the current time in UTC
+        utc_now = datetime.now(pytz.utc)
+
+        # Set the threshold date (1 minute before current time)
+        threshold_date = utc_now - timedelta(minutes=1)
+
+        # Fetch posts marked as "soft deleted" and older than 1 minute
         old_posts = Post.query.filter(
             Post.is_deleted == True, Post.deleted_at < threshold_date).all()
 
         # Hard delete the posts
         for post in old_posts:
-            post.delete()  # Assuming you have a delete() method in your model
-        app.db.session.commit()
-    
+            db.session.delete(post)  # Assuming you have a delete() method in your model
+
+        # Commit the changes
+        db.session.commit()
