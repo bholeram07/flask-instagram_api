@@ -146,7 +146,7 @@ class CommentApi(MethodView):
         reply_data = []
         for reply in replies:
             reply_info = self.reply_comment_schema.dump(reply)
-            author = User.query.get(reply.user_id)
+            author = User.query.filter_by(id = reply.user_id).first(                )
             reply_info["author"] = {
                 "id": author.id,
                 "username": author.username

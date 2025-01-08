@@ -65,7 +65,7 @@ class PostLikeAPi(MethodView):
         like_data = self.like_schema.dump(like)
 
         # get a user data to the comment
-        user = User.query.get(self.current_user_id)
+        user = User.query.filter_by(id = self.current_user_id).first()
         user_data = {
             "id": user.id,
             "username": user.username,

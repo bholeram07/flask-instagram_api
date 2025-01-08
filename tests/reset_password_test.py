@@ -66,7 +66,6 @@ def test_new_password_same(client, mock_redis, user_data):
     token = secrets.token_urlsafe(32)
     # Send the request to the reset password endpoint
     response = client.post('/api/reset-password/{token}/', json=data)
-    print(response.json)
 
     assert response.status_code == 400
     assert response.json["error"] == "new and old password not be same"

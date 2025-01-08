@@ -39,7 +39,7 @@ class FollowApi(MethodView):
 
         # if user_id is not provided than get the follower list of the current user
         else:
-            user = User.query.get(self.current_user_id)
+            user = User.query.filter_by(id = self.current_user_id).first()
 
         # get the page,offset and page_size
         page, offset, page_size = get_limit_offset()
@@ -67,7 +67,7 @@ class FollowApi(MethodView):
         takes the user_id which user want to folllow
         """
         # get the current user
-        current_user = User.query.get(self.current_user_id)
+        current_user = User.query.filter_by(id = self.current_user_id).first()
 
         # get the data from the request
         data = request.json
@@ -166,7 +166,7 @@ class FollowingApi(MethodView):
 
         # fetch the current user
         else:
-            user = User.query.get(self.current_user_id)
+            user = User.query.filter_by(id = self.current_user_id).first()
 
         if not user:
             return jsonify({"error": "User not found"}), 404

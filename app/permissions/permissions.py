@@ -24,7 +24,7 @@ class Permission:
         if not current_user_id:
             return False
         # fetch the user from the current_user_id
-        current_user = User.query.get(current_user_id)
+        current_user = User.query.filter_by(id = current_user_id).first()
         if target_user == current_user:
             return True
 
@@ -55,7 +55,7 @@ class Permission:
             target_user = None
             # if post_id is taken
             if user_id:
-                target_user = User.query.get(user_id)
+                target_user = User.query.filter_by(id = user_id,is_active = True,is_deleted = False).first()
             if post_id:
                 if not is_valid_uuid(post_id):
                     return jsonify({"error": "Invalid uuid format"}), 400
@@ -64,7 +64,7 @@ class Permission:
                 if not post:
                     return jsonify({"error": "Post not found"}), 404
                 # pass the user of the post
-                target_user = User.query.get(post.user)
+                target_user = User.query.filter_by(id = post.user,is_active = True, is_deleted = False).first()
             # if the comment id is taken
             if comment_id:
                 # fetch the comment
@@ -75,7 +75,7 @@ class Permission:
                 if not comment:
                     return jsonify({"error": "comment not exist"}), 404
                 # pass the user of the comment
-                target_user = User.query.get(comment.user_id)
+                target_user = User.query.filter_by(id = comment.user_id,is_active = True, is_deleted = False).first()
             # if the story id is taken
             if story_id:
                 # fetch the story
@@ -86,7 +86,7 @@ class Permission:
                 if not story:
                     return jsonify({"error": "Story does not exist"}), 404
                 # pass the user of the story
-                target_user = User.query.get(story.story_owner)
+                target_user = User.query.filter_by(id = story.story_owner, is_active = True, is_deleted = False).first()
                 
             if target_user == None:
                 return view_func(*args, **kwargs)

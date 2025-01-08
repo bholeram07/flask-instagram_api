@@ -147,8 +147,7 @@ class TestFollowRequestAcceptApi:
         access_token = create_access_token(identity=self.user_data_second.id)
         headers = {"Authorization": f"Bearer {access_token}"}
 
-        # Should print False
-        print(f"User account is private: {self.user_data_second.is_private}")
+ 
 
         data = {"user_id": str(self.another_user_data.id)}
        
@@ -159,8 +158,7 @@ class TestFollowRequestAcceptApi:
             headers=headers,
             query_string={"action": "accept"}
         )
-        print(response.json)
-        # print("Response:", response.json)  # Debug output
+        
 
         # Ensure it returns a 400 when the account is public
         assert response.status_code == 400

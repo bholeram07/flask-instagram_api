@@ -74,7 +74,6 @@ class TestPostApi:
             headers=self.headers
         )
 
-        print(response.json)
         assert response.status_code == 201
         assert response.json["title"] == "Test Title"
         assert response.json["caption"] == "Test Caption"
@@ -127,7 +126,6 @@ class TestPostApi:
             json=updated_data,
             headers=self.headers
         )
-        print(response.json)
         assert response.status_code == 202
         assert response.json["title"] == "Updated Title"
         assert response.json["caption"] == "Updated Caption"
@@ -150,7 +148,7 @@ class TestPostApi:
         """Test updating a post created by another user."""
         another_user_token = create_access_token(
             identity=999999)  # Simulate another user
-        print(another_user_token)
+        
         headers = {"Authorization": f"Bearer {another_user_token}"}
 
         post_id = self.create_post()
@@ -167,7 +165,6 @@ class TestPostApi:
             headers=headers
         )
 
-        # print(response.json)
         assert response.status_code == 404
 
     def test_provide_data_for_update(self):
@@ -185,7 +182,6 @@ class TestPostApi:
 
     def test_only_image_data_for_update(self):
         post_id = self.create_post()
-        print(post_id)
         image = BytesIO(b"test image content")  # Simulate an image file
         image.filename = "test_image.jpg"
         files = {
@@ -199,7 +195,6 @@ class TestPostApi:
             headers=self.headers
         )
 
-        print(response.json)
         assert response.status_code == 202
         assert response.json["title"] == "Test Title"
         assert response.json["caption"] == "Test Caption"
@@ -233,7 +228,6 @@ class TestPostApi:
 
         another_user_token = create_access_token(
             identity=999999)  # Simulate another user
-        print(another_user_token)
         headers = {"Authorization": f"Bearer {another_user_token}"}
 
         post_id = self.create_post()
@@ -243,8 +237,6 @@ class TestPostApi:
             f'/api/posts/{post_id}/',
             headers=headers
         )
-
-        # print(response.json)
         assert response.status_code == 404
 
     def test_delete_post_not_exist(self):

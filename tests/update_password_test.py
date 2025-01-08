@@ -56,7 +56,6 @@ def test_incorrect_password(client, user_data):
         },
         headers={"Authorization": f"Bearer {access_token}"},
     )
-    print(response.json)
     assert response.status_code == 401
     assert response.json["error"] == "Invalid credentials"
 

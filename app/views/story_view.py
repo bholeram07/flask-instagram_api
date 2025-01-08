@@ -1,4 +1,4 @@
-from flask import jsonify, request
+from flask import jsonify, request,current_app
 from flask_restful import MethodView
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from datetime import datetime
@@ -13,7 +13,7 @@ from app.pagination_response import paginate_and_serialize
 from app.utils.upload_story_content import story_upload
 from app.uuid_validator import is_valid_uuid
 from app.permissions.permissions import Permission
-
+from app.utils.ist_time import current_time_ist
 
 class UserStory(MethodView):
     """An API for uploading a story if content is provided"""
@@ -135,6 +135,7 @@ class UserStory(MethodView):
             return jsonify(), 204
         except Exception as e:
             # Handle database errors during deletion
+            current_app.logger.info(e)
             db.session.rollback()
             return jsonify({"error": "Some error occurred during deleting the story"}), 500
 

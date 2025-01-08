@@ -4,15 +4,13 @@ import os
 
 load_dotenv()
 class Config:
-    BASE_DIR = os.path.abspath(os.path.dirname(__file__))  # Base directory of the project
-    UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')      # Upload folder path
-    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}  
+    BASE_DIR = os.path.abspath(os.path.dirname(__file__))  # Base directory of the project   
     PROPAGATE_EXCEPTIONS = True
     JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY')
-    BROKER_URL = 'redis://localhost:6379/0'
-    RESULT_BACKEND = 'redis://localhost:6379/0'
-    MAIL_SERVER = 'smtp.googlemail.com'
-    MAIL_PORT = 587
+    BROKER_URL = os.getenv('BROKER_URL')
+    RESULT_BACKEND = os.getenv('RESULT_BACKEND')
+    MAIL_SERVER = os.getenv('MAIL_SERVER')
+    MAIL_PORT = os.getenv('MAIL_PORT')
     MAIL_USE_TLS = True
     MAIL_USERNAME = os.getenv('EMAIL_USERNAME')
     MAIL_PASSWORD = os.getenv('EMAIL_PASS')
@@ -20,10 +18,10 @@ class Config:
     REDIS_HOST = 'localhost'
     REDIS_PORT = 6379
     REDIS_DB = 0
-    BLACKLIST_KEY = "blacklisted_tokens"
+    BLACKLIST_KEY = os.getenv('BLACKLIST_KEY')
     SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URI")
     SQLALCHEMY_TEST_DATABASE_URI = os.getenv("TEST_DATABASE_URI")
-    S3_ENDPOINT_URL = "http://127.0.0.1:9000"
+    S3_ENDPOINT_URL = os.getenv('S3_ENDPOINT_URL')
     TIMEZONE = 'Asia/Kolkata'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SECRET_KEY = os.getenv('SECRET_KEY')

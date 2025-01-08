@@ -47,7 +47,7 @@ class TestStoryApi:
             headers=self.headers
         )
         response_json = response.get_json()
-        print(response_json)
+      
 
         return response_json['id']
 
@@ -101,7 +101,7 @@ class TestStoryApi:
             f'/api/story/{story_id}/',
             headers=self.headers
         )
-        print(response.json)
+     
         assert response.status_code == 200
         assert response.json["id"] == story_id
 
@@ -128,8 +128,7 @@ class TestStoryApi:
     def test_delete_story(self):
         """Test deleting a story by its ID."""
         story_id = self.create_story()
-        print(story_id)
-
+       
         response = self.client.delete(
             f'/api/story/{story_id}/',
             headers=self.headers

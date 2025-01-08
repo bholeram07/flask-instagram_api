@@ -35,29 +35,34 @@ from app.tasks import send_mail, send_location_mail
 from app.uuid_validator import is_valid_uuid
 from app.utils.validation import validate_and_load
 import os
+from typing import Tuple, Union
+
+
 
 
 class Signup(MethodView):
-    """Api for user signup takes the username, email, and password"""
-    signup_schema = SignupSchema()
+    """API for user signup takes the username, email, and password."""
 
-    def post(self):
+    signup_schema: SignupSchema = SignupSchema()
+
+    def post(self) -> Tuple[Union[dict, str], int]:
+        """Handles the POST request for user signup."""
         # Get the data
-        data = request.get_json()
-        email = data.get('email')
-        username = data.get('username')
-        password = data.get('password')
+        data: dict = request.get_json()
+        email: str = data.get('email', '')
+        username: str = data.get('username', '')
+        password: str = data.get('password', '')
 
         # Validate the data
         user_data, errors = validate_and_load(self.signup_schema, data)
         if errors:
-            return jsonify({"errors": errors}), 400
+            return {"errors": errors}, 400
 
         # Check if the username or email already exists
         if User.query.filter_by(email=email).first():
-            return jsonify({"error": "Another account is using this email"}), 409
+            return {"error": "Another account is using this email"}, 409
         if User.query.filter_by(username=username).first():
-            return jsonify({"error": "This username is not available. Please try another"}), 409
+            return {"error": "This username is not available. Please try another"}, 409
 
         try:
             # Begin transaction
@@ -67,85 +72,102 @@ class Signup(MethodView):
             db.session.add(user)
             # Commit the changes
             db.session.commit()
+
             # Generate a verification token
-            token = generate_verification_token(
-                email, current_app.config['SECRET_KEY'])
+            token: str = generate_verification_token(
+                email, current_app.config['SECRET_KEY']
+            )
             # Generate the verification URL
-            verify_url = url_for('auth.verify_email',
-                                 token=token, _external=True)
+            verify_url: str = url_for(
+                'auth.verify_email', token=token, _external=True)
             current_app.logger.info(verify_url)
+
             # Render the email template with the verification URL and username
-            html_message = render_template(
+            html_message: str = render_template(
                 'verify_email.html',
                 username=username,
                 verification_url=verify_url
             )
+
             # Send the verification email asynchronously
             send_mail.delay(email, html_message, "Please Verify Your Email")
-            return jsonify({"message": "Verification email sent. Please check your email to complete signup."}), 200
-        except Exception as e:
+
+            return {"message": "Verification email sent. Please check your email to complete signup."}, 200
+
+        except SQLAlchemyError as e:
             # Rollback the transaction if any exception occurs
             db.session.rollback()
+            current_app.logger.error(f"Database error during signup: {str(e)}")
+            return {"error": "An error occurred during signup. Please try again later."}, 500
+        except Exception as e:
             current_app.logger.error(f"Error during signup: {str(e)}")
-            return jsonify({"error": "An error occurred during signup. Please try again later."}), 500
+            return {"error": "An unexpected error occurred during signup. Please try again later."}, 500
 
 
 class Login(MethodView):
-    """ API for login takes the username or email and password"""
-    # schema for login
-    login_schema = LoginSchema()
+    """API for login takes the username or email and password."""
 
-    def post(self):
-        # get the requested data
-        data = request.get_json()
-        username_or_email = data.get("username_or_email")
-        # validate and loads the data
+    # Schema for login
+    login_schema: LoginSchema = LoginSchema()
+
+    def post(self) -> Tuple[Union[dict, str], int]:
+        """Handles the POST request for user login."""
+        # Get the requested data
+        data: dict = request.get_json()
+        username_or_email: str = data.get("username_or_email", '')
+
+        # Validate and load the data
         user_data, errors = validate_and_load(self.login_schema, data)
         if errors:
-            return jsonify({"errors": errors}), 400
+            return {"errors": errors}, 400
 
+        # Retrieve the user by username or email
+        user: Union[User, None] = None
         if username_or_email:
-            user = User.query.filter((User.username == username_or_email) | (
-                User.email == username_or_email), User.is_verified == True, User.is_deleted == False) .first()
+            user = User.query.filter(
+                (User.username == username_or_email) | (
+                    User.email == username_or_email),
+                User.is_verified == True,
+                User.is_deleted == False
+            ).first()
 
-        # check user
+        # Check user existence
         if not user:
-            return jsonify({"error": "Invalid credentials"}), 400
+            return {"error": "Invalid credentials"}, 400
 
-        # check the password
+        # Check the password
         if not user.check_password(data["password"]):
-            return jsonify({"error": "Invalid credentials"}), 401
+            return {"error": "Invalid credentials"}, 401
 
-        # if user account is suspended active
-        if user.is_active == False:
+        # Reactivate user account if it was suspended
+        if not user.is_active:
             user.is_active = True
             db.session.commit()
 
-        # third party api for user location
-        user_ip = request.remote_addr
-        location = get_user_location(user_ip)
-        # generate the token on valid credentials
-        # access token
-        access_token = create_access_token(
+        # Third-party API for user location
+        user_ip: str = request.remote_addr
+        location: dict = get_user_location(user_ip)
+
+        # Generate the tokens on valid credentials
+        # Access token
+        access_token: str = create_access_token(
             identity=user.id, expires_delta=timedelta(hours=1)
         )
-        # refresh token
-        refresh_token = create_refresh_token(
+        # Refresh token
+        refresh_token: str = create_refresh_token(
             identity=user.id, expires_delta=timedelta(days=1)
         )
-        access_token_expiration = datetime.utcnow() + timedelta(hours=1)
-        refresh_token_expiration = datetime.utcnow() + timedelta(days=1)
-        return (
-            jsonify(
-                {
-                    "access_token": access_token,
-                    "refresh_token": refresh_token,
-                    "access_token_expiration_time": access_token_expiration,
-                    "refresh_token_expiration_time": refresh_token_expiration,
-                }
-            ),
-            200,
-        )
+
+        # Token expiration times
+        access_token_expiration: datetime = datetime.utcnow() + timedelta(hours=1)
+        refresh_token_expiration: datetime = datetime.utcnow() + timedelta(days=1)
+
+        return {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "access_token_expiration_time": access_token_expiration.isoformat(),
+            "refresh_token_expiration_time": refresh_token_expiration.isoformat(),
+        }, 200
 
 
 class UpdatePassword(MethodView):
@@ -153,18 +175,18 @@ class UpdatePassword(MethodView):
     decorators = [jwt_required()]
     update_password_schema = UpdatePasswordSchema()
 
-    def put(self):
+    def put(self) -> Tuple[Union[dict,str],int] : 
         # Get the user_id from the JWT token
         user_id = get_jwt_identity()
-        data = request.json
+        data : str = request.get_json()
         # Fetch user and validate current password
-        user = get_user(user_id)
+        user: Union[User,None] = get_user(user_id)
         if not user:
             return jsonify({"error": "User not found"}), 404
 
         # get the password from the request data
-        current_password = data.get("current_password")
-        new_password = data.get("new_password")
+        current_password:str = data.get("current_password")
+        new_password:str = data.get("new_password")
         if not current_password:
             return jsonify({"errors": {"current_password": "Missing data for required field"}}), 400
 
@@ -205,7 +227,7 @@ class Logout(MethodView):
     """Api for the logout the user by invalidate the jwt token"""
     decorators = [jwt_required()]
 
-    def delete(self):
+    def delete(self) -> int:
         # Blacklist the current JWT
         blacklist_jwt_token()
         return jsonify(), 204
@@ -214,28 +236,28 @@ class Logout(MethodView):
 class ResetPasswordSendMail(MethodView):
     """An Api for the send the link with the token to user's mail for reset password """
 
-    def post(self):
-        data = request.json
-        email = data.get("email")
+    def post(self)-> Tuple[Union[dict,str],int]:
+        data: dict = request.get_json()
+        email: str = data.get("email")
         if not email:
             return jsonify({"error": "Invalid credentials"}), 400
         # get the user object by email
-        user = User.query.filter_by(
+        user : Union[User,None] = User.query.filter_by(
             email=email, is_verified=True, is_active=True, is_deleted=False).first()
         if not user:
             return jsonify({"error": "Not registered"}), 400
         # generate the token
-        token = secrets.token_urlsafe(32)
+        token:str = secrets.token_urlsafe(32)
         # key for store in redis
         redis_key = f"reset_password:{token}"
         redis_client = current_app.config["REDIS_CLIENT"]
         # store the token in the redis with expiration time of 10 minutes
         redis_client.setex(redis_key, timedelta(minutes=10), str(user.id))
         # generate the reset link
-        reset_link = get_reset_password_url(token)
+        reset_link:str = get_reset_password_url(token)
         current_app.logger.info(reset_link)
         # html message for send mail to user email
-        html_message = render_template(
+        html_message:str = render_template(
             "reset_password_email.html",
             subject="Reset Link Password",
             reset_link=reset_link,
@@ -251,16 +273,16 @@ class ResetPassword(MethodView):
     """Api for reset password takes the new password and confirm password"""
     reset_password_schema = ResetPasswordSchema()
 
-    def post(self, token):
-        data = request.json
+    def post(self, token) -> Tuple[Union[dict, str], int]:
+        data :dict = request.get_json()
         # takes the new password and confirm password
-        new_password = data.get("new_password")
-        confirm_password = data.get("confirm_password")
+        new_password:str = data.get("new_password")
+        confirm_password:str = data.get("confirm_password")
         # validate and loads the data
         user_data, errors = validate_and_load(self.reset_password_schema, data)
         if errors:
             return jsonify({"errors": errors}), 400
-        redis_key = f"reset_password:{token}"
+        redis_key : str = f"reset_password:{token}"
         redis_client = current_app.config["REDIS_CLIENT"]
         # get the user_id from the redis
         user_id = redis_client.get(redis_key)
@@ -268,7 +290,7 @@ class ResetPassword(MethodView):
         if not user_id:
             return jsonify({"error": "Invalid or expired token"}), 400
         # get the user object from the user id
-        user = get_user(user_id)
+        user : Union[User,None] = get_user(user_id)
         if not user:
             return jsonify({"error": "User not found"}), 404
         # check the passwoed

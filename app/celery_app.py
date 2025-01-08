@@ -9,7 +9,21 @@ celery_app.conf.beat_schedule = {
         'task': 'app.tasks.hard_delete_old_posts',
         'schedule': crontab(minute='*'),  # Runs at 12:00 AM every day
     },
+    'delete-old-story-every-day': {
+        'task': 'app.tasks.hard_delete_story',
+        'schedule': crontab(minute='*'),  # Runs at 12:00 AM every day
+    },
+    'delete-old-user-every-day':{
+    'task': 'app.tasks.hard_delete_user',
+    'schedule': crontab(minute='*'), # Runs at 12:00 AM every day
+},
+    'delete-old-comments-every-day': {
+        'task': 'app.tasks.hard_delete_comments',
+        'schedule': crontab(minute='*'),  # Runs at 12:00 AM every day
+    
+},
 }
+
 
 
 celery_app.conf.timezone = 'UTC'

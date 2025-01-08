@@ -15,7 +15,6 @@ def app():
     })
     app.config['REDIS_CLIENT'] = MagicMock()
     # Initialize database and set testing configurations
-    # Print configuration details for debugging
     with app.app_context():
         db.create_all()  # Create all tables in the test database
     # Yield the app instance for testing

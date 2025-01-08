@@ -52,7 +52,7 @@ class UserProfile(MethodView):
 
          # Retrieve the currently logged-in user's profile
         else:
-            user = User.query.get(self.current_user_id)
+            user = User.query.filter_by(id = self.current_user_id).first()
 
         # Count followers, following, and posts for the user
         followers_count = Follow.query.filter_by(following_id=user.id).count()
@@ -78,7 +78,7 @@ class UserProfile(MethodView):
         Allows updating fields such as username, bio, is_private, and profile picture.
         """
         # Retrieve the currently logged-in user's record
-        user = User.query.get(self.current_user_id)
+        user = User.query.filter_by(id = self.current_user_id).first()
 
         # Handle file uploads, specifically the profile picture
         file = request.files
