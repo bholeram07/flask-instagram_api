@@ -1,6 +1,6 @@
 from flask_jwt_extended import get_jwt
 from datetime import timedelta,datetime
-from flask import Blueprint, jsonify, request, current_app, render_template
+from flask import Blueprint, jsonify, request, current_app, render_template,Response
 from app.models.user import db, User
 from app.models.follower import Follow
 from app.models.post import Post
@@ -35,7 +35,7 @@ from app.tasks import send_mail, send_location_mail
 from app.uuid_validator import is_valid_uuid
 from app.utils.validation import validate_and_load
 import os
-from typing import Tuple, Union
+from typing import Tuple, Union,Optional
 
 
 
@@ -178,7 +178,7 @@ class UpdatePassword(MethodView):
     def put(self) -> Tuple[Union[dict,str],int] : 
         # Get the user_id from the JWT token
         user_id = get_jwt_identity()
-        data : str = request.get_json()
+        data : dict = request.get_json()
         # Fetch user and validate current password
         user: Union[User,None] = get_user(user_id)
         if not user:
@@ -321,14 +321,14 @@ class DeactivateAccount(MethodView):
     """An api for account deactivation of the user by the user password"""
     decorators = [jwt_required()]
 
-    def put(self):
-        data = request.json
-        password = data.get("password")
+    def put(self) -> Tuple[Union[dict, str],int]:
+        data:dict = request.get_json()
+        password : str = data.get("password")
         if not password:
             return jsonify({"error": {"password": "Missing required field"}}), 400
         current_user_id = get_jwt_identity()
         # get the user object
-        user = get_user(current_user_id)
+        user : Union[User,None] = get_user(current_user_id)
         # check the password
         if not user.check_password(password):
             return jsonify({"error": "Invalid Credentials"}), 400
@@ -350,11 +350,11 @@ class DeleteAccount(MethodView):
     """An Api for delete the user account"""
     decorators = [jwt_required()]
 
-    def delete(self):
+    def delete(self)-> int :
         # get the user_id by the jwt token
         current_user_id = get_jwt_identity()
         # get the user
-        user = get_user(current_user_id)
+        user :Optional[User]= get_user(current_user_id)
         # database opearation of delete
         try:
 

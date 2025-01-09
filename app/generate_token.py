@@ -1,7 +1,7 @@
 from itsdangerous import URLSafeTimedSerializer
 
 #token generation function
-def generate_verification_token(email, secret_key):
+def generate_verification_token(email:str, secret_key:int)->str:
     """generate a random token by the inbuilt function of flask"""
     #make the object of urlsafetimedserializer, pass the secret key
     serializer = URLSafeTimedSerializer(secret_key)

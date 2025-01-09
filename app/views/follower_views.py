@@ -11,6 +11,7 @@ from app.utils.get_validate_user import get_user
 from app.pagination_response import paginate_and_serialize
 from app.utils.get_limit_offset import get_limit_offset
 from app.permissions.permissions import Permission
+from typing import Tuple, Union, Dict, Optional, List
 
 
 class FollowApi(MethodView):
@@ -24,7 +25,7 @@ class FollowApi(MethodView):
         self.current_user_id = get_jwt_identity()
 
     @Permission.user_permission_required
-    def get(self, user_id=None):
+    def get(self, user_id :Optional[str] =None)->dict:
         """
          get the follower list of the current user.
          if user id is provided than follower list of that user
@@ -32,20 +33,20 @@ class FollowApi(MethodView):
         # if user_id is provided than get the follower list of that user
         if user_id:
             # get the user
-            user = get_user(user_id)
+            user:Optional[User] = get_user(user_id)
             # if user not exist
             if not user:
                 return jsonify({"error": "User does not exist"}), 404
 
         # if user_id is not provided than get the follower list of the current user
         else:
-            user = User.query.filter_by(id = self.current_user_id).first()
+            user : Optional[User]= User.query.filter_by(id = self.current_user_id).first()
 
         # get the page,offset and page_size
         page, offset, page_size = get_limit_offset()
 
         # fetch the follower
-        followers = user.followers.offset(offset).limit(page).all()
+        followers: Optional[Follow] = user.followers.offset(offset).limit(page).all()
 
         # added the data of id,username and image in the list of follower
         followers_list = [{
@@ -58,7 +59,7 @@ class FollowApi(MethodView):
         # pagination
         return paginate_and_serialize(followers_list, page, page_size)
 
-    def post(self):
+    def post(self)->Union[dict,str]:
         """
         A function to follow the user.. if account is private than send the follow request,
         if request already exist than withdraw the request,
@@ -70,8 +71,8 @@ class FollowApi(MethodView):
         current_user = User.query.filter_by(id = self.current_user_id).first()
 
         # get the data from the request
-        data = request.json
-        user_id = data.get("user_id")
+        data :dict = request.get_json()
+        user_id:str = data.get("user_id")
 
         # if user_id is not provided
         if not user_id:
@@ -82,7 +83,7 @@ class FollowApi(MethodView):
             return jsonify({"error": "Invalid uuid format"}), 400
 
         # get the user to follow
-        user_to_follow = get_user(user_id)
+        user_to_follow: Optional[User] = get_user(user_id)
 
         # if user not exist
         if not user_to_follow:
@@ -95,7 +96,7 @@ class FollowApi(MethodView):
         # if user account is private than send the follow request
         if user_to_follow.is_private:
             # fetch the follow request
-            follow_request = FollowRequest.query.filter_by(
+            follow_request :Optional[FollowRequest] = FollowRequest.query.filter_by(
                 follower_id=self.current_user_id, following_id=user_id).first()
 
             # if follow request already exist than withdraw the follow request
@@ -105,7 +106,7 @@ class FollowApi(MethodView):
 
             # send the follow request
             else:
-                follow_relationship = Follow.query.filter_by(
+                follow_relationship: Optional[Follow] = Follow.query.filter_by(
                     follower_id=self.current_user_id, following_id=user_to_follow.id).first()
 
             # if user follow the user already than not send the request
@@ -154,7 +155,7 @@ class FollowingApi(MethodView):
     def __init__(self):
         self.current_user_id = get_jwt_identity()
 
-    def get(self, user_id=None):
+    def get(self, user_id :Optional[str]=None)->Tuple[Union[dict,str],int]:
         """
          function to get the following list
         """
@@ -166,10 +167,10 @@ class FollowingApi(MethodView):
 
         # fetch the current user
         else:
-            user = User.query.filter_by(id = self.current_user_id).first()
+            user :Optional[User] = User.query.filter_by(id = self.current_user_id).first()
 
-        if not user:
-            return jsonify({"error": "User not found"}), 404
+            if not user:
+                return jsonify({"error": "User not found"}), 404
         # fetch the following list of the user
         # get the page_number,page_size and offset
         page_number, offset, page_size = get_limit_offset()

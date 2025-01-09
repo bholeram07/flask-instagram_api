@@ -26,17 +26,9 @@ def user_data(app):
     return user
 
 
-@pytest.fixture
-def login_payload():
-    return {
-        "username_or_email": "test@example.com",
-        "password": "Bhole057p@"
-    }
-
 
 def test_login_success(client, user_data):
     # Send a POST request to the signup endpoint
-
     response = client.post('/api/login/', json={
         "username_or_email": user_data.email,
         "password": "Bhole057p@"

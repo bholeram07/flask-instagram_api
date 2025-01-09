@@ -9,14 +9,14 @@ class CustomPagination:
         self.page = page
         self.per_page = per_page
 
-    def paginate(self):
+    def paginate(self)->dict:
         # start = (3-1)*5
-        offset = (self.page - 1) * self.per_page
-        limit = self.per_page
+        offset :int= (self.page - 1) * self.per_page
+        limit : int= self.per_page
 
         # If self.query is a SQLAlchemy query object, apply offset and limit
         # Ensure the offset doesn't exceed the total number of items
-        total_items = len(self.query)
+        total_items:int = len(self.query)
         if offset >= total_items:
             offset = total_items - self.per_page if total_items > 0 else 0
 
@@ -27,7 +27,7 @@ class CustomPagination:
             total_items = len(self.query)
 
         # Calculate total pages
-        total_pages = (total_items + self.per_page - 1) // self.per_page
+        total_pages:int= (total_items + self.per_page - 1) // self.per_page
 
         # Return paginated response
         return {

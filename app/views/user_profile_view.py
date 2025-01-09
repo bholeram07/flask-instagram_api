@@ -11,11 +11,12 @@ from werkzeug.utils import secure_filename
 from config import Config
 import boto3
 import secrets
+from typing import Optional,Union
 from flask_restful import MethodView
 from app.models.post import Post
 from app.models.follower import Follow
 from app.models.user import db, User
-from flask import Blueprint, jsonify, request, current_app
+from flask import Blueprint, jsonify, request, current_app,Response
 from app.utils.update_profile_pic import update_profile_pic
 from app.utils.ist_time import current_time_ist
 
@@ -25,40 +26,40 @@ class UserProfile(MethodView):
     A RESTful API class providing profile functionality to the user.
     This includes retrieving and updating user profile information.
     """
-    # Use the ProfileSchema for serializing and deserializing profile data
-    profile_schema = ProfileSchema()
-    decorators = [jwt_required()]
 
-    # Get the ID of the currently logged-in user from the JWT token
+    profile_schema = ProfileSchema()  # Serialize and deserialize profile data
+
+    decorators = [jwt_required()]  # Enforce JWT authentication for all methods
+    
+    
     def __init__(self):
         self.current_user_id = get_jwt_identity()
 
-    def get(self, user_id=None):
+    def get(self, user_id: Optional[str] = None) -> Response:
         """
         Retrieve the profile of the user.
-        If a `user_id` is provided, retrieve the profile for that user.
-        If no `user_id` is provided, retrieve the profile of the currently logged-in user.
+        - If `user_id` is provided, retrieve the profile for that user.
+        - If no `user_id` is provided, retrieve the profile of the currently logged-in user.
         """
+
+        # If a `user_id` is provided, validate and fetch that user's profile
         if user_id:
-            # Validate the UUID format of the provided user ID
             if not is_valid_uuid(user_id):
                 return jsonify({"error": "Invalid UUID format"}), 400
 
-            # Query for the user by ID, ensuring the user is active and not deleted
             user = User.query.filter_by(
                 id=user_id, is_active=True, is_deleted=False).first()
             if not user:
                 return jsonify({"error": "User not found"}), 404
-
-         # Retrieve the currently logged-in user's profile
         else:
-            user = User.query.filter_by(id = self.current_user_id).first()
+            # Fetch the currently logged-in user's profile
+            user = User.query.filter_by(id=self.current_user_id).first()
+            if not user:
+                return jsonify({"error": "User not found"}), 404
 
         # Count followers, following, and posts for the user
         followers_count = Follow.query.filter_by(following_id=user.id).count()
         following_count = Follow.query.filter_by(follower_id=user.id).count()
-
-        # get the post count of the user
         post_count = Post.query.filter_by(
             user=user.id, is_deleted=False).count()
 
@@ -70,15 +71,17 @@ class UserProfile(MethodView):
             "posts": post_count,
         })
 
-        return jsonify(profile_data)
-
-    def patch(self):
+        return jsonify(profile_data), 200
+    
+    
+    
+    def patch(self)-> [Union[dict,str],int]:
         """
         Update the profile of the currently logged-in user.
         Allows updating fields such as username, bio, is_private, and profile picture.
         """
         # Retrieve the currently logged-in user's record
-        user = User.query.filter_by(id = self.current_user_id).first()
+        user : Optional[User] = User.query.filter_by(id = self.current_user_id).first()
 
         # Handle file uploads, specifically the profile picture
         file = request.files

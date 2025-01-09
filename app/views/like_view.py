@@ -14,6 +14,7 @@ from app.pagination_response import paginate_and_serialize
 from sqlalchemy import desc
 from app.permissions.permissions import Permission
 from app.utils.get_limit_offset import get_limit_offset
+from typing import Tuple, Union, Dict, Optional, List
 
 
 class PostLikeAPi(MethodView):
@@ -23,25 +24,25 @@ class PostLikeAPi(MethodView):
     def __init__(self):
         self.current_user_id = get_jwt_identity()
 
-    def post(self):
+    def post(self)->Tuple[Union[dict, str], int]:
         """
         create a like on the post and if not find like of the user on the post
         deslike the post 
         """
         # get the request data and initailize the post_id
-        data = request.json
-        post_id = data.get("post_id")
+        data:dict = request.get_json()
+        post_id:str= data.get("post_id")
 
         # validates the post_id
         if not post_id or not is_valid_uuid(post_id):
             return jsonify({"error": "Invalid or missing post ID"}), 400
         # fetch the post by post_id
-        post = Post.query.filter_by(id=post_id, is_deleted=False).first()
+        post: Optional[Post] = Post.query.filter_by(id=post_id, is_deleted=False).first()
         if not post:
             return jsonify({"error": "Post does not exist"}), 404
 
         # fetch the like of the user on the post
-        like = Like.query.filter_by(
+        like:Optional[Like]= Like.query.filter_by(
             post=post_id, user=self.current_user_id, is_deleted=False).first()
 
         # for dislike
@@ -62,7 +63,7 @@ class PostLikeAPi(MethodView):
             "title": post.title,
 
         }
-        like_data = self.like_schema.dump(like)
+        like_data:dict = self.like_schema.dump(like)
 
         # get a user data to the comment
         user = User.query.filter_by(id = self.current_user_id).first()
@@ -78,7 +79,7 @@ class PostLikeAPi(MethodView):
 
         return jsonify(like_data), 201
 
-    def get(self, post_id):
+    def get(self, post_id:str)->dict:
         """
         This api is for get the likes on the post by post_id
         """
@@ -90,17 +91,17 @@ class PostLikeAPi(MethodView):
             return jsonify({"error": "Invalid UUID format"}), 400
 
         # get a post
-        post = Post.query.filter_by(id=post_id, is_deleted=False).first()
+        post:Optional[Post] = Post.query.filter_by(id=post_id, is_deleted=False).first()
         if not post:
             return jsonify({"error": "Post does not exist"}), 404
 
         # for get all the likes on the post
         page_number, offset, page_size = get_limit_offset()
-        likes = (Like.query.filter_by(post=post_id).order_by(
+        likes : Optional[Like] = (Like.query.filter_by(post=post_id).order_by(
             desc(Like.created_at)).offset(offset).limit(page_size).all())
 
         # count of the likes on the post
-        likes_count = Like.query.filter_by(post=post_id).count()
+        likes_count:int = Like.query.filter_by(post=post_id).count()
 
         if likes_count == 0:
             return jsonify({"error": "No likes found on this post"}), 404
@@ -120,14 +121,14 @@ class CommentLikeApi(MethodView):
     def __init__(self):
         self.current_user_id = get_jwt_identity()
 
-    def post(self):
+    def post(self)-> Tuple[Union[dict, str], int]:
         """ 
         An function to create the like on the comment
         """
         # get the request data
-        data = request.json
+        data:dict= request.get_json()
         # get the comment id
-        comment_id = data.get("comment_id")
+        comment_id:str = data.get("comment_id")
         if not comment_id:
             return jsonify({"error": "please provide comment id"}), 400
         # validate the comment id
@@ -135,13 +136,13 @@ class CommentLikeApi(MethodView):
             return jsonify({"error": "Invalid UUID format"}), 400
 
         # fetch the comment by comment_id
-        comment = Comment.query.filter_by(
+        comment:Optional[Comment] = Comment.query.filter_by(
             id=comment_id, is_deleted=False).first()
         if not comment:
             return jsonify({"error": "Comment not exist"}), 404
 
         # check the like of the user on the comment
-        like = Like.query.filter_by(
+        like : Optional[Like] = Like.query.filter_by(
             comment=comment_id, user=self.current_user_id, is_deleted=False).first()
 
         # for dislike
@@ -169,7 +170,7 @@ class CommentLikeApi(MethodView):
         }
         return jsonify(result), 201
 
-    def get(self, comment_id=None):
+    def get(self, comment_id: Optional[str]=None):
         """ 
         An function to get the likes on the comment by comment id
         """
@@ -179,7 +180,7 @@ class CommentLikeApi(MethodView):
         if not is_valid_uuid(comment_id):
             return jsonify({"error": "Invalid UUID format"}), 400
 
-        comment = Comment.query.filter_by(
+        comment: Optional[Comment] = Comment.query.filter_by(
             id=comment_id, is_deleted=False).first()
         if not comment:
             return jsonify({"errors": "Comment not exist"}), 400
@@ -187,7 +188,7 @@ class CommentLikeApi(MethodView):
         # get the page size and page_number given by the user
         page_number, offset, page_size = get_limit_offset()
         # fetch the likes on the comment
-        likes = Like.query.filter_by(
+        likes : Optional[Like] = Like.query.filter_by(
             comment=comment_id).offset(
             offset).limit(page_size).all()
         like_data = []
@@ -199,7 +200,7 @@ class CommentLikeApi(MethodView):
                 "liked_by": like.user
             })
         # apply the pagination
-        item = paginate_and_serialize(
+        item :dict = paginate_and_serialize(
             like_data, page_number, page_size), 200
 
         return item
@@ -214,17 +215,17 @@ class StorylikeApi(MethodView):
     def __init__(self):
         self.current_user_id = get_jwt_identity()
 
-    def post(self):
+    def post(self)-> Tuple[Union[dict, str], int]:
         # get the request data
-        data = request.json
-        story_id = data.get("story_id")
+        data:dict = request.get_json()
+        story_id:str = data.get("story_id")
 
         # validate the story_id
         if not is_valid_uuid(story_id):
             return jsonify({"error": "Invalid UUID format"}), 400
 
         # fetch the story by story_id
-        story = Story.query.filter_by(
+        story : Optional[Story]= Story.query.filter_by(
             id=story_id, is_deleted=False).first()
         # if story not exist
         if not story:
@@ -235,7 +236,7 @@ class StorylikeApi(MethodView):
             return jsonify({"error": "You can't like your own story"}), 400
 
         # check the like of the user on the story
-        like = Like.query.filter_by(
+        like: Optional[Like] = Like.query.filter_by(
             story=story_id, user=self.current_user_id).first()
 
         # for dislike
@@ -261,14 +262,14 @@ class StorylikeApi(MethodView):
         }
         return jsonify(result), 201
 
-    def get(self, story_id):
+    def get(self, story_id:str)-> Tuple[Union[dict, str], int]:
         """
         An function to get the likes on the comment by comment id
         """
         if not is_valid_uuid(story_id):
             return jsonify({"error": "Invalid UUID format"}), 400
         # get the comment
-        story = Story.query.filter_by(
+        story: Optional[Story] = Story.query.filter_by(
             id=story_id).first()
         if not story:
             return jsonify({"error": "Story not exist"}), 404
@@ -277,7 +278,7 @@ class StorylikeApi(MethodView):
         page_number, offset, page_size = get_limit_offset()
 
         # fetch the likes on the comment
-        likes = Like.query.filter_by(
+        likes: Optional[Like] = Like.query.filter_by(
             story=story_id).offset(
             offset).limit(page_size).all()
 
@@ -290,7 +291,7 @@ class StorylikeApi(MethodView):
                 "content": story.content
             })
         # apply the pagination
-        item = paginate_and_serialize(
+        item:dict = paginate_and_serialize(
             like_data, page_number, page_size), 200
 
         return item

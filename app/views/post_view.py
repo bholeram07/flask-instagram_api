@@ -21,6 +21,7 @@ from app.permissions.permissions import Permission
 from app.utils.get_validate_user import get_user
 from app.utils.get_limit_offset import get_limit_offset
 from app.utils.ist_time import current_time_ist
+from typing import Union, List, Dict, Optional,Tuple
 
 
 class PostApi(MethodView):
@@ -32,7 +33,7 @@ class PostApi(MethodView):
         # Get the ID of the currently authenticated user
         self.current_user_id = get_jwt_identity()
 
-    def post(self):
+    def post(self)-> Tuple[Union[dict , str],int] :
         """
         Create a new post.
         Requires user authentication.
@@ -43,7 +44,7 @@ class PostApi(MethodView):
         post_data = request.form
 
         # create the post instance
-        post = Post(
+        post: Optional[Post] = Post(
             title=post_data.get("title"),
             caption=post_data.get("caption"),
             user=self.current_user_id,
@@ -79,7 +80,7 @@ class PostApi(MethodView):
             current_app.logger.error(f"Error creating post: {str(e)}")
             return {"error": "An error occurred while creating the post"}, 500
 
-    def patch(self, post_id):
+    def patch(self, post_id:str)-> Tuple[Union[dict,str],int]:
         """
         Update an existing post.
         Only the post owner can perform updates.
@@ -147,7 +148,7 @@ class PostApi(MethodView):
             return jsonify({"error": "An error occurred while updating the post"}), 500
 
     @Permission.user_permission_required
-    def get(self, post_id):
+    def get(self, post_id:str)-> Tuple[Union[dict,str],int]:
         """
         Retrieve a specific post by its ID.
         Requires appropriate user permissions.
@@ -157,14 +158,14 @@ class PostApi(MethodView):
             return jsonify({"error": "Please provide a valid post ID"}), 400
 
         # fetch the post by post_id
-        post = Post.query.filter_by(id=post_id, is_deleted=False).first()
+        post: Optional[Post] = Post.query.filter_by(id=post_id, is_deleted=False).first()
         # if post does not exist
         if not post:
             return jsonify({"error": "Post does not exist"}), 400
 
         return jsonify(self.post_schema.dump(post)), 200
 
-    def delete(self, post_id):
+    def delete(self, post_id:str)->int:
         """
         Soft-delete a post by marking it as deleted.
         Only the post owner can perform this operation.
@@ -174,7 +175,7 @@ class PostApi(MethodView):
             return jsonify({"error": "Invalid or missing post ID"}), 400
 
         # Fetch the post by ID
-        post = Post.query.filter_by(
+        post : Optional[Post] = Post.query.filter_by(
             user=self.current_user_id, id=post_id, is_deleted=False).first()
 
         # if post not exist
@@ -207,7 +208,7 @@ class UserPostListApi(MethodView):
         # Get the ID of the currently authenticated user
         self.current_user_id = get_jwt_identity()
 
-    def get(self, user_id=None):
+    def get(self, user_id: Optional[str] = None) -> dict:
         """
         Retrieve a list of posts for a specific user.
         If no user ID is provided, fetch posts for the current user.

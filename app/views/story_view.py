@@ -14,6 +14,8 @@ from app.utils.upload_story_content import story_upload
 from app.uuid_validator import is_valid_uuid
 from app.permissions.permissions import Permission
 from app.utils.ist_time import current_time_ist
+from typing import Tuple, Union, Dict, Optional, List
+from app.utils.get_limit_offset import get_limit_offset
 
 class UserStory(MethodView):
     """An API for uploading a story if content is provided"""
@@ -24,10 +26,10 @@ class UserStory(MethodView):
         # Initialize the current user ID from the JWT
         self.current_user_id = get_jwt_identity()
 
-    def post(self):
+    def post(self)->Tuple[Union[dict,str], int]:
         """Story creation function"""
         # Create a story instance with the current user as the owner
-        story = Story(
+        story  = Story(
             story_owner=self.current_user_id,
         )
         # Get the file data from the request
@@ -46,7 +48,7 @@ class UserStory(MethodView):
         # If the content is text, retrieve it from the request data
         else:
             data = request.form or request.json
-            content = data.get("content")
+            content :str = data.get("content")
             if content is None or not content.strip():
                 # Return error if no content is provided
                 return jsonify({"errors": {"content": "Missing required field"}}), 400
@@ -63,7 +65,7 @@ class UserStory(MethodView):
             return jsonify({"error": "some error occurred during uploading the story please try again"}), 500
 
     @Permission.user_permission_required
-    def get(self, story_id):
+    def get(self, story_id:str)->Tuple[Union[dict,str], int]:
         """Function to get the story of the user by story ID"""
         # if not story_id is provided
         if not story_id:
@@ -85,7 +87,7 @@ class UserStory(MethodView):
         if str(story.story_owner) != str(self.current_user_id):
             # Add a view record if the story is viewed by someone else
             try:
-                story_view = StoryView.query.filter_by(
+                story_view : Optional[StoryView]= StoryView.query.filter_by(
                     viewer_id=self.current_user_id).first()
                 if not story_view:
                     story_view = StoryView(
@@ -110,7 +112,7 @@ class UserStory(MethodView):
         }
         return jsonify(story_data), 200
 
-    def delete(self, story_id):
+    def delete(self, story_id:str)->int:
         """Function to delete the story of the user by story ID (only owner can access)"""
         if not story_id:
             return jsonify({"error": "story_id is required"}), 400
@@ -120,7 +122,7 @@ class UserStory(MethodView):
             return jsonify({"error": "Invalid UUID format"}), 400
 
         # Retrieve the story by ID
-        story = Story.query.filter_by(
+        story: Optional[story] = Story.query.filter_by(
             id=story_id, is_deleted=False, story_owner=self.current_user_id).first()
         if not story:
             # Handle case where the story doesn't exist
@@ -149,7 +151,7 @@ class GetStoryView(MethodView):
         # Initialize the current user ID from the JWT
         self.current_user_id = get_jwt_identity()
 
-    def get(self, story_id=None):
+    def get(self, story_id :Optional[str]=None)->dict:
         """Function to get the story view"""
         if not is_valid_uuid(story_id):
             # Ensure the provided story ID is a valid UUID
@@ -157,14 +159,14 @@ class GetStoryView(MethodView):
 
         # Retrieve the total count of views for the story
 
-        total_views_count = StoryView.query.filter_by(
+        total_views_count:int = StoryView.query.filter_by(
             story_owner=self.current_user_id, story_id=story_id).count()
-        page_number = request.args.get('page', default=1, type=int)
-        page_size = request.args.get('size', default=5, type=int)
-        offset = (page_number - 1) * page_size
+
+        offset, page_size, page_number = get_limit_offset()
+
 
         # Retrieve the story by ID
-        story = Story.query.filter_by(
+        story : Optional[Story] = Story.query.filter_by(
             id=story_id, is_deleted=False, story_owner=self.current_user_id).first()
 
         # if story not exist
@@ -173,7 +175,7 @@ class GetStoryView(MethodView):
             return jsonify({"error": "Story does not exist"}), 404
 
         # Retrieve the views for the story
-        story_views = StoryView.query.filter_by(
+        story_views: Optional[StoryView] = StoryView.query.filter_by(
             story_owner=self.current_user_id, story_id=story_id).offset(offset).limit(page_size).all()
 
         # Serialize the story view data
