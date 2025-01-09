@@ -32,7 +32,7 @@ def test_delete_account(client, user_data):
     # Generate a valid access token for the test user
     access_token = create_access_token(identity=user_data.id)
     response = client.delete(
-        "/api/accounts/delete/",
+        "/api/accounts/",
         headers={"Authorization": f"Bearer {access_token}"},
     )
     assert response.status_code == 204

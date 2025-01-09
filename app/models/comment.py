@@ -22,6 +22,15 @@ class Comment(BaseModel,db.Model):
     #relationships
     likes = db.relationship('Like', backref='liked_comment', lazy=True,overlaps="post")
     post = db.relationship("Post", backref = "comment_on_post", lazy = True, overlaps="likes")
-  
+    
+    def soft_delete(self):
+        super().soft_delete()  # Soft delete the user
+
+        # Soft delete related comments
+        for like in self.likes:
+            like.soft_delete()
+
+        db.session.commit()
+
     def __str__(self):
         return f"{self.content} by {self.user_id}"

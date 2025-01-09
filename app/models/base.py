@@ -16,3 +16,7 @@ class BaseModel(db.Model):
     updated_at = db.Column(db.DateTime(timezone = True), default=None)
     is_deleted = db.Column(db.Boolean, default=False)
     deleted_at = db.Column(db.DateTime(timezone=True), nullable=True)
+    
+    def soft_delete(self):
+        self.is_deleted = True
+        self.deleted_at = current_time_ist()

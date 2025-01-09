@@ -29,6 +29,20 @@ class Post(BaseModel,db.Model):
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+    
+    
+    def soft_delete(self):
+        super().soft_delete()  # Soft delete the user
+
+        # Soft delete related comments
+        for comment in self.comments:
+            comment.soft_delete()
+
+        # Soft delete related likes
+        for like in self.likes:
+            like.soft_delete()
+        
+        db.session.commit()
 
     def __str__(self):
-        return f"{self.content} by {self.user}"
+        return f"{self.caption} by {self.user}"

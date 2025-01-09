@@ -240,12 +240,12 @@ class ResetPasswordSendMail(MethodView):
         data: dict = request.get_json()
         email: str = data.get("email")
         if not email:
-            return jsonify({"error": "Invalid credentials"}), 400
+            return jsonify({"errors": {"email": "Missing data for required field."}}), 400
         # get the user object by email
         user : Union[User,None] = User.query.filter_by(
             email=email, is_verified=True, is_active=True, is_deleted=False).first()
         if not user:
-            return jsonify({"error": "Not registered"}), 400
+            return jsonify({"error": "Invalid Credentials"}), 400
         # generate the token
         token:str = secrets.token_urlsafe(32)
         # key for store in redis
@@ -361,6 +361,7 @@ class DeleteAccount(MethodView):
             blacklist_jwt_token()
             user.is_deleted = True
             user.deleted_at = datetime.now()
+            user.soft_delete()
             db.session.commit()
             return jsonify(), 204
         except Exception as e:

@@ -7,7 +7,7 @@ from app.pagination_response import paginate_and_serialize
 from app.models.likes import Like
 from app.models.comment import Comment
 from typing import Tuple, Union
-
+from app.utils.get_limit_offset import get_limit_offset 
 class UserActivity(MethodView):
     """
     An API to get the activity of the user, such as likes and comments.
@@ -28,7 +28,8 @@ class UserActivity(MethodView):
         activity_type: str = request.args.get('type', default='likes', type=str)
         
         # Retrieve pagination parameters.
-        offset, page_size, page_number = get_limit_offset()
+
+        page_number, offset, page_size = get_limit_offset()
 
         # Determine the type of activity to fetch.
         if activity_type == 'likes':
@@ -49,7 +50,7 @@ class UserActivity(MethodView):
         likes = Like.query.filter_by(user=user_id).offset(
             offset).limit(limit).all()  # Query likes by the user.
         # Serialize and return the paginated data.
-        return paginate_and_serialize(likes, self.like_schema, page_number, limit)
+        return paginate_and_serialize(likes, page_number, limit,self.like_schema)
 
     def get_comments(self, user_id:str, offset:int, limit:int , page_number:int)->dict:
         """
@@ -63,4 +64,4 @@ class UserActivity(MethodView):
             offset).limit(limit).all()  
         
         # Serialize and return the paginated data.
-        return paginate_and_serialize(comments, self.comment_schema, page_number, limit)
+        return paginate_and_serialize(comments, page_number, limit,self.comment_schema)

@@ -28,7 +28,12 @@ class User(BaseModel,db.Model):
     #relationships
     posts = relationship("Post", backref="user_post",lazy="dynamic")
     comments = relationship("Comment", backref="user_comment", lazy= "dynamic")
-    likes = relationship("Like",backref="user_likes",lazy="dynamic")
+    likes = db.relationship(
+        "Like",
+        backref="user_likes",
+        cascade="all, delete-orphan",
+        lazy="dynamic"
+    )
     
 
     following = db.relationship(
@@ -50,6 +55,23 @@ class User(BaseModel,db.Model):
     #method that check the password with existing password by check password hash
     def check_password(self, raw_password):
         return check_password_hash(self.password, raw_password)
+    
+    def soft_delete(self):
+        super().soft_delete()  # Soft delete the user
+
+        # Soft delete related posts
+        for post in self.posts:
+            post.soft_delete()
+
+        # Soft delete related comments
+        for comment in self.comments:
+            comment.soft_delete()
+
+        # Soft delete related likes
+        for like in self.likes:
+            like.soft_delete()
+        
+        db.session.commit()
 
     def set_password(self, raw_password):
         """method to set the password of the user in hash"""

@@ -2,7 +2,7 @@ from uuid import UUID
 from app.extensions import db
 from app.models.comment import Comment
 from sqlalchemy import func
-def comment_respose(comments,schema):
+def comment_response(comments,schema):
     comment_likes = {}
     for comment in comments:
             comment.likes_count = len(comment.likes)
@@ -29,8 +29,9 @@ def comment_respose(comments,schema):
     for comment in serialized_comments:
         # Assuming comment["id"] is in string format ,convert into uuid
         comment_id = UUID(comment["id"])
+        parent = comment["parent"]
         #get the reply count from the list reply
-        comment["reply_count"] = reply_count_map.get(comment_id, 0)
-        comment["likes_count"] = comment_likes.get(comment_id, 0)
+        comment["replies"] = reply_count_map.get(comment_id, 0)
+        comment["likes"] = comment_likes.get(comment_id, 0)
     return serialized_comments
 

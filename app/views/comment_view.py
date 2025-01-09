@@ -16,7 +16,7 @@ from sqlalchemy import desc
 from app.pagination_response import paginate_and_serialize
 from uuid import UUID
 from datetime import datetime
-from app.response.comment_response import comment_respose
+from app.response.comment_response import comment_response
 from app.permissions.permissions import Permission
 from app.utils.get_limit_offset import get_limit_offset
 from app.utils.ist_time import current_time_ist
@@ -68,11 +68,17 @@ class CommentApi(MethodView):
         if error:
             return jsonify({"errors": error}), 400
 
-        comment: Comment = Comment(
+        comment: Optional[Comment] = Comment(
             post_id=post_id, user_id=self.current_user_id, content=content)
         db.session.add(comment)
         db.session.commit()
-        return jsonify(self.comment_schema.dump(comment)), 201
+        response = {
+            "id": comment.id,
+            "content": comment.content,
+            "author": comment.user_id,
+            "post" : post_id
+        }
+        return jsonify(response), 201
 
     def create_reply(self, parent_comment_id: str, content: str, data: dict) -> dict:
         """
@@ -93,15 +99,15 @@ class CommentApi(MethodView):
         if not content:
             return jsonify({"error": "Provide content for reply"}), 400
 
-        reply_comment: Comment = Comment(
+        reply_comment: Optional[Comment] = Comment(
             parent=parent_comment_id, content=content, user_id=self.current_user_id)
         db.session.add(reply_comment)
         db.session.commit()
 
         response = {
             "id": reply_comment.id,
-            "content": "This is the reply to the comment",
-            "replied_by": reply_comment.user_id,
+            "content": reply_comment.content,
+            "author": reply_comment.user_id,
             "parent_comment": {
                 "id": parent_comment.id,
                 "content": parent_comment.content
@@ -129,6 +135,7 @@ class CommentApi(MethodView):
         replies = Comment.query.filter_by(
             parent=comment_id, is_deleted=False).all()
         comment_data["replies"] = self.get_replies_data(replies)
+        comment_data["parent"] = comment.parent
 
         return jsonify(comment_data), 200
 
@@ -224,5 +231,5 @@ class CommentListApi(MethodView):
         comments : Optional[Comment] = Comment.query.filter_by(post_id=post_id, is_deleted=False).order_by(
             desc(Comment.created_at)).offset(offset).limit(page_size).all()
         # serialize the comments
-        serialized_comments = comment_respose(comments, self.comment_schema)
+        serialized_comments = comment_response(comments, self.comment_schema)
         return paginate_and_serialize(serialized_comments, page_number, page_size)

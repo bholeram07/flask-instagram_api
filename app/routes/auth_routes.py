@@ -36,6 +36,6 @@ user_api.add_url_rule(
     view_func=DeactivateAccount.as_view("deactivate_account"),methods =["PUT"]
 )
 user_api.add_url_rule(
-    "/accounts/delete/",
+    "/accounts/",
     view_func=DeleteAccount.as_view("delete_account"),methods =["DELETE"]    
 )

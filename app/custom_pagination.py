@@ -11,7 +11,7 @@ class CustomPagination:
 
     def paginate(self)->dict:
         # start = (3-1)*5
-        offset :int= (self.page - 1) * self.per_page
+        offset: int = (self.page - 1) * self.per_page
         limit : int= self.per_page
 
         # If self.query is a SQLAlchemy query object, apply offset and limit

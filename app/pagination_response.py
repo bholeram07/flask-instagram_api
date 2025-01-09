@@ -3,7 +3,7 @@ from app.custom_pagination import CustomPagination
 from typing import Optional
 
 
-def paginate_and_serialize(queryset:str, page:int, per_page:int, schema:Optional[object]=None, **extra_fields)->dict:
+def paginate_and_serialize(queryset:str, page:int, per_page:int, schema=None, **extra_fields)->dict:
     """
     Paginate and serialize a queryset.
 

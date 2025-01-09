@@ -103,7 +103,7 @@ def hard_delete_user():
         utc_now = datetime.now(pytz.utc)
 
         # Set the threshold date (1 minute before current time)
-        threshold_date = utc_now - timedelta(minutes=1)
+        threshold_date = utc_now - timedelta(seconds=1)
 
         # Fetch posts marked as "soft deleted" and older than 1 minute
         deleted_user = User.query.filter(User.deleted_at < threshold_date).all()

@@ -188,9 +188,7 @@ class PostApi(MethodView):
             post_image_video_obj = PostImageVideo(
                 post, post.image_or_video, self.current_user_id)
             post_image_video_obj.delete_image_or_video()
-            post.is_deleted = True
-            post.deleted_at = current_time_ist()
-            db.session.commit()
+            post.soft_delete()
             return jsonify(), 204
 
         except Exception as e:
@@ -213,11 +211,13 @@ class UserPostListApi(MethodView):
         Retrieve a list of posts for a specific user.
         If no user ID is provided, fetch posts for the current user.
         """
-        # if user_id is provided
-        if not is_valid_uuid(user_id):
-            return jsonify({"error": "Invalid user ID format"}), 400
+      
 
         query_user_id = user_id or self.current_user_id
+        if user_id:
+            if not is_valid_uuid(user_id):
+                return jsonify({"error": "Invalid UUID format"}), 400
+        
         query_user = get_user(query_user_id)
         if not query_user:
             return jsonify({"error": "User does not exist"}), 404
