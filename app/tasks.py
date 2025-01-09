@@ -7,6 +7,8 @@ from app.models.post import Post
 from app.models.user import User
 from app.models.story import Story
 from app.models.comment import Comment
+from app.models.follow_request import FollowRequest
+from app.models.follower import Follow
 from app.extensions import db
 import pytz
 
@@ -141,3 +143,54 @@ def hard_delete_comments():
 
         # Commit the changes
         db.session.commit()
+        
+
+@celery_app.task
+def hard_delete_user():
+    """Hard delete posts marked for deletion."""
+    from app import create_app
+    app = create_app()
+
+    with app.app_context():
+        # Get the current time in UTC
+        utc_now = datetime.now(pytz.utc)
+
+        # Set the threshold date (1 minute before current time)
+        threshold_date = utc_now - timedelta(seconds=1)
+
+        # Fetch posts marked as "soft deleted" and older than 1 minute
+        non_verified_user = User.query.filter_by(is_verified = False).all()
+
+        # Hard delete the posts
+        for user in deleted_user:
+            # Assuming you have a delete() method in your model
+            db.session.delete(user)
+
+        # Commit the changes
+        db.session.commit()
+
+
+# @celery_app.task
+# def accept_the_request():
+#     """Hard delete posts marked for deletion."""
+#     from app import create_app
+#     app = create_app()
+
+#     with app.app_context():
+#         # Get the current time in UTC
+#         utc_now = datetime.now(pytz.utc)
+
+#         # Set the threshold date (1 minute before current time)
+#         threshold_date = utc_now - timedelta(minutes=1)
+
+#         # Fetch posts marked as "soft deleted" and older than 1 minute
+#         user = User.query.filter(is_private == False).all()
+#         followrequests = FollowRequest.query.filter(
+#             following_id=self.current_user_id).all()
+#         for follower in followrequests:
+#             follow = Follow(follower_id=follower.follower_id,following_id=follower.following_id)
+#             db.session.add(follow)
+#         # Hard delete the posts
+      
+#         # Commit the changes
+#         db.session.commit()
