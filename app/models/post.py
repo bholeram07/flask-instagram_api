@@ -25,6 +25,10 @@ class Post(BaseModel,db.Model):
                          lazy="dynamic", overlaps="comments", viewonly=True)
     comments = relationship(
         "Comment", backref="post_commment", lazy="dynamic", overlaps="likes", viewonly=True)
+    
+    __table_args__ = (
+        db.Index('idx_user_created_at', 'user', 'id', 'created_at'),
+    )
 
     
     def __init__(self, **kwargs):

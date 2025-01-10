@@ -13,7 +13,6 @@ class Comment(BaseModel,db.Model):
     Comment model that creates a comment table in the database with the defined column
     """
     __tablename__ = "comment"
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = db.Column(UUID(as_uuid=True), db.ForeignKey("user.id",ondelete = "CASCADE"))
     post_id = db.Column(UUID(as_uuid=True), db.ForeignKey("post.id",ondelete = "CASCADE"))
     content = db.Column(db.Text, nullable=False)  # size
@@ -23,6 +22,10 @@ class Comment(BaseModel,db.Model):
     likes = db.relationship('Like', backref='liked_comment', lazy=True,overlaps="post")
     post = db.relationship("Post", backref = "comment_on_post", lazy = True, overlaps="likes")
     
+    __table_args__ = (
+        db.Index('idx_post_created_at', 'post_id', 'id','created_at'),
+    )
+
     def soft_delete(self):
         super().soft_delete()  # Soft delete the user
 

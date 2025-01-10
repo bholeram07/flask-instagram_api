@@ -51,6 +51,11 @@ class User(BaseModel,db.Model):
         lazy="dynamic",
         cascade="all, delete-orphan",
     )
+    
+    __table_args__ = (
+        db.Index('idx_id', 'id'),
+        db.Index('idx_is_verified_active', 'is_verified', 'is_active'),
+    )
 
     #method that check the password with existing password by check password hash
     def check_password(self, raw_password):

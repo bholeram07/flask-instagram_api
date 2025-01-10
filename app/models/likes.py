@@ -12,11 +12,13 @@ class Like(BaseModel,db.Model):
     A like model that creates a like table in the databases 
     """
     __tablename__ = "like"
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user = db.Column(UUID(as_uuid=True), db.ForeignKey("user.id",ondelete = "CASCADE"),nullable = False)
-    post = db.Column(UUID(as_uuid=True), db.ForeignKey("post.id",ondelete = "CASCADE"),nullable = True)
-    story = db.Column(UUID(as_uuid=True), db.ForeignKey("story.id",ondelete = "CASCADE"),nullable = True)
+    user = db.Column(UUID(as_uuid=True), db.ForeignKey("user.id",ondelete = "CASCADE"),nullable = False,index = True)
+    post = db.Column(UUID(as_uuid=True), db.ForeignKey("post.id",ondelete = "CASCADE"),nullable = True, index = True)
+    story = db.Column(UUID(as_uuid=True), db.ForeignKey("story.id",ondelete = "CASCADE"),nullable = True, index = True)
     comment = db.Column(UUID(as_uuid=True), db.ForeignKey("comment.id",ondelete = "CASCADE"), nullable = True)
+    
+    
+    
   
 
     def __str__(self):
