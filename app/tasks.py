@@ -92,7 +92,31 @@ def hard_delete_story():
 
         # Commit the changes
         db.session.commit()
-    
+
+
+@celery_app.task
+def hard_delete_story_by_user():
+    """Hard delete posts marked for deletion."""
+    from app import create_app
+    app = create_app()
+
+    with app.app_context():
+        # Get the current time in UTC
+        utc_now = datetime.now(pytz.utc)
+
+        # Set the threshold date (1 minute before current time)
+        threshold_date = utc_now - timedelta(minutes=1)
+
+        # Fetch posts marked as "soft deleted" and older than 1 minute
+        old_story = Story.query.filter_by(is_deleted = False).all()
+
+        # Hard delete the posts
+        for story in old_story:
+            # Assuming you have a delete() method in your model
+            db.session.delete(story)
+
+        # Commit the changes
+        db.session.commit()
     
 @celery_app.task
 def hard_delete_user():
@@ -168,6 +192,7 @@ def hard_delete_user():
 
         # Commit the changes
         db.session.commit()
+
 
 
 # @celery_app.task

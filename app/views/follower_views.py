@@ -111,7 +111,9 @@ class FollowApi(MethodView):
 
             # if user follow the user already than not send the request
                 if follow_relationship:
-                    return jsonify({"message": "You are already following the user,request not sent"}), 400
+                    db.session.delete(follow_relationship)
+                    db.session.commit()
+                    return jsonify({"message": "Unfollowed"}), 200
 
                 # send the follow request
                 else:

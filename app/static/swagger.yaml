@@ -3,8 +3,8 @@ info:
   title: flask
   version: 1.0.0
 servers:
-  - url: http://{{base_url}}
-  - url: http://127.0.0.1:5000
+  # - url: http://{{base_url}}
+  - url: http://127.0.0.1:5000/
 components:
   securitySchemes:
     bearerAuth:
@@ -17,7 +17,6 @@ tags:
   - name: Profile
   - name: Posts
   - name: Users
-  - name: Reply-Comments
   - name: Comments
   - name: Story
   - name: Likes
@@ -39,8 +38,8 @@ paths:
                 email: bholeram@gkmit.co
                 password: Bhole057p@
       responses:
-        '201':
-          description: CREATED
+        '200':
+          description: OK
           headers:
             Server:
               schema:
@@ -49,7 +48,7 @@ paths:
             Date:
               schema:
                 type: string
-                example: Tue, 10 Dec 2024 17:14:44 GMT
+                example: Wed, 08 Jan 2025 09:13:20 GMT
             Content-Type:
               schema:
                 type: string
@@ -57,7 +56,7 @@ paths:
             Content-Length:
               schema:
                 type: integer
-                example: '107'
+                example: '88'
             Connection:
               schema:
                 type: string
@@ -67,20 +66,51 @@ paths:
               schema:
                 type: object
               example:
-                email: vikramsinghr550@gmail.com
-                id: e3caa1a3-26c4-4ea2-9a69-9cbdf0f3e0b4
-                username: vikrambanna
+                message: >-
+                  Verification email sent. Please check your email to complete
+                  signup.
+        '400':
+          description: BAD REQUEST
+          headers:
+            Server:
+              schema:
+                type: string
+                example: Werkzeug/3.1.3 Python/3.9.7
+            Date:
+              schema:
+                type: string
+                example: Wed, 01 Jan 2025 09:38:51 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json
+            Content-Length:
+              schema:
+                type: integer
+                example: '122'
+            Connection:
+              schema:
+                type: string
+                example: close
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                errors:
+                  email: Missing data for required field.
+                  password: Missing data for required field.
         '409':
           description: CONFLICT
           headers:
             Server:
               schema:
                 type: string
-                example: Werkzeug/3.1.2 Python/3.9.11
+                example: Werkzeug/3.1.3 Python/3.9.7
             Date:
               schema:
                 type: string
-                example: Sat, 23 Nov 2024 07:21:17 GMT
+                example: Wed, 01 Jan 2025 09:37:56 GMT
             Content-Type:
               schema:
                 type: string
@@ -88,7 +118,7 @@ paths:
             Content-Length:
               schema:
                 type: integer
-                example: '33'
+                example: '53'
             Connection:
               schema:
                 type: string
@@ -97,8 +127,15 @@ paths:
             application/json:
               schema:
                 type: object
-              example:
-                error: email already exists
+              examples:
+                example-0:
+                  summary: '409'
+                  value:
+                    error: Another account is using this email
+                example-1:
+                  summary: 409-username
+                  value:
+                    error: This username is not available. Please try another
   /auth/verify-email/InNhZ2FyQGdtYWlsLmNvbSI.Z2ZqJA.Ix62dQjvvG4UIzDowwUcnzLLQns:
     post:
       tags:
@@ -146,7 +183,7 @@ paths:
             Date:
               schema:
                 type: string
-                example: Sat, 21 Dec 2024 08:48:21 GMT
+                example: Sun, 05 Jan 2025 13:12:25 GMT
             Content-Type:
               schema:
                 type: string
@@ -154,7 +191,7 @@ paths:
             Content-Length:
               schema:
                 type: integer
-                example: '37'
+                example: '62'
             Connection:
               schema:
                 type: string
@@ -164,7 +201,7 @@ paths:
               schema:
                 type: object
               example:
-                message: Email already verified
+                error: Invalid token. Please check your email link.
   /api/login/:
     post:
       tags:
@@ -177,7 +214,7 @@ paths:
               type: object
               example:
                 username_or_email: bholeram057p
-                password: Bholeram057p@
+                password: Bhole057p@
       responses:
         '200':
           description: OK
@@ -223,7 +260,7 @@ paths:
             Date:
               schema:
                 type: string
-                example: Mon, 23 Dec 2024 08:28:53 GMT
+                example: Mon, 23 Dec 2024 08:30:00 GMT
             Content-Type:
               schema:
                 type: string
@@ -231,46 +268,7 @@ paths:
             Content-Length:
               schema:
                 type: integer
-                example: '78'
-            Connection:
-              schema:
-                type: string
-                example: close
-          content:
-            application/json:
-              schema:
-                type: object
-              examples:
-                example-0:
-                  summary: '400'
-                  value:
-                    errors:
-                      username_or_email: Either email or username must be provided.
-                example-1:
-                  summary: 400-missing field
-                  value:
-                    errors:
-                      password: Missing data for required field.
-                      username_or_email: Missing data for required field.
-        '401':
-          description: UNAUTHORIZED
-          headers:
-            Server:
-              schema:
-                type: string
-                example: Werkzeug/3.1.2 Python/3.9.11
-            Date:
-              schema:
-                type: string
-                example: Sun, 24 Nov 2024 05:04:24 GMT
-            Content-Type:
-              schema:
-                type: string
-                example: application/json
-            Content-Length:
-              schema:
-                type: integer
-                example: '29'
+                example: '114'
             Connection:
               schema:
                 type: string
@@ -280,7 +278,38 @@ paths:
               schema:
                 type: object
               example:
-                error: Invalid password
+                errors:
+                  password: Missing data for required field.
+                  username_or_email: Missing data for required field.
+        '401':
+          description: UNAUTHORIZED
+          headers:
+            Server:
+              schema:
+                type: string
+                example: Werkzeug/3.1.3 Python/3.9.7
+            Date:
+              schema:
+                type: string
+                example: Wed, 01 Jan 2025 09:41:39 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json
+            Content-Length:
+              schema:
+                type: integer
+                example: '37'
+            Connection:
+              schema:
+                type: string
+                example: close
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                error: Invalid credentials
   /api/update-password/:
     put:
       tags:
@@ -295,8 +324,8 @@ paths:
                 current_password: Bholeram057p@
                 new_password: Bhole057p@
       responses:
-        '200':
-          description: OK
+        '202':
+          description: Accepted
           headers:
             Server:
               schema:
@@ -324,6 +353,35 @@ paths:
                 type: object
               example:
                 detail: Password Update Successfully
+        '400':
+          description: BAD REQUEST
+          headers:
+            Server:
+              schema:
+                type: string
+                example: Werkzeug/3.1.3 Python/3.9.7
+            Date:
+              schema:
+                type: string
+                example: Mon, 06 Jan 2025 06:43:56 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json
+            Content-Length:
+              schema:
+                type: integer
+                example: '60'
+            Connection:
+              schema:
+                type: string
+                example: close
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                error: Old and new passwords must not be the same
         '401':
           description: UNAUTHORIZED
           headers:
@@ -334,7 +392,7 @@ paths:
             Date:
               schema:
                 type: string
-                example: Tue, 10 Dec 2024 15:53:11 GMT
+                example: Wed, 01 Jan 2025 09:43:06 GMT
             Content-Type:
               schema:
                 type: string
@@ -342,7 +400,7 @@ paths:
             Content-Length:
               schema:
                 type: integer
-                example: '31'
+                example: '41'
             Connection:
               schema:
                 type: string
@@ -353,17 +411,17 @@ paths:
                 type: object
               examples:
                 example-0:
+                  summary: 401-anuthorized
+                  value:
+                    error: You have to login first
+                example-1:
+                  summary: invalid credentials
+                  value:
+                    error: Invalid credentials
+                example-2:
                   summary: '401'
                   value:
-                    error: Incorrect Password
-                example-1:
-                  summary: Token invalidate
-                  value:
-                    error: You have to login again
-                example-2:
-                  summary: 401- incorrect password
-                  value:
-                    error: Incorrect Password
+                    error: Invalid credentials
   /api/reset-password/send-mail/:
     post:
       tags:
@@ -435,7 +493,7 @@ paths:
                 type: object
               example:
                 error: Not registered
-  /api/reset-password/ZHZRe4D2CJEg8b_DtawOi1VGxdAe6eyhF4mylmzTwus/:
+  /api/reset-password/1234/:
     post:
       tags:
         - Auth
@@ -455,11 +513,11 @@ paths:
             Server:
               schema:
                 type: string
-                example: Werkzeug/3.1.2 Python/3.9.11
+                example: Werkzeug/3.1.3 Python/3.9.7
             Date:
               schema:
                 type: string
-                example: Mon, 25 Nov 2024 17:31:23 GMT
+                example: Wed, 01 Jan 2025 10:37:20 GMT
             Content-Type:
               schema:
                 type: string
@@ -467,7 +525,36 @@ paths:
             Content-Length:
               schema:
                 type: integer
-                example: '42'
+                example: '47'
+            Connection:
+              schema:
+                type: string
+                example: close
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                message: Password reset successfully
+        '400':
+          description: BAD REQUEST
+          headers:
+            Server:
+              schema:
+                type: string
+                example: Werkzeug/3.1.3 Python/3.9.7
+            Date:
+              schema:
+                type: string
+                example: Wed, 01 Jan 2025 10:38:19 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json
+            Content-Length:
+              schema:
+                type: integer
+                example: '81'
             Connection:
               schema:
                 type: string
@@ -478,42 +565,14 @@ paths:
                 type: object
               examples:
                 example-0:
-                  summary: Update-Password
+                  summary: 400-missing field
                   value:
-                    detail: Password Update Successfully
+                    errors:
+                      confirm_password: Missing data for required field.
                 example-1:
-                  summary: reset-password
+                  summary: 400 - confirm password must be equal
                   value:
-                    error: Password reset successfully
-        '401':
-          description: UNAUTHORIZED
-          headers:
-            Server:
-              schema:
-                type: string
-                example: Werkzeug/3.1.2 Python/3.9.11
-            Date:
-              schema:
-                type: string
-                example: Sun, 24 Nov 2024 04:48:50 GMT
-            Content-Type:
-              schema:
-                type: string
-                example: application/json
-            Content-Length:
-              schema:
-                type: integer
-                example: '39'
-            Connection:
-              schema:
-                type: string
-                example: close
-          content:
-            application/json:
-              schema:
-                type: object
-              example:
-                error: Incorrect Current Password
+                    error: new password and confirm password must be equal
   /api/logout/:
     delete:
       tags:
@@ -601,7 +660,7 @@ paths:
             Date:
               schema:
                 type: string
-                example: Mon, 23 Dec 2024 11:13:27 GMT
+                example: Wed, 01 Jan 2025 10:40:50 GMT
             Content-Type:
               schema:
                 type: string
@@ -609,7 +668,7 @@ paths:
             Content-Length:
               schema:
                 type: integer
-                example: '80'
+                example: '85'
             Connection:
               schema:
                 type: string
@@ -632,7 +691,7 @@ paths:
             Date:
               schema:
                 type: string
-                example: Mon, 23 Dec 2024 11:11:33 GMT
+                example: Wed, 01 Jan 2025 10:43:43 GMT
             Content-Type:
               schema:
                 type: string
@@ -640,7 +699,7 @@ paths:
             Content-Length:
               schema:
                 type: integer
-                example: '27'
+                example: '37'
             Connection:
               schema:
                 type: string
@@ -649,16 +708,18 @@ paths:
             application/json:
               schema:
                 type: object
-              example:
-                error: User not found
-  /api/accounts/delete/:
-    delete:
-      tags:
-        - Auth
-      summary: Delete-Account
-      responses:
-        '404':
-          description: NOT FOUND
+              examples:
+                example-0:
+                  summary: '400'
+                  value:
+                    error: Invalid Credentials
+                example-1:
+                  summary: 400 - password required
+                  value:
+                    error:
+                      password: Missing required field
+        '401':
+          description: UNAUTHORIZED
           headers:
             Server:
               schema:
@@ -667,7 +728,7 @@ paths:
             Date:
               schema:
                 type: string
-                example: Mon, 23 Dec 2024 11:25:25 GMT
+                example: Wed, 01 Jan 2025 10:44:51 GMT
             Content-Type:
               schema:
                 type: string
@@ -675,7 +736,7 @@ paths:
             Content-Length:
               schema:
                 type: integer
-                example: '27'
+                example: '41'
             Connection:
               schema:
                 type: string
@@ -685,7 +746,66 @@ paths:
               schema:
                 type: object
               example:
-                error: User not exist
+                error: You have to login first
+  /api/accounts/:
+    delete:
+      tags:
+        - Auth
+      summary: Delete-Account
+      responses:
+        '204':
+          description: NO CONTENT
+          headers:
+            Server:
+              schema:
+                type: string
+                example: Werkzeug/3.1.3 Python/3.9.7
+            Date:
+              schema:
+                type: string
+                example: Wed, 01 Jan 2025 10:45:53 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json
+            Connection:
+              schema:
+                type: string
+                example: close
+          content:
+            application/json:
+              schema:
+                type: object
+              example: {}
+        '401':
+          description: UNAUTHORIZED
+          headers:
+            Server:
+              schema:
+                type: string
+                example: Werkzeug/3.1.3 Python/3.9.7
+            Date:
+              schema:
+                type: string
+                example: Wed, 01 Jan 2025 10:46:14 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json
+            Content-Length:
+              schema:
+                type: integer
+                example: '41'
+            Connection:
+              schema:
+                type: string
+                example: close
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                error: You have to login first
   /api/users/profile/:
     get:
       tags:
@@ -702,7 +822,7 @@ paths:
             Date:
               schema:
                 type: string
-                example: Mon, 09 Dec 2024 16:52:14 GMT
+                example: Wed, 01 Jan 2025 10:47:44 GMT
             Content-Type:
               schema:
                 type: string
@@ -710,7 +830,7 @@ paths:
             Content-Length:
               schema:
                 type: integer
-                example: '141'
+                example: '608'
             Connection:
               schema:
                 type: string
@@ -720,24 +840,31 @@ paths:
               schema:
                 type: object
               example:
-                bio: null
-                followers: 0
-                following: 0
-                id: 2e3ac167-b3bf-4d27-a615-dd63c8e34a5f
-                posts: 0
-                profile_pic: null
-                username: bholeramgkmit
+                bio: always
+                followers: 1
+                following: 1
+                id: cbdfc19e-ae0d-4c64-ba59-32ff6411e45e
+                is_private: true
+                other_social: >-
+                  https://www.google.com/search?q=facebook&oq=facebook&gs_lcrp=EgZjaHJvbWUqDggAEEUYJxg7GIAEGIoFMg4IABBFGCcYOxiABBiKBTIQCAEQABiDARixAxiABBjHBTIQCAIQABiDARixAxiABBjHBTINCAMQABiDARixAxiABDIKCAQQABixAxiABDIKCAUQABiABBjHBTIGCAYQRRg8MgYIBxBFGDzSAQgxODY2ajBqN6gCALACAA&sourceid=chrome&ie=UTF-8
+                posts: 16
+                profile_pic: >-
+                  http://127.0.0.1:9000/instagramapistorage/profile_pics/cbdfc19e-ae0d-4c64-ba59-32ff6411e45e/069A2593
+                  (4).JPG
+                username: bholeram057p
     patch:
       tags:
         - Profile
       summary: Update-Profile
       requestBody:
         content:
-          application/json:
+          multipart/form-data:
             schema:
               type: object
-              example:
-                is_private: true
+              properties:
+                profile_pic:
+                  type: string
+                  format: binary
       responses:
         '202':
           description: ACCEPTED
@@ -749,7 +876,7 @@ paths:
             Date:
               schema:
                 type: string
-                example: Mon, 09 Dec 2024 16:52:53 GMT
+                example: Wed, 01 Jan 2025 10:56:00 GMT
             Content-Type:
               schema:
                 type: string
@@ -757,7 +884,7 @@ paths:
             Content-Length:
               schema:
                 type: integer
-                example: '178'
+                example: '451'
             Connection:
               schema:
                 type: string
@@ -768,21 +895,27 @@ paths:
                 type: object
               examples:
                 example-0:
-                  summary: '202'
+                  summary: 202 - image to null
                   value:
                     bio: always
-                    id: 2e3ac167-b3bf-4d27-a615-dd63c8e34a5f
-                    profile_pic: >-
-                      /Users/mac/Desktop/flask_api/flask/uploads/pexels-alexasfotos-2220336.jpg
-                    username: bholeramgkmit
+                    id: cbdfc19e-ae0d-4c64-ba59-32ff6411e45e
+                    is_private: true
+                    other_social: >-
+                      https://www.google.com/search?q=facebook&oq=facebook&gs_lcrp=EgZjaHJvbWUqDggAEEUYJxg7GIAEGIoFMg4IABBFGCcYOxiABBiKBTIQCAEQABiDARixAxiABBjHBTIQCAIQABiDARixAxiABBjHBTINCAMQABiDARixAxiABDIKCAQQABixAxiABDIKCAUQABiABBjHBTIGCAYQRRg8MgYIBxBFGDzSAQgxODY2ajBqN6gCALACAA&sourceid=chrome&ie=UTF-8
+                    profile_pic: null
+                    username: bholeram057p
                 example-1:
                   summary: '202'
                   value:
-                    bio: updated
-                    id: e6ff9c96-c6ab-4a77-8cfc-8f74ae0e84c8
+                    bio: always
+                    id: cbdfc19e-ae0d-4c64-ba59-32ff6411e45e
+                    is_private: true
+                    other_social: >-
+                      https://www.google.com/search?q=facebook&oq=facebook&gs_lcrp=EgZjaHJvbWUqDggAEEUYJxg7GIAEGIoFMg4IABBFGCcYOxiABBiKBTIQCAEQABiDARixAxiABBjHBTIQCAIQABiDARixAxiABBjHBTINCAMQABiDARixAxiABDIKCAQQABixAxiABDIKCAUQABiABBjHBTIGCAYQRRg8MgYIBxBFGDzSAQgxODY2ajBqN6gCALACAA&sourceid=chrome&ie=UTF-8
                     profile_pic: >-
-                      /Users/mac/Desktop/flask_api/flask/uploads/pexels-alexasfotos-2220336.jpg
-                    username: Rambhole
+                      http://127.0.0.1:9000/instagramapistorage/profile_pics/cbdfc19e-ae0d-4c64-ba59-32ff6411e45e/069A2593
+                      (5).JPG
+                    username: bholeram057p
         '400':
           description: BAD REQUEST
           headers:
@@ -810,20 +943,27 @@ paths:
             application/json:
               schema:
                 type: object
-              example:
-                error: This username is already taken
+              examples:
+                example-0:
+                  summary: 400 - already taken username
+                  value:
+                    error: This username is already taken
+                example-1:
+                  summary: 400 - provide data
+                  value:
+                    error: provide data to update
   /api/users/{user_id}/profile/:
     get:
       tags:
         - Profile
-      summary: Get User Profile by uuid
+      summary: Get User Profile by id
       parameters:
         - name: user_id
           in: path
           schema:
             type: string
           required: true
-          example: 653d76e3-2670-48d0-8e64-889d15d2574
+          example: 226147c0-e895-438a-a9bf-192e85769a18
       responses:
         '200':
           description: OK
@@ -835,7 +975,7 @@ paths:
             Date:
               schema:
                 type: string
-                example: Mon, 09 Dec 2024 16:53:20 GMT
+                example: Wed, 01 Jan 2025 10:59:26 GMT
             Content-Type:
               schema:
                 type: string
@@ -843,7 +983,7 @@ paths:
             Content-Length:
               schema:
                 type: integer
-                example: '211'
+                example: '221'
             Connection:
               schema:
                 type: string
@@ -853,14 +993,15 @@ paths:
               schema:
                 type: object
               example:
-                bio: always
+                bio: null
                 followers: 0
                 following: 0
-                id: 802e017f-636e-4bd0-916d-acdd73939ed1
-                posts: 1
-                profile_pic: >-
-                  /Users/mac/Desktop/flask_api/flask/uploads/pexels-alexasfotos-2220336.jpg
-                username: Bholeram
+                id: 226147c0-e895-438a-a9bf-192e85769a18
+                is_private: false
+                other_social: null
+                posts: 0
+                profile_pic: null
+                username: bholearampatidar3
         '400':
           description: BAD REQUEST
           headers:
@@ -930,7 +1071,7 @@ paths:
             schema:
               type: object
               properties:
-                video_or_image:
+                image_or_video:
                   type: string
                   format: binary
                 title:
@@ -950,7 +1091,7 @@ paths:
             Date:
               schema:
                 type: string
-                example: Mon, 09 Dec 2024 16:56:56 GMT
+                example: Mon, 06 Jan 2025 06:48:12 GMT
             Content-Type:
               schema:
                 type: string
@@ -958,41 +1099,7 @@ paths:
             Content-Length:
               schema:
                 type: integer
-                example: '217'
-            Connection:
-              schema:
-                type: string
-                example: close
-          content:
-            application/json:
-              schema:
-                type: object
-              example:
-                content: content
-                id: 4e8d316f-7096-4deb-99a6-f70238322846
-                image: >-
-                  /Users/mac/Desktop/flask_api/flask/uploads/pexels-alexasfotos-2220336.jpg
-                title: post-title
-                user: 2e3ac167-b3bf-4d27-a615-dd63c8e34a5f
-        '400':
-          description: BAD REQUEST
-          headers:
-            Server:
-              schema:
-                type: string
-                example: Werkzeug/3.1.2 Python/3.9.11
-            Date:
-              schema:
-                type: string
-                example: Thu, 28 Nov 2024 09:12:42 GMT
-            Content-Type:
-              schema:
-                type: string
-                example: application/json
-            Content-Length:
-              schema:
-                type: integer
-                example: '41'
+                example: '363'
             Connection:
               schema:
                 type: string
@@ -1003,13 +1110,60 @@ paths:
                 type: object
               examples:
                 example-0:
-                  summary: 400-blank field
+                  summary: 201 - by only image
                   value:
-                    error: Content should not be blank.
+                    caption: null
+                    created_at: '2025-01-06T06:48:12.917698'
+                    id: 4989ba90-7c8d-4cb6-bc8a-bed3552c1514
+                    image_or_video: >-
+                      http://127.0.0.1:9000/instagramapistorage/posts/3b75fcbb-a8ab-4375-823f-bc7cdaba6723/069A2593
+                      (3) (1).JPG
+                    is_enable_comment: true
+                    title: null
+                    updated_at: null
+                    user: 3b75fcbb-a8ab-4375-823f-bc7cdaba6723
                 example-1:
-                  summary: 400 - missing data
+                  summary: '201'
                   value:
-                    error: Missing data for required field.
+                    caption: this is test content
+                    created_at: '2025-01-09T09:58:58.286156+00:00'
+                    id: c73dab43-a027-4808-a950-c477cddbdbb8
+                    image_or_video: >-
+                      http://127.0.0.1:9000/instagramapistorage/posts/5b7ae8b5-4f48-4d5f-84df-6c00acc520e9/069A2593
+                      (4).JPG
+                    is_enable_comment: true
+                    title: this is test post
+                    updated_at: null
+                    user: 5b7ae8b5-4f48-4d5f-84df-6c00acc520e9
+        '400':
+          description: BAD REQUEST
+          headers:
+            Server:
+              schema:
+                type: string
+                example: Werkzeug/3.1.3 Python/3.9.7
+            Date:
+              schema:
+                type: string
+                example: Wed, 01 Jan 2025 11:00:57 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json
+            Content-Length:
+              schema:
+                type: integer
+                example: '56'
+            Connection:
+              schema:
+                type: string
+                example: close
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                error: Please Provide image or video for post
   /api/posts/{post_id}:
     patch:
       tags:
@@ -1026,14 +1180,17 @@ paths:
                   format: binary
                 caption:
                   type: string
-                  example: this is updated post
+                  example: This is updated content
+                title:
+                  type: string
+                  example: this is updated test
       parameters:
         - name: post_id
           in: path
           schema:
             type: string
           required: true
-          example: 3c633162-2e52-4102-9935-7d6de5c8fa47
+          example: c73dab43-a027-4808-a950-c477cddbdbb8
       responses:
         '202':
           description: ACCEPTED
@@ -1045,7 +1202,7 @@ paths:
             Date:
               schema:
                 type: string
-                example: Mon, 09 Dec 2024 17:00:42 GMT
+                example: Wed, 01 Jan 2025 11:05:28 GMT
             Content-Type:
               schema:
                 type: string
@@ -1053,7 +1210,7 @@ paths:
             Content-Length:
               schema:
                 type: integer
-                example: '243'
+                example: '399'
             Connection:
               schema:
                 type: string
@@ -1062,13 +1219,33 @@ paths:
             application/json:
               schema:
                 type: object
-              example:
-                content: this is updated content
-                id: 4e8d316f-7096-4deb-99a6-f70238322846
-                image: >-
-                  /Users/mac/Desktop/flask_api/flask/uploads/pexels-alexasfotos-2220336.jpg
-                title: this is updated post
-                user: 2e3ac167-b3bf-4d27-a615-dd63c8e34a5f
+              examples:
+                example-0:
+                  summary: '202'
+                  value:
+                    caption: this is updated post
+                    created_at: '2024-12-31T10:13:55.440167'
+                    id: 3c633162-2e52-4102-9935-7d6de5c8fa47
+                    image_or_video: >-
+                      http://127.0.0.1:9000/instagramapistorage/posts/cbdfc19e-ae0d-4c64-ba59-32ff6411e45e/069A2593
+                      (2).JPG
+                    is_enable_comment: true
+                    title: ''
+                    updated_at: '2025-01-01T16:35:28.902790'
+                    user: cbdfc19e-ae0d-4c64-ba59-32ff6411e45e
+                example-1:
+                  summary: 202- accepted
+                  value:
+                    caption: this is updated post
+                    created_at: '2024-12-31T10:13:55.440167'
+                    id: 3c633162-2e52-4102-9935-7d6de5c8fa47
+                    image_or_video: >-
+                      http://127.0.0.1:9000/instagramapistorage/posts/cbdfc19e-ae0d-4c64-ba59-32ff6411e45e/069A2593
+                      (2).JPG
+                    is_enable_comment: false
+                    title: this is updated title
+                    updated_at: '2025-01-01T16:36:53.836894'
+                    user: cbdfc19e-ae0d-4c64-ba59-32ff6411e45e
         '400':
           description: BAD REQUEST
           headers:
@@ -1079,7 +1256,7 @@ paths:
             Date:
               schema:
                 type: string
-                example: Mon, 09 Dec 2024 17:01:18 GMT
+                example: Wed, 01 Jan 2025 11:04:46 GMT
             Content-Type:
               schema:
                 type: string
@@ -1087,7 +1264,7 @@ paths:
             Content-Length:
               schema:
                 type: integer
-                example: '32'
+                example: '40'
             Connection:
               schema:
                 type: string
@@ -1096,8 +1273,15 @@ paths:
             application/json:
               schema:
                 type: object
-              example:
-                error: Invalid UUID format
+              examples:
+                example-0:
+                  summary: 400 - Provide data to update
+                  value:
+                    error: provide data to update
+                example-1:
+                  summary: 400 - invalid uuid
+                  value:
+                    error: Invalid or missing post ID
         '404':
           description: NOT FOUND
           headers:
@@ -1108,7 +1292,7 @@ paths:
             Date:
               schema:
                 type: string
-                example: Tue, 10 Dec 2024 05:35:48 GMT
+                example: Wed, 01 Jan 2025 11:09:09 GMT
             Content-Type:
               schema:
                 type: string
@@ -1116,7 +1300,7 @@ paths:
             Content-Length:
               schema:
                 type: integer
-                example: '27'
+                example: '32'
             Connection:
               schema:
                 type: string
@@ -1137,7 +1321,7 @@ paths:
           schema:
             type: string
           required: true
-          example: a05c6b4a-19b7-4a26-84dd-48114aa16374
+          example: c293941e-00de-439f-bdce-d22d3de44d26
       responses:
         '200':
           description: OK
@@ -1149,7 +1333,7 @@ paths:
             Date:
               schema:
                 type: string
-                example: Mon, 09 Dec 2024 17:02:29 GMT
+                example: Wed, 01 Jan 2025 11:17:12 GMT
             Content-Type:
               schema:
                 type: string
@@ -1157,7 +1341,7 @@ paths:
             Content-Length:
               schema:
                 type: integer
-                example: '153'
+                example: '412'
             Connection:
               schema:
                 type: string
@@ -1167,11 +1351,15 @@ paths:
               schema:
                 type: object
               example:
-                content: content of the post
-                id: f2dc7d47-e16e-443b-bee9-b400cb264ae6
-                image: null
-                title: title
-                user: 2e3ac167-b3bf-4d27-a615-dd63c8e34a5f
+                caption: this is test content
+                created_at: '2024-12-29T07:34:03.808056'
+                id: a05c6b4a-19b7-4a26-84dd-48114aa16374
+                image_or_video: >-
+                  http://127.0.0.1:9000/instagramapistorage/posts/42bfab03-3e5e-4707-af9d-c13cda3bc979/069A2593.JPG
+                is_enable_comment: true
+                title: this is test post
+                updated_at: '2024-12-29T07:34:03.808086'
+                user: 42bfab03-3e5e-4707-af9d-c13cda3bc979
         '400':
           description: BAD REQUEST
           headers:
@@ -1201,6 +1389,35 @@ paths:
                 type: object
               example:
                 error: Invalid UUID format
+        '403':
+          description: FORBIDDEN
+          headers:
+            Server:
+              schema:
+                type: string
+                example: Werkzeug/3.1.3 Python/3.9.7
+            Date:
+              schema:
+                type: string
+                example: Mon, 06 Jan 2025 07:18:12 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json
+            Content-Length:
+              schema:
+                type: integer
+                example: '54'
+            Connection:
+              schema:
+                type: string
+                example: close
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                error: Can't access user account is private
         '404':
           description: NOT FOUND
           headers:
@@ -1211,7 +1428,7 @@ paths:
             Date:
               schema:
                 type: string
-                example: Thu, 05 Dec 2024 06:16:01 GMT
+                example: Wed, 01 Jan 2025 11:18:05 GMT
             Content-Type:
               schema:
                 type: string
@@ -1219,7 +1436,7 @@ paths:
             Content-Length:
               schema:
                 type: integer
-                example: '22'
+                example: '32'
             Connection:
               schema:
                 type: string
@@ -1229,7 +1446,7 @@ paths:
               schema:
                 type: object
               example:
-                error: Not exist
+                error: Post not found
     delete:
       tags:
         - Posts
@@ -1240,7 +1457,7 @@ paths:
           schema:
             type: string
           required: true
-          example: 952abcea-1b59-466d-a5c0-1f217e57e9e6
+          example: c293941e-00de-439f-bdce-d22d3de44d26
       responses:
         '204':
           description: NO CONTENT
@@ -1334,12 +1551,12 @@ paths:
           in: query
           schema:
             type: integer
-          example: '1'
-        - name: size
+          example: '2'
+        - name: page_size
           in: query
           schema:
             type: integer
-          example: '5'
+          example: '3'
       responses:
         '200':
           description: OK
@@ -1351,7 +1568,7 @@ paths:
             Date:
               schema:
                 type: string
-                example: Thu, 05 Dec 2024 05:58:04 GMT
+                example: Thu, 09 Jan 2025 10:09:52 GMT
             Content-Type:
               schema:
                 type: string
@@ -1359,7 +1576,7 @@ paths:
             Content-Length:
               schema:
                 type: integer
-                example: '980'
+                example: '588'
             Connection:
               schema:
                 type: string
@@ -1369,42 +1586,39 @@ paths:
               schema:
                 type: object
               example:
-                current_page: 5
+                current_page: 2
                 items:
-                  - content: this is the first post content
-                    id: 28d6a077-5048-409c-b83f-91baa3324b03
-                    image: null
-                    title: this is the first post
-                    user: 38fd79b8-2fde-4455-b5ce-80a9d9f92127
-                  - content: this is the first post content
-                    id: d96e1b61-2ea0-4175-9d15-abca67f15bc6
-                    image: null
-                    title: this is the first post
-                    user: 38fd79b8-2fde-4455-b5ce-80a9d9f92127
-                  - content: this is the first post content
-                    id: 8b57ab24-c6fa-4038-85fb-66acfd9001e6
-                    image: null
-                    title: this is the first post
-                    user: 38fd79b8-2fde-4455-b5ce-80a9d9f92127
-                  - content: this is the first post content
-                    id: fae3a7db-1d7f-42c2-af36-af4416576c84
-                    image: null
-                    title: this is the first post
-                    user: 38fd79b8-2fde-4455-b5ce-80a9d9f92127
-                  - content: this is the first post content
-                    id: f84ba73f-8f38-46df-b9a1-c5a0fd2dd764
-                    image: null
-                    title: this is the first post
-                    user: 38fd79b8-2fde-4455-b5ce-80a9d9f92127
-                per_page: 5
-                total_items: 36
-                total_pages: 8
+                  - caption: this is test content
+                    comments_count: 1
+                    created_at: '2025-01-03T16:57:49.595267+00:00'
+                    id: c293941e-00de-439f-bdce-d22d3de44d26
+                    image_or_video: >-
+                      http://127.0.0.1:9000/instagramapistorage/posts/3b75fcbb-a8ab-4375-823f-bc7cdaba6723/069A2593
+                      (2).JPG
+                    is_enable_comment: true
+                    likes_count: 0
+                    title: this is test post
+                    updated_at: null
+                    user: 3b75fcbb-a8ab-4375-823f-bc7cdaba6723
+                per_page: 3
+                total_items: 2
+                total_pages: 1
   /api/users/{user_id}/posts:
     get:
       tags:
         - Users
       summary: get post by user_id
       parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+          example: '2'
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+          example: '6'
         - name: user_id
           in: path
           schema:
@@ -1422,7 +1636,7 @@ paths:
             Date:
               schema:
                 type: string
-                example: Mon, 09 Dec 2024 17:05:22 GMT
+                example: Mon, 06 Jan 2025 06:50:44 GMT
             Content-Type:
               schema:
                 type: string
@@ -1430,7 +1644,7 @@ paths:
             Content-Length:
               schema:
                 type: integer
-                example: '688'
+                example: '2973'
             Connection:
               schema:
                 type: string
@@ -1442,25 +1656,80 @@ paths:
               example:
                 current_page: 1
                 items:
-                  - content: content of the post
-                    id: 283bd72f-84a7-4654-a947-c6465a0b8d04
-                    image: null
-                    title: title
-                    user: 2e3ac167-b3bf-4d27-a615-dd63c8e34a5f
-                  - content: content
-                    id: bb079a43-e623-473e-933f-8676e9404179
-                    image: >-
-                      /Users/mac/Desktop/flask_api/flask/uploads/pexels-alexasfotos-2220336.jpg
-                    title: post-title
-                    user: 2e3ac167-b3bf-4d27-a615-dd63c8e34a5f
-                  - content: this is updated content
-                    id: 4e8d316f-7096-4deb-99a6-f70238322846
-                    image: >-
-                      /Users/mac/Desktop/flask_api/flask/uploads/pexels-alexasfotos-2220336.jpg
-                    title: this is updated post
-                    user: 2e3ac167-b3bf-4d27-a615-dd63c8e34a5f
-                per_page: 10
-                total_items: 3
+                  - caption: null
+                    comments_count: 0
+                    created_at: '2025-01-06T06:48:12.917698'
+                    id: 4989ba90-7c8d-4cb6-bc8a-bed3552c1514
+                    image_or_video: >-
+                      http://127.0.0.1:9000/instagramapistorage/posts/3b75fcbb-a8ab-4375-823f-bc7cdaba6723/069A2593
+                      (3) (1).JPG
+                    is_enable_comment: true
+                    likes_count: 0
+                    title: null
+                    updated_at: null
+                    user: 3b75fcbb-a8ab-4375-823f-bc7cdaba6723
+                  - caption: this is test content
+                    comments_count: 2
+                    created_at: '2025-01-05T08:12:07.829616'
+                    id: c6f1fa42-70ea-467a-b07d-31752e8e9a5d
+                    image_or_video: >-
+                      http://127.0.0.1:9000/instagramapistorage/posts/3b75fcbb-a8ab-4375-823f-bc7cdaba6723/069A2593
+                      (2).JPG
+                    is_enable_comment: true
+                    likes_count: 0
+                    title: this is test post
+                    updated_at: null
+                    user: 3b75fcbb-a8ab-4375-823f-bc7cdaba6723
+                  - caption: this is test content
+                    comments_count: 0
+                    created_at: '2025-01-05T06:01:10.538880'
+                    id: 9a35caea-f7d2-4292-9ee3-ffb30f55059b
+                    image_or_video: >-
+                      http://127.0.0.1:9000/instagramapistorage/posts/3b75fcbb-a8ab-4375-823f-bc7cdaba6723/069A2593
+                      (2).JPG
+                    is_enable_comment: true
+                    likes_count: 0
+                    title: this is test post
+                    updated_at: null
+                    user: 3b75fcbb-a8ab-4375-823f-bc7cdaba6723
+                  - caption: this is test content
+                    comments_count: 0
+                    created_at: '2025-01-05T06:01:07.002905'
+                    id: 1d81cfac-f5f4-4130-bac1-3a78be77e094
+                    image_or_video: >-
+                      http://127.0.0.1:9000/instagramapistorage/posts/3b75fcbb-a8ab-4375-823f-bc7cdaba6723/069A2593
+                      (2).JPG
+                    is_enable_comment: true
+                    likes_count: 0
+                    title: this is test post
+                    updated_at: null
+                    user: 3b75fcbb-a8ab-4375-823f-bc7cdaba6723
+                  - caption: this is test content
+                    comments_count: 4
+                    created_at: '2025-01-05T05:36:45.407905'
+                    id: d0d97aae-24ed-4fcc-8775-0679a719300c
+                    image_or_video: >-
+                      http://127.0.0.1:9000/instagramapistorage/posts/3b75fcbb-a8ab-4375-823f-bc7cdaba6723/069A2593
+                      (2).JPG
+                    is_enable_comment: true
+                    likes_count: 0
+                    title: this is test post
+                    updated_at: null
+                    user: 3b75fcbb-a8ab-4375-823f-bc7cdaba6723
+                  - caption: this is test content
+                    comments_count: 1
+                    created_at: '2025-01-03T16:57:49.595267'
+                    id: c293941e-00de-439f-bdce-d22d3de44d26
+                    image_or_video: >-
+                      http://127.0.0.1:9000/instagramapistorage/posts/3b75fcbb-a8ab-4375-823f-bc7cdaba6723/069A2593
+                      (2).JPG
+                    is_enable_comment: true
+                    likes_count: 1
+                    title: this is test post
+                    updated_at: null
+                    user: 3b75fcbb-a8ab-4375-823f-bc7cdaba6723
+                per_page: 6
+                total_items: 6
                 total_pages: 1
         '400':
           description: BAD REQUEST
@@ -1491,8 +1760,8 @@ paths:
                 type: object
               example:
                 error: Invalid UUID format
-        '404':
-          description: NOT FOUND
+        '403':
+          description: FORBIDDEN
           headers:
             Server:
               schema:
@@ -1501,7 +1770,7 @@ paths:
             Date:
               schema:
                 type: string
-                example: Mon, 09 Dec 2024 17:04:35 GMT
+                example: Wed, 01 Jan 2025 11:19:19 GMT
             Content-Type:
               schema:
                 type: string
@@ -1509,7 +1778,7 @@ paths:
             Content-Length:
               schema:
                 type: integer
-                example: '40'
+                example: '54'
             Connection:
               schema:
                 type: string
@@ -1520,104 +1789,13 @@ paths:
                 type: object
               examples:
                 example-0:
-                  summary: 404 - no posts
+                  summary: '403'
                   value:
-                    error: No posts found for the user
+                    error: Can't access user account is private
                 example-1:
-                  summary: 404 - user not found
+                  summary: '403'
                   value:
-                    error: User not exist
-  /api/comments/:
-    post:
-      tags:
-        - Comments
-      summary: Create Comment
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              example:
-                content: this comment is created most recently again
-                post_id: a05c6b4a-19b7-4a26-84dd-48114aa16374
-      responses:
-        '201':
-          description: CREATED
-          headers:
-            Server:
-              schema:
-                type: string
-                example: Werkzeug/3.1.3 Python/3.9.7
-            Date:
-              schema:
-                type: string
-                example: Tue, 10 Dec 2024 04:54:15 GMT
-            Content-Type:
-              schema:
-                type: string
-                example: application/json
-            Content-Length:
-              schema:
-                type: integer
-                example: '346'
-            Connection:
-              schema:
-                type: string
-                example: close
-          content:
-            application/json:
-              schema:
-                type: object
-              examples:
-                example-0:
-                  summary: '201'
-                  value:
-                    content: this is the comment for the post
-                    id: da08f3d5-fd71-4c9e-8826-c884e8182d62
-                    post:
-                      content: content of the post
-                      id: ad2e2450-de23-4dfa-9172-d8198d6ea0b1
-                    user:
-                      id: 2e3ac167-b3bf-4d27-a615-dd63c8e34a5f
-                      profile_pic: >-
-                        /Users/mac/Desktop/flask_api/flask/uploads/pexels-alexasfotos-2220336.jpg
-                      username: bholeramgkmit
-                example-1:
-                  summary: Create Comment
-                  value:
-                    content: this comment is created most recently again
-                    id: f130ed83-2aee-4fec-8bbf-96ebc85a407b
-                    post_id: 57ad01cd-d050-4aea-8246-ed526f48173e
-                    user_id: cbdfc19e-ae0d-4c64-ba59-32ff6411e45e
-        '400':
-          description: BAD REQUEST
-          headers:
-            Server:
-              schema:
-                type: string
-                example: Werkzeug/3.1.3 Python/3.9.7
-            Date:
-              schema:
-                type: string
-                example: Tue, 10 Dec 2024 05:37:10 GMT
-            Content-Type:
-              schema:
-                type: string
-                example: application/json
-            Content-Length:
-              schema:
-                type: integer
-                example: '32'
-            Connection:
-              schema:
-                type: string
-                example: close
-          content:
-            application/json:
-              schema:
-                type: object
-              example:
-                error: invalid uuid format
+                    error: Can't access user account is private
         '404':
           description: NOT FOUND
           headers:
@@ -1628,7 +1806,7 @@ paths:
             Date:
               schema:
                 type: string
-                example: Tue, 10 Dec 2024 05:37:53 GMT
+                example: Tue, 10 Dec 2024 05:51:51 GMT
             Content-Type:
               schema:
                 type: string
@@ -1646,19 +1824,20 @@ paths:
               schema:
                 type: object
               example:
-                error: Post not exist
-  /api/comments/{comment_id}/reply:
-    get:
+                error: User not exist
+  /api/comments/:
+    post:
       tags:
-        - Reply-Comments
-      summary: Get reply
-      parameters:
-        - name: comment_id
-          in: path
-          schema:
-            type: string
-          required: true
-          example: cb0291f0-7299-4c52-b710-7de7d5626f10
+        - Comments
+      summary: create reply
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                comment_id: 3866be23-47ba-4e7e-bf90-49e524ed71db
+                content: This is the reply on the comment
       responses:
         '200':
           description: OK
@@ -1670,7 +1849,7 @@ paths:
             Date:
               schema:
                 type: string
-                example: Thu, 26 Dec 2024 17:48:01 GMT
+                example: Wed, 01 Jan 2025 11:24:54 GMT
             Content-Type:
               schema:
                 type: string
@@ -1678,7 +1857,7 @@ paths:
             Content-Length:
               schema:
                 type: integer
-                example: '452'
+                example: '294'
             Connection:
               schema:
                 type: string
@@ -1688,17 +1867,41 @@ paths:
               schema:
                 type: object
               example:
-                current_page: 2
-                items:
-                  - content: This is the reply on the comment
-                    id: f5fa0a65-429f-4b50-9500-322a8bd7c76e
-                    replied_by: cbdfc19e-ae0d-4c64-ba59-32ff6411e45e
-                  - content: This is the reply on the comment
-                    id: aeeaa83c-efa2-4f2f-8514-c893c0a12e3e
-                    replied_by: cbdfc19e-ae0d-4c64-ba59-32ff6411e45e
-                per_page: 5
-                total_items: 2
-                total_pages: 1
+                content: This is the reply on the comment
+                id: 15db1f1c-87de-450d-ad5d-1cb96734e8d1
+                parent_comment:
+                  content: this comment is created most recently again
+                  id: a6adf435-68c7-4ba8-983e-3e63e786406a
+                replied_by: cbdfc19e-ae0d-4c64-ba59-32ff6411e45e
+        '404':
+          description: NOT FOUND
+          headers:
+            Server:
+              schema:
+                type: string
+                example: Werkzeug/3.1.3 Python/3.9.7
+            Date:
+              schema:
+                type: string
+                example: Wed, 01 Jan 2025 11:20:04 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json
+            Content-Length:
+              schema:
+                type: integer
+                example: '35'
+            Connection:
+              schema:
+                type: string
+                example: close
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                error: comment not exist
   /api/posts/{post_id}/comments/:
     get:
       tags:
@@ -1720,7 +1923,7 @@ paths:
           schema:
             type: string
           required: true
-          example: bb8135c0-5ca2-45a2-9b9f-f8a5b2571047"
+          example: fc6bd4ac-fbc7-486b-b630-510876cbeca5
       responses:
         '200':
           description: OK
@@ -1732,7 +1935,7 @@ paths:
             Date:
               schema:
                 type: string
-                example: Thu, 05 Dec 2024 06:52:25 GMT
+                example: Thu, 09 Jan 2025 10:43:21 GMT
             Content-Type:
               schema:
                 type: string
@@ -1740,7 +1943,7 @@ paths:
             Content-Length:
               schema:
                 type: integer
-                example: '443'
+                example: '1498'
             Connection:
               schema:
                 type: string
@@ -1752,16 +1955,38 @@ paths:
               example:
                 current_page: 1
                 items:
-                  - content: this is the comment content
-                    id: 9f65fb62-0c77-48fe-8d4d-9a782b2d556c
-                    post_id: fed5bf03-3221-4cb4-81b5-b4650b80b877
-                    user_id: 38fd79b8-2fde-4455-b5ce-80a9d9f92127
-                  - content: this is the comment content
-                    id: 2368d97f-9ed3-4cd4-8cbb-53d753be5513
-                    post_id: fed5bf03-3221-4cb4-81b5-b4650b80b877
-                    user_id: 38fd79b8-2fde-4455-b5ce-80a9d9f92127
-                per_page: 10
-                total_items: 2
+                  - content: this comment is created most recently again
+                    id: 11f79d9e-9271-413c-a99d-a8cf63ff9c82
+                    likes: 0
+                    post_id: d0d97aae-24ed-4fcc-8775-0679a719300c
+                    replies: 0
+                    user_id: 3b75fcbb-a8ab-4375-823f-bc7cdaba6723
+                  - content: this comment is created most recently again
+                    id: e9c16eee-de06-4b98-9b78-f56b48865436
+                    likes: 0
+                    post_id: d0d97aae-24ed-4fcc-8775-0679a719300c
+                    replies: 0
+                    user_id: 3b75fcbb-a8ab-4375-823f-bc7cdaba6723
+                  - content: this comment is created most recently again
+                    id: 82d894ce-d861-4e31-9551-4ae87d89cf5b
+                    likes: 0
+                    post_id: d0d97aae-24ed-4fcc-8775-0679a719300c
+                    replies: 0
+                    user_id: 3b75fcbb-a8ab-4375-823f-bc7cdaba6723
+                  - content: this comment is created most recently again
+                    id: 70cd791d-a96e-456b-a722-6336181c17a9
+                    likes: 0
+                    post_id: d0d97aae-24ed-4fcc-8775-0679a719300c
+                    replies: 0
+                    user_id: 3b75fcbb-a8ab-4375-823f-bc7cdaba6723
+                  - content: this comment is created most recently again
+                    id: 2b24385b-437c-4514-bba9-eea755c08c5e
+                    likes: 0
+                    post_id: d0d97aae-24ed-4fcc-8775-0679a719300c
+                    replies: 0
+                    user_id: 3b75fcbb-a8ab-4375-823f-bc7cdaba6723
+                per_page: 5
+                total_items: 5
                 total_pages: 1
         '400':
           description: BAD REQUEST
@@ -1792,6 +2017,35 @@ paths:
                 type: object
               example:
                 error: Invalid uuid format
+        '403':
+          description: FORBIDDEN
+          headers:
+            Server:
+              schema:
+                type: string
+                example: Werkzeug/3.1.3 Python/3.9.7
+            Date:
+              schema:
+                type: string
+                example: Mon, 06 Jan 2025 07:19:14 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json
+            Content-Length:
+              schema:
+                type: integer
+                example: '54'
+            Connection:
+              schema:
+                type: string
+                example: close
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                error: Can't access user account is private
         '404':
           description: NOT FOUND
           headers:
@@ -1802,7 +2056,7 @@ paths:
             Date:
               schema:
                 type: string
-                example: Tue, 10 Dec 2024 05:44:19 GMT
+                example: Tue, 10 Dec 2024 05:46:36 GMT
             Content-Type:
               schema:
                 type: string
@@ -1810,7 +2064,7 @@ paths:
             Content-Length:
               schema:
                 type: integer
-                example: '44'
+                example: '27'
             Connection:
               schema:
                 type: string
@@ -1819,15 +2073,8 @@ paths:
             application/json:
               schema:
                 type: object
-              examples:
-                example-0:
-                  summary: 404 - no comments
-                  value:
-                    error: No comments found for this post
-                example-1:
-                  summary: 404 - post not exist
-                  value:
-                    error: Post not exist
+              example:
+                error: Post not exist
   /api/comments/{comment_id}:
     get:
       tags:
@@ -1839,7 +2086,7 @@ paths:
           schema:
             type: string
           required: true
-          example: 2e35f83e-6230-43c5-b801-42082f20b621
+          example: 3866be23-47ba-4e7e-bf90-49e524ed71db
       responses:
         '200':
           description: OK
@@ -1851,7 +2098,7 @@ paths:
             Date:
               schema:
                 type: string
-                example: Mon, 09 Dec 2024 17:10:53 GMT
+                example: Thu, 09 Jan 2025 10:51:50 GMT
             Content-Type:
               schema:
                 type: string
@@ -1859,7 +2106,7 @@ paths:
             Content-Length:
               schema:
                 type: integer
-                example: '189'
+                example: '261'
             Connection:
               schema:
                 type: string
@@ -1868,11 +2115,32 @@ paths:
             application/json:
               schema:
                 type: object
-              example:
-                content: this is the comment for the post
-                id: 4ca5f480-8608-41ed-b400-6d7bde3e4701
-                post_id: ad2e2450-de23-4dfa-9172-d8198d6ea0b1
-                user_id: 2e3ac167-b3bf-4d27-a615-dd63c8e34a5f
+              examples:
+                example-0:
+                  summary: 200 - get_reply_comment
+                  value:
+                    content: This is the reply on the comment
+                    id: d4a3ff4b-2288-48ad-852d-f6c85987f079
+                    parent: 3866be23-47ba-4e7e-bf90-49e524ed71db
+                    post_id: null
+                    replies: []
+                    reply_count: 0
+                    user_id: 3b75fcbb-a8ab-4375-823f-bc7cdaba6723
+                example-1:
+                  summary: 200 - get comment
+                  value:
+                    content: this comment is created most recently again
+                    id: 3866be23-47ba-4e7e-bf90-49e524ed71db
+                    parent: null
+                    post_id: c6f1fa42-70ea-467a-b07d-31752e8e9a5d
+                    replies:
+                      - author:
+                          id: 3b75fcbb-a8ab-4375-823f-bc7cdaba6723
+                          username: bholeram057p
+                        content: This is the reply on the comment
+                        id: d4a3ff4b-2288-48ad-852d-f6c85987f079
+                    reply_count: 1
+                    user_id: 3b75fcbb-a8ab-4375-823f-bc7cdaba6723
         '400':
           description: BAD REQUEST
           headers:
@@ -1948,40 +2216,8 @@ paths:
           schema:
             type: string
           required: true
-          example: 68ee385d-46d0-44f3-8d41-6cd5af3055d0
+          example: acd82e00-d852-441e-9db5-72168524335a
       responses:
-        '202':
-          description: ACCEPTED
-          headers:
-            Server:
-              schema:
-                type: string
-                example: Werkzeug/3.1.3 Python/3.9.7
-            Date:
-              schema:
-                type: string
-                example: Mon, 09 Dec 2024 17:12:59 GMT
-            Content-Type:
-              schema:
-                type: string
-                example: application/json
-            Content-Length:
-              schema:
-                type: integer
-                example: '172'
-            Connection:
-              schema:
-                type: string
-                example: close
-          content:
-            application/json:
-              schema:
-                type: object
-              example:
-                content: updated comment
-                id: 4ca5f480-8608-41ed-b400-6d7bde3e4701
-                post_id: ad2e2450-de23-4dfa-9172-d8198d6ea0b1
-                user_id: 2e3ac167-b3bf-4d27-a615-dd63c8e34a5f
         '400':
           description: BAD REQUEST
           headers:
@@ -2009,8 +2245,16 @@ paths:
             application/json:
               schema:
                 type: object
-              example:
-                error: Invalid uuid format
+              examples:
+                example-0:
+                  summary: 400 - invalid_uuid
+                  value:
+                    error: Invalid uuid format
+                example-1:
+                  summary: 400 - missing field
+                  value:
+                    errors:
+                      content: Missing data for required field.
         '404':
           description: NOT FOUND
           headers:
@@ -2134,20 +2378,18 @@ paths:
                 type: object
               example:
                 error: Comment not exist
-  /api/story:
+  /api/story/:
     post:
       tags:
         - Story
       summary: Create
       requestBody:
         content:
-          multipart/form-data:
+          application/json:
             schema:
               type: object
-              properties:
-                content:
-                  type: string
-                  format: binary
+              example:
+                content: this is my second story after video
       responses:
         '200':
           description: OK
@@ -2159,7 +2401,7 @@ paths:
             Date:
               schema:
                 type: string
-                example: Thu, 26 Dec 2024 07:35:56 GMT
+                example: Wed, 01 Jan 2025 11:40:04 GMT
             Content-Type:
               schema:
                 type: string
@@ -2167,7 +2409,7 @@ paths:
             Content-Length:
               schema:
                 type: integer
-                example: '186'
+                example: '272'
             Connection:
               schema:
                 type: string
@@ -2176,23 +2418,45 @@ paths:
             application/json:
               schema:
                 type: object
-              examples:
-                example-0:
-                  summary: '200'
-                  value:
-                    content: this is content
-                    created_at: '2024-12-26T07:35:56.147270'
-                    id: 9fa4219d-c677-4006-81a8-1309c517d635
-                    story_owner: cbdfc19e-ae0d-4c64-ba59-32ff6411e45e
-                example-1:
-                  summary: '200'
-                  value:
-                    content: >-
-                      http://127.0.0.1:9000/instagramapistorage/story/cbdfc19e-ae0d-4c64-ba59-32ff6411e45e/069A2593
-                      (5).JPG
-                    created_at: '2024-12-26T07:51:48.305027'
-                    id: 5516cb53-7ca9-4b93-b203-856973d5c91e
-                    story_owner: cbdfc19e-ae0d-4c64-ba59-32ff6411e45e
+              example:
+                content: >-
+                  http://127.0.0.1:9000/instagramapistorage/story/cbdfc19e-ae0d-4c64-ba59-32ff6411e45e/069A2593
+                  (4).JPG
+                created_at: '2025-01-01T11:40:04.211027'
+                id: c091839c-9a1b-4812-86a5-951d094cbb04
+                story_owner: cbdfc19e-ae0d-4c64-ba59-32ff6411e45e
+        '201':
+          description: CREATED
+          headers:
+            Server:
+              schema:
+                type: string
+                example: Werkzeug/3.1.3 Python/3.9.7
+            Date:
+              schema:
+                type: string
+                example: Thu, 09 Jan 2025 10:13:43 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json
+            Content-Length:
+              schema:
+                type: integer
+                example: '212'
+            Connection:
+              schema:
+                type: string
+                example: close
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                content: this is my second story after video
+                created_at: '2025-01-09T10:13:43.937794+00:00'
+                id: faeb3d16-0a9f-478c-83a6-02737f2e325c
+                story_owner: 3b75fcbb-a8ab-4375-823f-bc7cdaba6723
         '400':
           description: BAD REQUEST
           headers:
@@ -2220,17 +2484,9 @@ paths:
             application/json:
               schema:
                 type: object
-              examples:
-                example-0:
-                  summary: 400-missing content
-                  value:
-                    errors:
-                      content: Missing required field
-                example-1:
-                  summary: '400'
-                  value:
-                    errors:
-                      content: Missing required field
+              example:
+                errors:
+                  content: Missing required field
   /api/story/{story_id}:
     get:
       tags:
@@ -2279,6 +2535,64 @@ paths:
                 owner:
                   user_id: cbdfc19e-ae0d-4c64-ba59-32ff6411e45e
                   username: bholeram057p
+        '400':
+          description: BAD REQUEST
+          headers:
+            Server:
+              schema:
+                type: string
+                example: Werkzeug/3.1.3 Python/3.9.7
+            Date:
+              schema:
+                type: string
+                example: Wed, 01 Jan 2025 11:43:05 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json
+            Content-Length:
+              schema:
+                type: integer
+                example: '37'
+            Connection:
+              schema:
+                type: string
+                example: close
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                error: Invalid uuid format
+        '404':
+          description: NOT FOUND
+          headers:
+            Server:
+              schema:
+                type: string
+                example: Werkzeug/3.1.3 Python/3.9.7
+            Date:
+              schema:
+                type: string
+                example: Wed, 01 Jan 2025 11:46:17 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json
+            Content-Length:
+              schema:
+                type: integer
+                example: '33'
+            Connection:
+              schema:
+                type: string
+                example: close
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                error: story not exist
     delete:
       tags:
         - Story
@@ -2330,6 +2644,35 @@ paths:
                 per_page: 5
                 total_items: 1
                 total_pages: 1
+        '404':
+          description: NOT FOUND
+          headers:
+            Server:
+              schema:
+                type: string
+                example: Werkzeug/3.1.3 Python/3.9.7
+            Date:
+              schema:
+                type: string
+                example: Mon, 06 Jan 2025 07:01:57 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json
+            Content-Length:
+              schema:
+                type: integer
+                example: '38'
+            Connection:
+              schema:
+                type: string
+                example: close
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                error: Story does not exist
   /api/story/{story_id}/view:
     get:
       tags:
@@ -2381,11 +2724,47 @@ paths:
                 per_page: 5
                 total_items: 1
                 total_pages: 1
-  /api/story/views:
-    get:
+        '404':
+          description: NOT FOUND
+          headers:
+            Server:
+              schema:
+                type: string
+                example: Werkzeug/3.1.3 Python/3.9.7
+            Date:
+              schema:
+                type: string
+                example: Mon, 06 Jan 2025 07:01:13 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json
+            Content-Length:
+              schema:
+                type: integer
+                example: '38'
+            Connection:
+              schema:
+                type: string
+                example: close
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                error: Story does not exist
+  /api/posts/toggle-like/:
+    post:
       tags:
-        - Story
-      summary: Get view on all story
+        - Likes
+      summary: Post-Like-Unlike
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                post_id: c293941e-00de-439f-bdce-d22d3de44d26
       responses:
         '200':
           description: OK
@@ -2397,7 +2776,7 @@ paths:
             Date:
               schema:
                 type: string
-                example: Thu, 26 Dec 2024 10:16:45 GMT
+                example: Mon, 06 Jan 2025 07:02:43 GMT
             Content-Type:
               schema:
                 type: string
@@ -2405,7 +2784,7 @@ paths:
             Content-Length:
               schema:
                 type: integer
-                example: '386'
+                example: '32'
             Connection:
               schema:
                 type: string
@@ -2415,30 +2794,7 @@ paths:
               schema:
                 type: object
               example:
-                current_page: 1
-                items:
-                  - content: >-
-                      http://127.0.0.1:9000/instagramapistorage/story/cbdfc19e-ae0d-4c64-ba59-32ff6411e45e/069A2593
-                      (5).JPG
-                    story_id: 4d9e34ba-4dc7-4e0b-b25b-9c3023d7ab47
-                    viewer_id: cbdfc19e-ae0d-4c64-ba59-32ff6411e45e
-                    viewer_name: bholeram057p
-                per_page: 5
-                total_items: 1
-                total_pages: 1
-  /api/posts/like/:
-    post:
-      tags:
-        - Likes
-      summary: Like-unlike
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              example:
-                post_id: a45ebe7f-d958-4197-971e-b2e00f387490
-      responses:
+                message: Post unliked
         '201':
           description: CREATED
           headers:
@@ -2541,7 +2897,7 @@ paths:
           schema:
             type: string
           required: true
-          example: 4f43e0b7-de4d-41aa-b2e5-7aed25ede90b
+          example: c293941e-00de-439f-bdce-d22d3de44d26
       responses:
         '200':
           description: OK
@@ -2580,20 +2936,54 @@ paths:
                 per_page: 10
                 total_items: 1
                 total_pages: 1
-  /api/comments/{comment_id}/like:
+        '404':
+          description: NOT FOUND
+          headers:
+            Server:
+              schema:
+                type: string
+                example: Werkzeug/3.1.3 Python/3.9.7
+            Date:
+              schema:
+                type: string
+                example: Mon, 06 Jan 2025 07:03:38 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json
+            Content-Length:
+              schema:
+                type: integer
+                example: '45'
+            Connection:
+              schema:
+                type: string
+                example: close
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                example-0:
+                  summary: '404'
+                  value:
+                    error: No likes found on this post
+                example-1:
+                  summary: 404 - post not found
+                  value:
+                    error: Post not found
+  /api/comments/toggle-like:
     post:
       tags:
         - Likes
-      summary: create like on comment
+      summary: Comment like-unlike
       requestBody:
-        content: {}
-      parameters:
-        - name: comment_id
-          in: path
-          schema:
-            type: string
-          required: true
-          example: 59360e6d-c3b3-495b-929e-bbdb2ed64084
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                comment_id: d57b3de3-cd4c-491c-9176-985984fcedd5
       responses:
         '200':
           description: OK
@@ -2605,7 +2995,7 @@ paths:
             Date:
               schema:
                 type: string
-                example: Thu, 26 Dec 2024 11:19:24 GMT
+                example: Thu, 02 Jan 2025 07:12:34 GMT
             Content-Type:
               schema:
                 type: string
@@ -2634,7 +3024,7 @@ paths:
             Date:
               schema:
                 type: string
-                example: Thu, 26 Dec 2024 11:16:04 GMT
+                example: Thu, 02 Jan 2025 06:47:55 GMT
             Content-Type:
               schema:
                 type: string
@@ -2652,10 +3042,40 @@ paths:
               schema:
                 type: object
               example:
-                comment_id: ec20a100-d8de-4924-b3a1-1414a485f49b
+                comment_id: d57b3de3-cd4c-491c-9176-985984fcedd5
                 comment_owner: cbdfc19e-ae0d-4c64-ba59-32ff6411e45e
                 content: this comment is created most recently again
                 liked_by: cbdfc19e-ae0d-4c64-ba59-32ff6411e45e
+        '400':
+          description: BAD REQUEST
+          headers:
+            Server:
+              schema:
+                type: string
+                example: Werkzeug/3.1.3 Python/3.9.7
+            Date:
+              schema:
+                type: string
+                example: Mon, 06 Jan 2025 07:05:47 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json
+            Content-Length:
+              schema:
+                type: integer
+                example: '43'
+            Connection:
+              schema:
+                type: string
+                example: close
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                error: please provide comment id
+  /api/comments/{comment_id}/like:
     get:
       tags:
         - Likes
@@ -2666,6 +3086,7 @@ paths:
           schema:
             type: string
           required: true
+          example: d57b3de3-cd4c-491c-9176-985984fcedd5
       responses:
         '200':
           description: OK
@@ -2677,7 +3098,7 @@ paths:
             Date:
               schema:
                 type: string
-                example: Thu, 26 Dec 2024 12:23:04 GMT
+                example: Thu, 02 Jan 2025 07:11:29 GMT
             Content-Type:
               schema:
                 type: string
@@ -2685,7 +3106,7 @@ paths:
             Content-Length:
               schema:
                 type: integer
-                example: '226'
+                example: '284'
             Connection:
               schema:
                 type: string
@@ -2698,25 +3119,82 @@ paths:
                 current_page: 1
                 items:
                   - author: cbdfc19e-ae0d-4c64-ba59-32ff6411e45e
-                    comment_id: ec20a100-d8de-4924-b3a1-1414a485f49b
+                    comment_id: d57b3de3-cd4c-491c-9176-985984fcedd5
+                    liked_by: cbdfc19e-ae0d-4c64-ba59-32ff6411e45e
                 per_page: 5
                 total_items: 1
                 total_pages: 1
-  /api/story/{story_id}/like:
+        '404':
+          description: NOT FOUND
+          headers:
+            Server:
+              schema:
+                type: string
+                example: Werkzeug/3.1.3 Python/3.9.7
+            Date:
+              schema:
+                type: string
+                example: Thu, 02 Jan 2025 07:13:00 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json
+            Content-Length:
+              schema:
+                type: integer
+                example: '35'
+            Connection:
+              schema:
+                type: string
+                example: close
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                error: comment not exist
+  /api/story/toggle-like:
     post:
       tags:
         - Likes
       summary: create like on story
       requestBody:
-        content: {}
-      parameters:
-        - name: story_id
-          in: path
-          schema:
-            type: string
-          required: true
-          example: 184b7cb2-b003-4f22-bbe1-f26ea91d820e
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                story_id: 184b7cb2-b003-4f22-bbe1-f26ea91d820e
       responses:
+        '200':
+          description: OK
+          headers:
+            Server:
+              schema:
+                type: string
+                example: Werkzeug/3.1.3 Python/3.9.7
+            Date:
+              schema:
+                type: string
+                example: Thu, 02 Jan 2025 07:15:00 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json
+            Content-Length:
+              schema:
+                type: integer
+                example: '33'
+            Connection:
+              schema:
+                type: string
+                example: close
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                message: Story unliked
         '201':
           description: CREATED
           headers:
@@ -2727,7 +3205,7 @@ paths:
             Date:
               schema:
                 type: string
-                example: Thu, 26 Dec 2024 12:45:44 GMT
+                example: Thu, 02 Jan 2025 07:14:30 GMT
             Content-Type:
               schema:
                 type: string
@@ -2751,6 +3229,7 @@ paths:
                 liked_by: cbdfc19e-ae0d-4c64-ba59-32ff6411e45e
                 story_id: 184b7cb2-b003-4f22-bbe1-f26ea91d820e
                 story_owner: cbdfc19e-ae0d-4c64-ba59-32ff6411e45e
+  /api/story/{story_id}/like:
     get:
       tags:
         - Likes
@@ -2802,17 +3281,17 @@ paths:
     post:
       tags:
         - follow
-      summary: follow-request-accept
+      summary: follow-unfollow
       requestBody:
         content:
           application/json:
             schema:
               type: object
               example:
-                user_id: 91a3f789-bd9e-4ad2-a630-7858d978f88b
+                user_id: 5b7ae8b5-4f48-4d5f-84df-6c00acc520e9
       responses:
-        '404':
-          description: NOT FOUND
+        '200':
+          description: OK
           headers:
             Server:
               schema:
@@ -2821,7 +3300,7 @@ paths:
             Date:
               schema:
                 type: string
-                example: Mon, 30 Dec 2024 05:27:58 GMT
+                example: Tue, 10 Dec 2024 06:04:25 GMT
             Content-Type:
               schema:
                 type: string
@@ -2829,7 +3308,43 @@ paths:
             Content-Length:
               schema:
                 type: integer
-                example: '43'
+                example: '24'
+            Connection:
+              schema:
+                type: string
+                example: close
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                example-0:
+                  summary: unfollow - 200
+                  value:
+                    detail: Unfollowed
+                example-1:
+                  summary: 200 - follow request
+                  value:
+                    message: follow request sent to the user
+        '201':
+          description: CREATED
+          headers:
+            Server:
+              schema:
+                type: string
+                example: Werkzeug/3.1.3 Python/3.9.7
+            Date:
+              schema:
+                type: string
+                example: Tue, 10 Dec 2024 06:04:03 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json
+            Content-Length:
+              schema:
+                type: integer
+                example: '49'
             Connection:
               schema:
                 type: string
@@ -2839,7 +3354,43 @@ paths:
               schema:
                 type: object
               example:
-                errors: Follow reqiest not found
+                detail: You are now following bholeramgkmit
+        '400':
+          description: BAD REQUEST
+          headers:
+            Server:
+              schema:
+                type: string
+                example: Werkzeug/3.1.3 Python/3.9.7
+            Date:
+              schema:
+                type: string
+                example: Tue, 10 Dec 2024 06:09:31 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json
+            Content-Length:
+              schema:
+                type: integer
+                example: '32'
+            Connection:
+              schema:
+                type: string
+                example: close
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                example-0:
+                  summary: 400 - invalid_uuid
+                  value:
+                    error: Invalid uuid format
+                example-1:
+                  summary: 400 - follow yourself
+                  value:
+                    error: You cant follow yourself
   /api/users/follow-request/:
     post:
       tags:
@@ -2869,7 +3420,7 @@ paths:
             Date:
               schema:
                 type: string
-                example: Mon, 30 Dec 2024 05:27:58 GMT
+                example: Tue, 31 Dec 2024 18:43:50 GMT
             Content-Type:
               schema:
                 type: string
@@ -2877,7 +3428,7 @@ paths:
             Content-Length:
               schema:
                 type: integer
-                example: '43'
+                example: '41'
             Connection:
               schema:
                 type: string
@@ -2886,22 +3437,15 @@ paths:
             application/json:
               schema:
                 type: object
-              examples:
-                example-0:
-                  summary: '404'
-                  value:
-                    errors: Follow reqiest not found
-                example-1:
-                  summary: '404'
-                  value:
-                    error: follow request not foud
+              example:
+                error: follow request not foud
     get:
       tags:
         - follow
       summary: get follow request
       responses:
-        '404':
-          description: NOT FOUND
+        '200':
+          description: OK
           headers:
             Server:
               schema:
@@ -2910,7 +3454,7 @@ paths:
             Date:
               schema:
                 type: string
-                example: Mon, 30 Dec 2024 05:27:58 GMT
+                example: Mon, 06 Jan 2025 05:10:36 GMT
             Content-Type:
               schema:
                 type: string
@@ -2918,7 +3462,7 @@ paths:
             Content-Length:
               schema:
                 type: integer
-                example: '43'
+                example: '96'
             Connection:
               schema:
                 type: string
@@ -2927,15 +3471,12 @@ paths:
             application/json:
               schema:
                 type: object
-              examples:
-                example-0:
-                  summary: '404'
-                  value:
-                    errors: Follow reqiest not found
-                example-1:
-                  summary: '404'
-                  value:
-                    error: follow request not foud
+              example:
+                current_page: 1
+                items: []
+                per_page: 5
+                total_items: 0
+                total_pages: 0
   /api/users/follower/:
     get:
       tags:
@@ -3053,6 +3594,35 @@ paths:
                 type: object
               example:
                 error: Invalid uuid format
+        '403':
+          description: FORBIDDEN
+          headers:
+            Server:
+              schema:
+                type: string
+                example: Werkzeug/3.1.3 Python/3.9.7
+            Date:
+              schema:
+                type: string
+                example: Mon, 06 Jan 2025 07:16:22 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json
+            Content-Length:
+              schema:
+                type: integer
+                example: '54'
+            Connection:
+              schema:
+                type: string
+                example: close
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                error: Can't access user account is private
         '404':
           description: NOT FOUND
           headers:
@@ -3176,6 +3746,35 @@ paths:
                 per_page: 10
                 total_items: 2
                 total_pages: 1
+        '403':
+          description: FORBIDDEN
+          headers:
+            Server:
+              schema:
+                type: string
+                example: Werkzeug/3.1.3 Python/3.9.7
+            Date:
+              schema:
+                type: string
+                example: Mon, 06 Jan 2025 07:16:01 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json
+            Content-Length:
+              schema:
+                type: integer
+                example: '54'
+            Connection:
+              schema:
+                type: string
+                example: close
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                error: Can't access user account is private
   /api/users/activity:
     get:
       tags:
@@ -3186,12 +3785,17 @@ paths:
           in: query
           schema:
             type: integer
-          example: '1'
+          example: '3'
         - name: type
           in: query
           schema:
             type: string
           example: comments
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+          example: '10'
       responses:
         '200':
           description: OK
@@ -3220,17 +3824,68 @@ paths:
             application/json:
               schema:
                 type: object
-              example:
-                current_page: 1
-                items:
-                  - content: this comment is created most recently again
-                    id: 66cc98d9-9e06-4299-9711-cb28f384c603
-                    post_id: 57ad01cd-d050-4aea-8246-ed526f48173e
-                    user_id: cbdfc19e-ae0d-4c64-ba59-32ff6411e45e
-                  - content: this comment is created most recently again
-                    id: f130ed83-2aee-4fec-8bbf-96ebc85a407b
-                    post_id: 57ad01cd-d050-4aea-8246-ed526f48173e
-                    user_id: cbdfc19e-ae0d-4c64-ba59-32ff6411e45e
-                per_page: 5
-                total_items: 2
-                total_pages: 1
+              examples:
+                example-0:
+                  summary: get_comment
+                  value:
+                    current_page: 1
+                    items:
+                      - content: this comment is created most recently again
+                        id: 66cc98d9-9e06-4299-9711-cb28f384c603
+                        post_id: 57ad01cd-d050-4aea-8246-ed526f48173e
+                        user_id: cbdfc19e-ae0d-4c64-ba59-32ff6411e45e
+                      - content: this comment is created most recently again
+                        id: f130ed83-2aee-4fec-8bbf-96ebc85a407b
+                        post_id: 57ad01cd-d050-4aea-8246-ed526f48173e
+                        user_id: cbdfc19e-ae0d-4c64-ba59-32ff6411e45e
+                    per_page: 5
+                    total_items: 2
+                    total_pages: 1
+                example-1:
+                  summary: '200'
+                  value:
+                    current_page: 3
+                    items:
+                      - content: this comment is created most recently again
+                        id: 3866be23-47ba-4e7e-bf90-49e524ed71db
+                        post_id: c6f1fa42-70ea-467a-b07d-31752e8e9a5d
+                        user_id: 3b75fcbb-a8ab-4375-823f-bc7cdaba6723
+                      - content: This is the reply on the comment
+                        id: d4a3ff4b-2288-48ad-852d-f6c85987f079
+                        post_id: null
+                        user_id: 3b75fcbb-a8ab-4375-823f-bc7cdaba6723
+                      - content: this comment is created most recently again
+                        id: d188c4b2-0e2e-4f1b-b27a-b7d424621c07
+                        post_id: c6f1fa42-70ea-467a-b07d-31752e8e9a5d
+                        user_id: 3b75fcbb-a8ab-4375-823f-bc7cdaba6723
+                      - content: this comment is created most recently again
+                        id: 378fb711-097c-4cc2-be01-74f08ccbc592
+                        post_id: c6f1fa42-70ea-467a-b07d-31752e8e9a5d
+                        user_id: 3b75fcbb-a8ab-4375-823f-bc7cdaba6723
+                      - content: this comment is created most recently again
+                        id: 4665b45a-dd54-4372-8b4d-649dde345f3b
+                        post_id: c6f1fa42-70ea-467a-b07d-31752e8e9a5d
+                        user_id: 3b75fcbb-a8ab-4375-823f-bc7cdaba6723
+                      - content: this comment is created most recently again
+                        id: ee10f6a2-19a2-4f54-9db6-60d304b7da29
+                        post_id: c6f1fa42-70ea-467a-b07d-31752e8e9a5d
+                        user_id: 3b75fcbb-a8ab-4375-823f-bc7cdaba6723
+                      - content: this comment is created most recently again
+                        id: 395d7c19-7bb6-4c13-9e54-e98a1aa6270f
+                        post_id: c6f1fa42-70ea-467a-b07d-31752e8e9a5d
+                        user_id: 3b75fcbb-a8ab-4375-823f-bc7cdaba6723
+                      - content: This is the reply on the comment
+                        id: 23dc656c-0fed-43bc-b1dc-9df53f90cc0d
+                        post_id: null
+                        user_id: 3b75fcbb-a8ab-4375-823f-bc7cdaba6723
+                      - content: This is the reply on the comment
+                        id: 950b2426-1e73-48d1-a0ba-b27a875b1ed5
+                        post_id: null
+                        user_id: 3b75fcbb-a8ab-4375-823f-bc7cdaba6723
+                      - content: This is the reply on the comment
+                        id: 2ff88c2f-35e8-469d-ba4f-994012f8538a
+                        post_id: null
+                        user_id: 3b75fcbb-a8ab-4375-823f-bc7cdaba6723
+                    per_page: 10
+                    total_items: 10
+                    total_pages: 1

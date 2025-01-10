@@ -22,6 +22,11 @@ celery_app.conf.beat_schedule = {
         'schedule': crontab(minute='*'),  # Runs at 12:00 AM every day
     
 },
+    'delete-user-story-every-day': {
+        'task': 'app.tasks.hard_delete_story_by_user',
+        'schedule': crontab(minute='*'),  # Runs at 12:00 AM every day
+
+    },
 }
 
 

@@ -71,6 +71,12 @@ class User(BaseModel,db.Model):
         for like in self.likes:
             like.soft_delete()
         
+        for follower in self.followers:
+            db.session.delete(follower)
+            
+        for following in self.following:
+            db.session.delete(following)
+        
         db.session.commit()
 
     def set_password(self, raw_password):
