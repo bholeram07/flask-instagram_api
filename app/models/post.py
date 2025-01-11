@@ -23,6 +23,7 @@ class Post(BaseModel,db.Model):
     #relationships
     likes = relationship("Like", backref="post_likes",
                          lazy="dynamic", overlaps="comments", viewonly=True)
+    owner = relationship("User", backref="user", viewonly=True)
     comments = relationship(
         "Comment", backref="post_commment", lazy="dynamic", overlaps="likes", viewonly=True)
     

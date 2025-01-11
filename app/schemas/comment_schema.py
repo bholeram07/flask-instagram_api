@@ -6,6 +6,7 @@ class CommentSchema(Schema):
     id = fields.UUID(dump_only=True)
     user_id = fields.UUID(dump_only=True)
     post_id = fields.UUID(dump_only=True)
+    parent = fields.UUID(dump_only=True)
     content = fields.String(required=True)
 
 

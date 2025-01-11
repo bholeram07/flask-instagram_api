@@ -26,8 +26,8 @@ class User(BaseModel,db.Model):
     username_change_timestamp = db.Column(db.DateTime(timezone=True),default=None)
     
     #relationships
-    posts = relationship("Post", backref="user_post",lazy="dynamic")
-    comments = relationship("Comment", backref="user_comment", lazy= "dynamic")
+    posts = relationship("Post", backref="posts",lazy="dynamic",viewonly=True)
+    comments = relationship("Comment", backref="user_comment", lazy= "dynamic",viewonly= True)
     likes = db.relationship(
         "Like",
         backref="user_likes",

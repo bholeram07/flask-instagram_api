@@ -21,6 +21,7 @@ class Comment(BaseModel,db.Model):
     #relationships
     likes = db.relationship('Like', backref='liked_comment', lazy=True,overlaps="post")
     post = db.relationship("Post", backref = "comment_on_post", lazy = True, overlaps="likes")
+    user = db.relationship("User",backref="user_comments")
     
     __table_args__ = (
         db.Index('idx_post_created_at', 'post_id', 'id','created_at'),

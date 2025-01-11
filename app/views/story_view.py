@@ -3,7 +3,6 @@ from flask_restful import MethodView
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from datetime import datetime
 import uuid
-
 from app.models.story import Story, StoryView
 from app.schemas.story_schema import StorySchema
 from app.extensions import db
@@ -61,6 +60,7 @@ class UserStory(MethodView):
             return jsonify(self.story_schema.dump(story)), 201
         except Exception as e:
             # Handle database errors
+            current_app.logger.error(e)
             db.session.rollback()
             return jsonify({"error": "some error occurred during uploading the story please try again"}), 500
 
@@ -98,6 +98,7 @@ class UserStory(MethodView):
                     db.session.add(story_view)
             except Exception as e:
                 # Handle database errors during viewing
+                current_app.logger.error(e)
                 db.session.rollback()
                 return jsonify({"error": "Some error occurred during viewing the story"}), 500
 
@@ -137,7 +138,7 @@ class UserStory(MethodView):
             return jsonify(), 204
         except Exception as e:
             # Handle database errors during deletion
-            current_app.logger.info(e)
+            current_app.logger.error(e)
             db.session.rollback()
             return jsonify({"error": "Some error occurred during deleting the story"}), 500
 
