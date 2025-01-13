@@ -47,7 +47,7 @@ def test_password_blank(client):
     }
     response = client.post('/api/signup/', json=signup_payload)
     assert response.status_code == 400
-    assert response.json['errors']['password'] == "Password should not be blank"
+    assert response.json['errors']['password'] == "Password should not be blank."
 
 
 def test_email(client):

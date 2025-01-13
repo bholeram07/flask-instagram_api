@@ -130,7 +130,7 @@ class CommentLikeApi(MethodView):
 
         # for dislike
         if like:
-            db.session.delete()
+            db.session.delete(like)
             db.session.commit()
             return jsonify({"message": "Comment unliked"}), 200
 
