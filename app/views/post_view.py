@@ -166,9 +166,6 @@ class PostApi(MethodView):
         
         # atomic transactions
         try:
-            post_image_video_obj = PostImageVideo(
-                post, post.image_or_video, self.current_user_id)
-            post_image_video_obj.delete_image_or_video()
             post.soft_delete()
             return jsonify(), 204
 

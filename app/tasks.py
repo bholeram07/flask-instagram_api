@@ -10,6 +10,8 @@ from app.models.comment import Comment
 from app.models.follow_request import FollowRequest
 from app.models.follower import Follow
 from app.extensions import db
+from app.utils.upload_image_or_video import PostImageVideo
+from app.utils.upload_story_content import delete_story_from_s3
 import pytz
 
 
@@ -81,6 +83,9 @@ def hard_delete_old_posts():
 
         # Hard delete the posts
         for post in old_posts:
+            post_image_video_obj = PostImageVideo(
+                post, post.image_or_video, post.user)
+            post_image_video_obj.delete_image_or_video()
             db.session.delete(post)  
 
         # Commit the changes
@@ -108,6 +113,7 @@ def hard_delete_story():
         # Hard delete the posts
         for story in old_story:
             # Assuming you have a delete() method in your model
+            delete_story_from_s3(story)
             db.session.delete(story)
 
         # Commit the changes
@@ -133,6 +139,7 @@ def hard_delete_story_by_user():
         # Hard delete the posts
         for story in old_story:
             # Assuming you have a delete() method in your model
+            delete_story_from_s3(story)
             db.session.delete(story)
 
         # Commit the changes

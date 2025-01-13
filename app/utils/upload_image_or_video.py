@@ -4,6 +4,7 @@ from app.utils.s3_utils import get_s3_client
 from app.constraints import get_s3_file_url
 from botocore.exceptions import ClientError
 import re
+import uuid
 
 
 class PostImageVideo:
@@ -33,7 +34,8 @@ class PostImageVideo:
     def upload_image_or_video(self):
         """A function to upload the post to the s3"""
         # define the new file name that are in post folder, in the user_id folder
-        new_file_key = f"posts/{self.user_id}/{self.file.filename}"
+        unique_id = uuid.uuid4().hex
+        new_file_key = f"posts/{self.user_id}/{unique_id}_{self.file.filename}"
         # get the file url with the new file key
         new_file_url = get_s3_file_url(new_file_key)
 

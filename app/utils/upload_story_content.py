@@ -5,6 +5,7 @@ from app.extensions import db
 from app.utils.s3_utils import get_s3_client
 from app.constraints import get_s3_file_url
 from typing import Optional
+import uuid
 
 
 def get_image_path(url: str) -> Optional[str]:
@@ -45,7 +46,8 @@ def story_upload(file, story, user_id: str) -> None:
 
     if file:
         # Generate a new file name and store it in the story folder for the user
-        new_file_key: str = f"story/{user_id}/{file.filename}"
+        unique_id = uuid.uuid4().hex
+        new_file_key: str = f"story/{user_id}/{unique_id}_{file.filename}"
         try:
             # Upload the content to S3
             s3_client.upload_fileobj(file, bucket_name, new_file_key)
@@ -58,3 +60,40 @@ def story_upload(file, story, user_id: str) -> None:
 
         except ClientError as e:
             current_app.logger.error(f"Failed to upload file to S3: {e}")
+
+
+def delete_story_from_s3(story) -> None:
+    """
+    Deletes the S3 object associated with a story if the content contains an S3 URL.
+
+    Args:
+        story: The story object containing the content.
+
+    Returns:
+        None
+    """
+    content = story.content
+    bucket_name = current_app.config['S3_BUCKET_NAME']
+    s3_endpoint_url = current_app.config['S3_ENDPOINT_URL']
+    s3_client = get_s3_client()
+
+    # Check if the content contains an S3 URL matching the upload format
+    if content and content.startswith(f"{s3_endpoint_url}/{bucket_name}/"):
+        try:
+            # Extract the file key from the content URL
+            file_key = content.split(f"{s3_endpoint_url}/{bucket_name}/")[-1]
+
+            # Delete the file from S3
+            s3_client.delete_object(Bucket=bucket_name, Key=file_key)
+            current_app.logger.info(
+                f"Successfully deleted S3 object: {file_key}")
+
+        except ClientError as e:
+            current_app.logger.error(f"Failed to delete S3 object: {e}")
+        except IndexError:
+            current_app.logger.warning(
+                "S3 URL is malformed or does not match the expected structure.")
+    else:
+        current_app.logger.info(
+            "Content does not contain an S3 URL, skipping S3 deletion.")
+

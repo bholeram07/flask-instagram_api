@@ -130,10 +130,11 @@ class UserStory(MethodView):
         if not story:
             # Handle case where the story doesn't exist
             return jsonify({"error": "Story does not exist"}), 404
-
+      
         # atomic transactions
         try:
             # Delete the story from the database
+           
             story.is_deleted = True
             story.deleted_at = current_time_ist()
             db.session.commit()
