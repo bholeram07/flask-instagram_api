@@ -16,12 +16,22 @@ class Story(BaseModel,db.Model):
     
     user = db.relationship("User", backref="stories", viewonly= True)
     story_view = db.relationship("StoryView", backref="story", viewonly=True)
+    likes = db.relationship(
+        "Like",
+        backref="story_like",
+        lazy="dynamic",
+        cascade="all, delete-orphan",  # Ensures related objects are removed
+        passive_deletes=True          # Aligns with database `ON DELETE CASCADE`
+    )
     
     def soft_delete(self):
         super().soft_delete()  # Soft delete the user
 
-        for story in self.story_view :
-            db.session.delete(story)
+        for view in self.story_view :
+            db.session.delete(view)
+            
+        for likes in self.likes:
+            db.session.delete(likes)
         db.session.commit()
 
     
@@ -30,9 +40,6 @@ class Story(BaseModel,db.Model):
         return f"story {self.content} posted by {self.story_owner}"
     
   
-        
-    
-
 
 class StoryView(db.Model):
     __tablename__ = "story_view"

@@ -9,7 +9,6 @@ from flask_restful import MethodView
 from flask import Flask, jsonify
 from flask import url_for
 import requests
-from app.utils.get_user_location import get_user_location
 import secrets
 from config import Config
 from app.generate_token import generate_verification_token
@@ -31,7 +30,7 @@ from flask_jwt_extended import (
     get_jwt,
 )
 from datetime import datetime, timedelta
-from app.tasks import send_mail, send_location_mail
+from app.tasks import send_mail
 from app.uuid_validator import is_valid_uuid
 from app.utils.validation import validate_and_load
 import os

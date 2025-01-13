@@ -50,18 +50,7 @@ def process_follow_requests(user_id):
         FollowRequest.query.filter_by(following_id=user_id).delete()
         db.session.commit()
 
-@celery_app.task
-def send_location_mail(recipient,html_message):
-    from app import create_app
-    app = create_app()
-    with app.app_context():
-        msg = Message(
-            subject="Login found",
-            recipients=[recipient],
-            html=html_message,
-            sender=current_app.config.get("MAIL_DEFAULT_SENDER"),
-        )
-        mail.send(msg)
+
         
     
 @celery_app.task
@@ -86,6 +75,10 @@ def hard_delete_old_posts():
             post_image_video_obj = PostImageVideo(
                 post, post.image_or_video, post.user)
             post_image_video_obj.delete_image_or_video()
+            
+            likes = Like.query.filter_by(post_id=post.id).all()
+            for like in likes:
+                db.session.delete(like)
             db.session.delete(post)  
 
         # Commit the changes
@@ -114,6 +107,9 @@ def hard_delete_story():
         for story in old_story:
             # Assuming you have a delete() method in your model
             delete_story_from_s3(story)
+            likes = Like.query.filter_by(story_id=story.id).all()
+            for like in likes:
+                db.session.delete(like)
             db.session.delete(story)
 
         # Commit the changes
@@ -137,9 +133,12 @@ def hard_delete_story_by_user():
         old_story = Story.query.filter_by(is_deleted = False).all()
 
         # Hard delete the posts
-        for story in old_story:
+        for stories in old_story:
             # Assuming you have a delete() method in your model
             delete_story_from_s3(story)
+            likes = Like.query.filter_by(story_id=story.id).all()
+            for like in likes:
+                db.session.delete(like)
             db.session.delete(story)
 
         # Commit the changes

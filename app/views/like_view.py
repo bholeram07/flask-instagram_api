@@ -15,7 +15,7 @@ from sqlalchemy import desc
 from app.permissions.permissions import Permission
 from app.utils.get_limit_offset import get_limit_offset
 from typing import Tuple, Union, Dict, Optional, List
-
+from app.utils.get_validate_user import get_post_or_404,get_comment_or_404
 
 class PostLikeAPi(MethodView):
     like_schema = LikeSchema()
@@ -37,9 +37,7 @@ class PostLikeAPi(MethodView):
         if not post_id or not is_valid_uuid(post_id):
             return jsonify({"error": "Invalid or missing post ID"}), 400
         # fetch the post by post_id
-        post: Optional[Post] = Post.query.filter_by(id=post_id, is_deleted=False).first()
-        if not post:
-            return jsonify({"error": "Post does not exist"}), 404
+        post: Post = get_post_or_404(post_id)
 
         # fetch the like of the user on the post
         like:Optional[Like]= Like.query.filter_by(
@@ -82,7 +80,7 @@ class PostLikeAPi(MethodView):
 
         # for get all the likes on the post
         page_number, offset, page_size = get_limit_offset()
-        likes : Optional[Like] = (Like.query.filter_by(post=post_id).order_by(
+        likes : Optional[Like] = (Like.query.filter_by(post=post_id,is_deleted = False).order_by(
             desc(Like.created_at)).offset(offset).limit(page_size).all())
 
         # count of the likes on the post
@@ -132,7 +130,7 @@ class CommentLikeApi(MethodView):
 
         # for dislike
         if like:
-            db.session.delete(like)
+            db.session.delete()
             db.session.commit()
             return jsonify({"message": "Comment unliked"}), 200
 
@@ -174,7 +172,7 @@ class CommentLikeApi(MethodView):
         page_number, offset, page_size = get_limit_offset()
         # fetch the likes on the comment
         likes : Optional[Like] = Like.query.filter_by(
-            comment=comment_id).offset(
+            comment=comment_id,is_deleted = False).offset(
             offset).limit(page_size).all()
         like_data = []
         # generate a dynamic response
@@ -222,7 +220,7 @@ class StorylikeApi(MethodView):
 
         # check the like of the user on the story
         like: Optional[Like] = Like.query.filter_by(
-            story=story_id, user=self.current_user_id).first()
+            story=story_id, user=self.current_user_id, is_deleted = False).first()
 
         # for dislike
         if like:
@@ -264,7 +262,7 @@ class StorylikeApi(MethodView):
 
         # fetch the likes on the comment
         likes: Optional[Like] = Like.query.filter_by(
-            story=story_id).offset(
+            story=story_id,is_deleted = False).offset(
             offset).limit(page_size).all()
 
         like_data = []
