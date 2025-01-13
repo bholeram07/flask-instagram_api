@@ -1,5 +1,5 @@
-from flask import jsonify, request, Blueprint, current_app,Response
-from typing import Union,List,Dict,Optional
+from flask import jsonify, request, Blueprint, current_app, Response
+from typing import Union, List, Dict, Optional
 from flask_restful import MethodView
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from marshmallow import ValidationError
@@ -20,7 +20,8 @@ from app.response.comment_response import comment_response
 from app.permissions.permissions import Permission
 from app.utils.get_limit_offset import get_limit_offset
 from app.utils.ist_time import current_time_ist
-
+from app.helper.comments import create_reply, create_comment, get_replies_data
+from app.utils.get_validate_user import get_post_or_404, get_comment_or_404
 
 
 class CommentApi(MethodView):
@@ -44,76 +45,13 @@ class CommentApi(MethodView):
         content: str = data.get("content")
 
         if post_id:
-            return self.create_comment(post_id, content, data)
+            return create_comment(post_id, content, data, self.current_user_id, self.comment_schema)
+
         elif parent_comment_id:
-            return self.create_reply(parent_comment_id, content, data)
+            return create_reply(parent_comment_id, content, data, self.current_user_id, self.reply_comment_schema)
+
         else:
             return jsonify({"error": "Post ID or Comment ID is required"}), 400
-
-    def create_comment(self, post_id: str, content: str, data: dict) -> dict:
-        """
-        Create a new comment on a post.
-        """
-        if not is_valid_uuid(post_id):
-            return jsonify({"error": "Invalid UUID format"}), 400
-
-        post: Optional[Post] = Post.query.filter_by(
-            id=post_id, is_deleted=False).first()
-        if not post:
-            return jsonify({"error": "Post does not exist"}), 404
-        if not post.is_enable_comment:
-            return jsonify({"error": "Post owner disabled comments on this post"}), 404
-
-        comment_data, error = validate_and_load(self.comment_schema, data)
-        if error:
-            return jsonify({"errors": error}), 400
-
-        comment: Optional[Comment] = Comment(
-            post_id=post_id, user_id=self.current_user_id, content=content)
-        db.session.add(comment)
-        db.session.commit()
-        response = {
-            "id": comment.id,
-            "content": comment.content,
-            "author": comment.user_id,
-            "post" : post_id
-        }
-        return jsonify(response), 201
-
-    def create_reply(self, parent_comment_id: str, content: str, data: dict) -> dict:
-        """
-        Create a reply to an existing comment.
-        """
-        if not is_valid_uuid(parent_comment_id):
-            return jsonify({"error": "Invalid UUID format"}), 400
-
-        comment_data, errors = validate_and_load(
-            self.reply_comment_schema, data)
-        if errors:
-            return jsonify({"errors": errors}), 400
-
-        parent_comment: Optional[Comment] = Comment.query.filter_by(
-            id=parent_comment_id, is_deleted=False).first()
-        if not parent_comment:
-            return jsonify({"error": "Comment does not exist"}), 404
-        if not content:
-            return jsonify({"error": "Provide content for reply"}), 400
-
-        reply_comment: Optional[Comment] = Comment(
-            parent=parent_comment_id, content=content, user_id=self.current_user_id)
-        db.session.add(reply_comment)
-        db.session.commit()
-
-        response = {
-            "id": reply_comment.id,
-            "content": reply_comment.content,
-            "author": reply_comment.user_id,
-            "parent_comment": {
-                "id": parent_comment.id,
-                "content": parent_comment.content
-            },
-        }
-        return jsonify(response), 200
 
     def get(self, comment_id: str) -> dict:
         """
@@ -122,10 +60,7 @@ class CommentApi(MethodView):
         if not is_valid_uuid(comment_id):
             return jsonify({"error": "Invalid UUID format"}), 400
 
-        comment: Optional[Comment] = Comment.query.filter_by(
-            id=comment_id, is_deleted=False).first()
-        if not comment:
-            return jsonify({"error": "Comment does not exist"}), 404
+        comment = get_comment_or_404(comment_id)
 
         reply_count: int = Comment.query.filter_by(
             parent=comment_id, is_deleted=False).count()
@@ -134,35 +69,18 @@ class CommentApi(MethodView):
 
         replies = Comment.query.filter_by(
             parent=comment_id, is_deleted=False).all()
-        comment_data["replies"] = self.get_replies_data(replies)
+        comment_data["replies"] = get_replies_data(
+            replies, self.reply_comment_schema)
         comment_data["parent"] = comment.parent
 
         return jsonify(comment_data), 200
-
-    def get_replies_data(self, replies: List[Comment]) -> List[Dict]:
-        """
-        Helper function to get data of replies to a comment.
-        """
-        reply_data = []
-        for reply in replies:
-            reply_info = self.reply_comment_schema.dump(reply)
-            author = User.query.filter_by(id=reply.user_id).first()
-            reply_info["author"] = {
-                "id": author.id, "username": author.username}
-            reply_data.append(reply_info)
-        return reply_data
 
     def put(self, comment_id: str) -> Union[dict, int]:
         """
         Update a comment by its ID.
         """
-        if not is_valid_uuid(comment_id):
-            return jsonify({"error": "Invalid UUID format"}), 400
 
-        comment: Optional[Comment] = Comment.query.filter_by(
-            user_id=self.current_user_id, id=comment_id, is_deleted=False).first()
-        if not comment:
-            return jsonify({"error": "Comment does not exist"}), 404
+        comment = get_comment_or_404(comment_id, self.current_user_id)
 
         data: dict = request.get_json()
         comment_update_data, errors = validate_and_load(
@@ -184,15 +102,9 @@ class CommentApi(MethodView):
         """
         Delete a comment by its ID.
         """
-        if not is_valid_uuid(comment_id):
-            return jsonify({"error": "Invalid UUID format"}), 400
+        comment: Comment = get_comment_or_404(comment_id)
+        post: Post = get_post_or_404(comment.post_id)
 
-        comment: Optional[Comment] = Comment.query.filter_by(
-            id=comment_id, is_deleted=False).first()
-        if not comment:
-            return jsonify({"error": "Comment does not exist"}), 404
-
-        post: Optional[Post] = Post.query.get(comment.post_id)
         if comment.user_id != UUID(self.current_user_id) and post.user_id != UUID(self.current_user_id):
             return jsonify({"error": "You do not have permission to delete this comment"}), 403
 
@@ -214,21 +126,15 @@ class CommentListApi(MethodView):
     decorators = [jwt_required(), Permission.user_permission_required]
     comment_schema = CommentSchema()
 
-    def get(self, post_id:str)->dict:
+    def get(self, post_id: str) -> dict:
         """
         Get a list of comments for a post.
         """
-        if not is_valid_uuid(post_id):
-            return jsonify({"error": "Invalid UUID format"}), 400
-
-        # fetch the post
-        post: Optional[Post] = Post.query.filter_by(id=post_id, is_deleted=False).first()
-        if not post:
-            return jsonify({"error": "Post does not exist"}), 404
+        post = get_post_or_404(post_id)
 
         # get the limit and offset
-        page_number, offset , page_size = get_limit_offset()
-        comments : Optional[Comment] = Comment.query.filter_by(post_id=post_id, is_deleted=False).order_by(
+        page_number, offset, page_size = get_limit_offset()
+        comments: Optional[Comment] = Comment.query.filter_by(post_id=post_id, is_deleted=False).order_by(
             desc(Comment.created_at)).offset(offset).limit(page_size).all()
         # serialize the comments
         serialized_comments = comment_response(comments, self.comment_schema)

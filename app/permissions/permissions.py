@@ -6,6 +6,8 @@ from app.models.post import Post
 from app.models.comment import Comment
 from app.uuid_validator import is_valid_uuid
 from app.models.story import Story
+from sqlalchemy.orm import joinedload
+from app.utils.get_validate_user import get_post_user,get_user,get_comment_post,get_story_user
 global target_user
 
 
@@ -55,38 +57,16 @@ class Permission:
             target_user = None
             # if post_id is taken
             if user_id:
-                target_user = User.query.filter_by(id = user_id,is_active = True,is_deleted = False).first()
+                target_user = get_user(user_id)
             if post_id:
-                if not is_valid_uuid(post_id):
-                    return jsonify({"error": "Invalid uuid format"}), 400
-                post = Post.query.filter_by(
-                    id=post_id, is_deleted=False).first()
-                if not post:
-                    return jsonify({"error": "Post not found"}), 404
-                # pass the user of the post
-                target_user = User.query.filter_by(id = post.user,is_active = True, is_deleted = False).first()
+                target_user = get_post_user(post_id)
             # if the comment id is taken
             if comment_id:
-                # fetch the comment
-                if not is_valid_uuid(comment_id):
-                    return jsonify({"error": "Invalid uuid format"}), 400
-                comment = Comment.query.filter_by(
-                    id=comment_id, is_deleted=False).first()
-                if not comment:
-                    return jsonify({"error": "comment not exist"}), 404
-                # pass the user of the comment
-                target_user = User.query.filter_by(id = comment.user_id,is_active = True, is_deleted = False).first()
+               target_user = get_comment_post(comment_id)
+            
             # if the story id is taken
             if story_id:
-                # fetch the story
-                if not is_valid_uuid(story_id):
-                    return jsonify({"error": "Invalid UUID format"}), 400
-                story = Story.query.filter_by(
-                    id=story_id, is_deleted=False).first()
-                if not story:
-                    return jsonify({"error": "Story does not exist"}), 404
-                # pass the user of the story
-                target_user = User.query.filter_by(id = story.story_owner, is_active = True, is_deleted = False).first()
+                target_user = get_story_user(story_id)
                 
             if target_user == None:
                 return view_func(*args, **kwargs)

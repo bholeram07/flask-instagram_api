@@ -7,8 +7,8 @@ import boto3
 from app.s3_bucket_config import create_s3_client
 import logging
 from flask_swagger_ui import get_swaggerui_blueprint
-from app.tasks import hard_delete_old_posts
-
+from app.tasks import hard_delete_old_posts,process_follow_requests
+from app.exceptions import NotFoundError,BadRequest
 
 # Swagger UI configuration
 SWAGGER_URL = '/api/docs'  # URL for exposing Swagger UI (without trailing '/')
@@ -76,6 +76,7 @@ def create_app(test_config=None):
     app.config["REDIS_CLIENT"] = redis_client
     # set up the logger
     setup_logging(app)
+    error_handler(app)
     # setup_logging(app)
     initialize_extensions(app)
     # import the blueprint and register with app
@@ -120,3 +121,19 @@ def register_jwt_handlers(app):
     def check_if_token_in_blacklist(jwt_header, jwt_payload):
         jti = jwt_payload["jti"]
         return redis_client.exists(jti)
+    
+
+def error_handler(app):
+    @app.errorhandler(BadRequest)
+    def handle_bad_request(error):
+        """Handle BadRequest error and return a structured response."""
+        return jsonify({"error": str(error)}), 400
+    
+    
+    @app.errorhandler(NotFoundError)
+    def handle_not_found_error(error):
+        """Handle BadRequest error and return a structured response."""
+        return jsonify({"error": str(error)}), 400
+
+
+

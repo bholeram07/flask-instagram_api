@@ -15,7 +15,9 @@ from typing import Optional,Union
 from flask_restful import MethodView
 from app.models.post import Post
 from app.models.follower import Follow
+from app.models.follow_request import FollowRequest
 from app.models.user import db, User
+from app.tasks import process_follow_requests
 from flask import Blueprint, jsonify, request, current_app,Response
 from app.utils.update_profile_pic import update_profile_pic
 from app.utils.ist_time import current_time_ist
@@ -111,6 +113,10 @@ class UserProfile(MethodView):
             is_private = data.get("is_private")
             if isinstance(is_private, bool):
                 user.is_private = is_private
+                process_follow_requests.delay(self.current_user_id)
+                
+                
+                
 
         # Update `other_social` field if provided
         if "other_social" in data:

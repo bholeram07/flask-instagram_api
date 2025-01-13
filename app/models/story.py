@@ -12,7 +12,9 @@ class Story(BaseModel,db.Model):
     __tablename__ = "story"
     story_owner = db.Column(UUID(as_uuid=True), db.ForeignKey("user.id", ondelete="CASCADE"))
     content = db.Column(db.Text,nullable  = False)
- 
+    
+    user = db.relationship("User", backref="user_story", viewonly= True)
+
     
     #represantation method
     def __str__(self):

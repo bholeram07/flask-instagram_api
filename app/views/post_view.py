@@ -18,10 +18,11 @@ import os
 from uuid import UUID
 from app.response.post_response import post_response
 from app.permissions.permissions import Permission
-from app.utils.get_validate_user import get_user
+from app.utils.get_validate_user import get_user,get_post_or_404
 from app.utils.get_limit_offset import get_limit_offset
 from app.utils.ist_time import current_time_ist
 from typing import Union, List, Dict, Optional,Tuple
+
 
 
 class PostApi(MethodView):
@@ -85,14 +86,9 @@ class PostApi(MethodView):
         Update an existing post.
         Only the post owner can perform updates.
         """
-        # Validate the post ID
-        if not is_valid_uuid(post_id):
-            return jsonify({"error": "Invalid or missing post ID"}), 400
-
+        
         # Fetch the post by ID
-        post = Post.query.filter_by(
-            id=post_id, user=self.current_user_id, is_deleted=False).first()
-
+        post = get_post_or_404(post_id)
         # if post does not exist
         if not post:
             return jsonify({"error": "Post does not exist"}), 404
@@ -143,6 +139,7 @@ class PostApi(MethodView):
                 post.updated_at = current_time_ist()
                 db.session.commit()
             return jsonify(self.post_schema.dump(post)), 202
+        
         except Exception as e:
             current_app.logger.error(f"Error updating post: {str(e)}")
             return jsonify({"error": "An error occurred while updating the post"}), 500
@@ -154,15 +151,8 @@ class PostApi(MethodView):
         Requires appropriate user permissions.
         """
         # if not post_id or not valid uuid
-        if not post_id or not is_valid_uuid(post_id):
-            return jsonify({"error": "Please provide a valid post ID"}), 400
-
-        # fetch the post by post_id
-        post: Optional[Post] = Post.query.filter_by(id=post_id, is_deleted=False).first()
-        # if post does not exist
-        if not post:
-            return jsonify({"error": "Post does not exist"}), 400
-
+        post = get_post_or_404(post_id)
+        
         return jsonify(self.post_schema.dump(post)), 200
 
     def delete(self, post_id:str)->int:
@@ -170,21 +160,12 @@ class PostApi(MethodView):
         Soft-delete a post by marking it as deleted.
         Only the post owner can perform this operation.
         """
-        # Validate the post ID
-        if not post_id or not is_valid_uuid(post_id):
-            return jsonify({"error": "Invalid or missing post ID"}), 400
 
         # Fetch the post by ID
-        post : Optional[Post] = Post.query.filter_by(
-            user=self.current_user_id, id=post_id, is_deleted=False).first()
-
-        # if post not exist
-        if not post:
-            return jsonify({"error": "Post does not exist"}), 404
-
+        post  = get_post_or_404(post_id,self.current_user_id)
+        
         # atomic transactions
         try:
-            # Delete associated media and mark the post as deleted
             post_image_video_obj = PostImageVideo(
                 post, post.image_or_video, self.current_user_id)
             post_image_video_obj.delete_image_or_video()
@@ -211,16 +192,9 @@ class UserPostListApi(MethodView):
         Retrieve a list of posts for a specific user.
         If no user ID is provided, fetch posts for the current user.
         """
-      
-
         query_user_id = user_id or self.current_user_id
         if user_id:
-            if not is_valid_uuid(user_id):
-                return jsonify({"error": "Invalid UUID format"}), 400
-        
-        query_user = get_user(query_user_id)
-        if not query_user:
-            return jsonify({"error": "User does not exist"}), 404
+            query_user = get_user(query_user_id)
 
         # Paginate the results
         page, offset, page_size = get_limit_offset()

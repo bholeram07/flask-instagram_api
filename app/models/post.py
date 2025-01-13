@@ -24,7 +24,7 @@ class Post(BaseModel,db.Model):
     likes = relationship("Like", backref="post_likes",
                          lazy="dynamic", overlaps="comments", viewonly=True)
     owner = relationship("User", backref="user", viewonly=True)
-    comments = relationship(
+    comment = relationship(
         "Comment", backref="post_commment", lazy="dynamic", overlaps="likes", viewonly=True)
     
     __table_args__ = (

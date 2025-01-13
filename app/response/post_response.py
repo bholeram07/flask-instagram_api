@@ -4,7 +4,7 @@ def post_response(posts,schema):
     post_comments = {}
     for post in posts:
             post.like_count = post.likes.count()
-            post.comment_count = post.comments.count()
+            post.comment_count = post.comment.count()
             post_likes[post.id] = post.like_count
             post_comments[post.id] = post.comment_count
     serialized_post = schema.dump(posts, many=True)

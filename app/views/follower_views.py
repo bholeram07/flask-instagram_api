@@ -183,7 +183,7 @@ class FollowingApi(MethodView):
             {
                 "id": follow.following.id,
                 "username": follow.following.username,
-                "image": follow.following.profile_pic if follow.following.profile_pic else None,
+                "profile_pic": follow.following.profile_pic if follow.following.profile_pic else None,
             }
             for follow in following
         ]

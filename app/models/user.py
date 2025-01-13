@@ -34,7 +34,8 @@ class User(BaseModel,db.Model):
         cascade="all, delete-orphan",
         lazy="dynamic"
     )
-    
+    story = relationship(
+        "Story", backref="user_story", lazy="dynamic", viewonly=True)
 
     following = db.relationship(
         "Follow",

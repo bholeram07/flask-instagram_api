@@ -232,7 +232,7 @@ class StorylikeApi(MethodView):
             return jsonify({"error": "story not exist"}), 404
 
         # if user like his own story
-        if story.story_owner == self.current_user_id:
+        if str(story.story_owner) == str(self.current_user_id):
             return jsonify({"error": "You can't like your own story"}), 400
 
         # check the like of the user on the story

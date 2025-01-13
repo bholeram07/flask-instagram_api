@@ -181,9 +181,7 @@ class UpdatePassword(MethodView):
         data : dict = request.get_json()
         # Fetch user and validate current password
         user: Union[User,None] = get_user(user_id)
-        if not user:
-            return jsonify({"error": "User not found"}), 404
-
+        
         # get the password from the request data
         current_password:str = data.get("current_password")
         new_password:str = data.get("new_password")
@@ -291,8 +289,6 @@ class ResetPassword(MethodView):
             return jsonify({"error": "Invalid or expired token"}), 400
         # get the user object from the user id
         user : Union[User,None] = get_user(user_id)
-        if not user:
-            return jsonify({"error": "User not found"}), 404
         # check the passwoed
         if user.check_password(new_password):
             return jsonify({"error": "new and old password not be same"}), 400

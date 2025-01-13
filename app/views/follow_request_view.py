@@ -86,7 +86,6 @@ class FollowrequestAccept(MethodView):
             ).first()
             if existing_follow:
                 return jsonify({"message": "User is already your follower"}), 200
-
             # Follow the user
             follow = Follow(
                 follower_id=user_id,
@@ -115,10 +114,15 @@ class FollowrequestAccept(MethodView):
 
     def get(self):
         """A function to get the follow request"""
+        
+        user = User.query.get(self.current_user_id)
+        if not user.is_private:
+            return jsonify({"error":"You can not implement this request as your account is public"}),400
         # page_number,offset,page_size
         page_number, offset, page_size = get_limit_offset()
 
         # fetch the follow request
+        
         followrequest = FollowRequest.query.filter_by(
             following_id=self.current_user_id).offset(offset).limit(page_size).all()
         # serialize the follow request
@@ -126,6 +130,8 @@ class FollowrequestAccept(MethodView):
         result = [
             {
                 "sender_id": req.follower.id,
+                "username" : req.follower.username,
+                "profile_pic" : req.follower.profile_pic
 
             } for req in followrequest
         ]

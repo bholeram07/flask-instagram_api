@@ -87,6 +87,7 @@ class UserStory(MethodView):
         if str(story.story_owner) != str(self.current_user_id):
             # Add a view record if the story is viewed by someone else
             try:
+                print("someone is view my story")
                 story_view : Optional[StoryView]= StoryView.query.filter_by(
                     viewer_id=self.current_user_id).first()
                 if not story_view:
@@ -96,6 +97,7 @@ class UserStory(MethodView):
                         story_owner=story.story_owner
                     )
                     db.session.add(story_view)
+                    db.session.commit()
             except Exception as e:
                 # Handle database errors during viewing
                 current_app.logger.error(e)
@@ -163,12 +165,15 @@ class GetStoryView(MethodView):
         total_views_count:int = StoryView.query.filter_by(
             story_owner=self.current_user_id, story_id=story_id).count()
 
-        offset, page_size, page_number = get_limit_offset()
+        page, offset, page_size = get_limit_offset()
 
 
         # Retrieve the story by ID
+        
+        
         story : Optional[Story] = Story.query.filter_by(
             id=story_id, is_deleted=False, story_owner=self.current_user_id).first()
+        
 
         # if story not exist
         if not story:
@@ -178,7 +183,7 @@ class GetStoryView(MethodView):
         # Retrieve the views for the story
         story_views: Optional[StoryView] = StoryView.query.filter_by(
             story_owner=self.current_user_id, story_id=story_id).offset(offset).limit(page_size).all()
-
+        
         # Serialize the story view data
         story_view_data = [
             {
@@ -190,4 +195,4 @@ class GetStoryView(MethodView):
         ]
 
         # Return paginated and serialized data
-        return paginate_and_serialize(story_view_data, page_number, page_size, views_count=total_views_count, story_id=story_id)
+        return paginate_and_serialize(story_view_data, page, page_size, views_count=total_views_count, story_id=story_id)

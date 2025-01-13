@@ -29,6 +29,26 @@ def send_mail(recipient, html_message, subject):
             mail.send(msg)
 
 @celery_app.task
+def process_follow_requests(user_id):
+    # Import inside the task to avoid circular imports
+    from app import create_app
+    app=create_app()
+    with app.app_context():
+
+        pending_follow_requests = FollowRequest.query.filter_by(
+            following_id=user_id).all()
+        new_follows = [
+            Follow(following_id=user_id, follower_id=request.follower_id)
+            for request in pending_follow_requests
+        ]
+    
+
+        # Bulk insert follows
+        db.session.bulk_save_objects(new_follows)
+        FollowRequest.query.filter_by(following_id=user_id).delete()
+        db.session.commit()
+
+@celery_app.task
 def send_location_mail(recipient,html_message):
     from app import create_app
     app = create_app()

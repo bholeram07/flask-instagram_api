@@ -63,7 +63,7 @@ class TestCommentApi:
 
         assert response.status_code == 201
         assert response.json["content"] == "This is a test comment."
-        assert response.json["post_id"] == str(self.post.id)
+        assert response.json["post"] == str(self.post.id)
 
     def test_create_comment_invalid_post(self):
         """Test creating a comment with an invalid post ID."""
