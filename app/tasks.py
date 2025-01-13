@@ -149,7 +149,7 @@ def hard_delete_user():
         utc_now = datetime.now(pytz.utc)
 
         # Set the threshold date (1 minute before current time)
-        threshold_date = utc_now - timedelta(seconds=1)
+        threshold_date = utc_now - timedelta(minutes=1)
 
         # Fetch posts marked as "soft deleted" and older than 1 minute
         deleted_user = User.query.filter(User.deleted_at < threshold_date).all()
@@ -158,9 +158,10 @@ def hard_delete_user():
         for user in deleted_user:
             # Assuming you have a delete() method in your model
             db.session.delete(user)
+            db.session.commit()
 
         # Commit the changes
-        db.session.commit()
+   
     
 
 @celery_app.task
@@ -190,7 +191,7 @@ def hard_delete_comments():
         
 
 @celery_app.task
-def hard_delete_user():
+def hard_delete_non_verified_user():
     """Hard delete posts marked for deletion."""
     from app import create_app
     app = create_app()
@@ -206,7 +207,7 @@ def hard_delete_user():
         non_verified_user = User.query.filter_by(is_verified = False).all()
 
         # Hard delete the posts
-        for user in deleted_user:
+        for user in non_verified_user:
             # Assuming you have a delete() method in your model
             db.session.delete(user)
 
@@ -215,27 +216,3 @@ def hard_delete_user():
 
 
 
-# @celery_app.task
-# def accept_the_request():
-#     """Hard delete posts marked for deletion."""
-#     from app import create_app
-#     app = create_app()
-
-#     with app.app_context():
-#         # Get the current time in UTC
-#         utc_now = datetime.now(pytz.utc)
-
-#         # Set the threshold date (1 minute before current time)
-#         threshold_date = utc_now - timedelta(minutes=1)
-
-#         # Fetch posts marked as "soft deleted" and older than 1 minute
-#         user = User.query.filter(is_private == False).all()
-#         followrequests = FollowRequest.query.filter(
-#             following_id=self.current_user_id).all()
-#         for follower in followrequests:
-#             follow = Follow(follower_id=follower.follower_id,following_id=follower.following_id)
-#             db.session.add(follow)
-#         # Hard delete the posts
-      
-#         # Commit the changes
-#         db.session.commit()

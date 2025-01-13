@@ -91,7 +91,7 @@ class TestPostLikeApi:
             json=data,
             headers=self.headers
         )
-        print(response.json)
+   
         assert response.status_code == 201
         assert response.json["post"] == str(self.post_data.id)
         assert response.json["user"] == str(self.user_data.id)
