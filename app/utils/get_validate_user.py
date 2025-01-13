@@ -40,12 +40,15 @@ def get_comment_post(comment_id):
             Comment.query.options(joinedload(Comment.user)).filter(Comment.id == comment_id, Comment.is_deleted == False).join(User, User.id == Comment.user_id)
             .filter(User.is_active == True, User.is_verified == True, User.is_deleted == False)
             .first()
-            )
-    
+    )
+
     if not comment:
         raise NotFoundError("comment not exist")
+  
     if comment.parent:
         parent = Comment.query.filter_by(id = comment.parent, is_deleted = False).first()
+        if not parent:
+            raise NotFoundError("comment not exist")
         return parent.user
     if comment.post_id:
         return comment.post.owner

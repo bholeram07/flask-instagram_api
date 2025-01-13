@@ -105,7 +105,7 @@ class CommentApi(MethodView):
         comment: Comment = get_comment_or_404(comment_id)
         post: Post = get_post_or_404(comment.post_id)
 
-        if comment.user_id != UUID(self.current_user_id) and post.user_id != UUID(self.current_user_id):
+        if comment.user_id != UUID(self.current_user_id) and post.user != UUID(self.current_user_id):
             return jsonify({"error": "You do not have permission to delete this comment"}), 403
 
         try:

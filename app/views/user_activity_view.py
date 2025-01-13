@@ -47,8 +47,10 @@ class UserActivity(MethodView):
         """
         Fetch the user's likes with pagination.
         """
-        likes = Like.query.filter_by(user=user_id).offset(
-            offset).limit(limit).all()  # Query likes by the user.
+       
+        # Query likes by the user.
+        likes = Like.query.filter(Like.post.isnot(
+            None), Like.user == user_id).offset(offset).limit(limit).all()
         # Serialize and return the paginated data.
         return paginate_and_serialize(likes, page_number, limit,self.like_schema)
 

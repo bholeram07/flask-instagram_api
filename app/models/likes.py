@@ -17,12 +17,6 @@ class Like(BaseModel,db.Model):
     story = db.Column(UUID(as_uuid=True), db.ForeignKey("story.id",ondelete = "CASCADE"),nullable = True, index = True)
     comment = db.Column(UUID(as_uuid=True), db.ForeignKey("comment.id",ondelete = "CASCADE"), nullable = True)
     
-   
-    
-    
-    
-  
-
     def __str__(self):
         return f"liked on {self.post} by {self.user}"
 
