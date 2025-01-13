@@ -1,4 +1,5 @@
 from marshmallow import Schema, fields, ValidationError, validates, validates_schema,EXCLUDE
+from app.utils.validate_password import validate_password_rules
 import re
 
 
@@ -11,27 +12,17 @@ class SignupSchema(Schema):
     @validates("password")
     def validate_password(self, password):
         if not password.strip():
-           raise ValidationError("Password should not be blank")
-        if len(password) < 8:
-            raise ValidationError("Password must be at least 8 characters long")
-        if not re.search(r"[!@#$%^&*()_]", password):
-            raise ValidationError(
-                "Password must contain at least one special character"
-            )
-        if not re.search(r"[1-9]", password):
-            raise ValidationError("Password must contain at least one numerical value")
-
-        if not re.search(r"[a-z]", password):
-            raise ValidationError(
-                "Password must contain at least one lowercase letter"
-            )
-
-        if not re.search(r"[A-Z]", password):
-            raise ValidationError(
-                "Password must contain at least one uppercase letter"
-            )
-
+            raise ValidationError("Password should not be blank.")
+    
+        # If there are errors, raise a single ValidationError with all messages
+        errors = validate_password_rules(password)
+        
+        # Raise ValidationError if there are any errors
+        if errors:
+            raise ValidationError(errors)
+            
         return password
+
     
     @validates("username")
     def validate_username(self, value):
@@ -80,25 +71,10 @@ class UpdatePasswordSchema(Schema):
         if not new_password.strip():
            raise ValidationError("new password should not be blank.")
     
-        if len(new_password) < 8:
-            raise ValidationError("Password must be at least 8 characters long.")
-        if not re.search(r"[!@#$%^&*()_]", new_password):
-            raise ValidationError(
-                "Password must contain at least one special character."
-            )
-        if not re.search(r"[1-9]", new_password):
-            raise ValidationError("Password must contain at least one numerical value")
-
-        if not re.search(r"[a-z]", new_password):
-            raise ValidationError(
-                "Password must contain at least one lowercase letter."
-            )
-
-        if not re.search(r"[A-Z]", new_password):
-            raise ValidationError(
-                "Password must contain at least one uppercase letter."
-            )
-
+        errors = validate_password_rules(new_password)
+        if errors:
+            raise ValidationError(errors)
+        
         return new_password
 
 
@@ -111,23 +87,9 @@ class ResetPasswordSchema(Schema):
         if not new_password.strip():
            raise ValidationError("new password should not be blank.")
     
-        if len(new_password) < 8:
-            raise ValidationError("Password must be at least 8 characters long.")
-        if not re.search(r"[!@#$%^&*()_]", new_password):
-            raise ValidationError(
-                "Password must contain at least one special character."
-            )
-        if not re.search(r"[1-9]", new_password):
-            raise ValidationError("Password must contain at least one numerical value")
-
-        if not re.search(r"[a-z]", new_password):
-            raise ValidationError(
-                "Password must contain at least one lowercase letter."
-            )
-
-        if not re.search(r"[A-Z]", new_password):
-            raise ValidationError(
-                "Password must contain at least one uppercase letter."
-            )
+        errors = validate_password_rules(new_password)
+        if errors:
+            return ValidationError(errors)
+            
 
         return new_password
