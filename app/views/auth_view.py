@@ -143,12 +143,8 @@ class Login(MethodView):
         if not user.is_active:
             user.is_active = True
             db.session.commit()
-
-        # Third-party API for user location
-        user_ip: str = request.remote_addr
-        location: dict = get_user_location(user_ip)
-
         # Generate the tokens on valid credentials
+        
         # Access token
         access_token: str = create_access_token(
             identity=user.id, expires_delta=timedelta(hours=1)

@@ -134,8 +134,8 @@ def test_follow_user_not_exist(client, user_data):
         json={"user_id": "2cc1bb98-d729-4146-9482-85bfd88fee4c"},
         headers={"Authorization": f"Bearer {access_token}"},
     )
-    assert response.status_code == 400
-    assert response.json["error"] == "User does not exist"
+    assert response.status_code == 404
+    assert response.json["error"] == "User not found"
 
 
 def test_follow_self(client, user_data):

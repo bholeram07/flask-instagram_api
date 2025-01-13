@@ -113,7 +113,7 @@ class TestStoryApi:
             headers=self.headers
         )
         assert response.status_code == 400
-        assert response.json["error"] == "Invalid UUID format"
+        assert response.json["error"] == "Invalid uuid format"
 
     def test_get_nonexistent_story(self):
         """Test retrieving a non-existent story."""
@@ -122,6 +122,7 @@ class TestStoryApi:
             f'/api/story/{story_id}/',
             headers=self.headers
         )
+        print(response.json)
         assert response.status_code == 404
         assert response.json["error"] == "Story does not exist"
 

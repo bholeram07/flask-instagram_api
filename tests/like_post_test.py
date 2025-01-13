@@ -34,7 +34,8 @@ def post_data(app, user_data):
         title="test_user",
         image_or_video="bhole.jpg",
         caption="this is the post",
-        is_deleted=False,
+        user = user_data.id,
+        is_deleted=False
     )
     with app.app_context():
         db.session.add(post)
@@ -83,17 +84,18 @@ class TestPostLikeApi:
     def test_like_post(self):
         """Test liking a post."""
         data = {"post_id": str(self.post_data.id)}
+        print(self.post_data.id)
 
         response = self.client.post(
             '/api/posts/toggle-like/',
             json=data,
             headers=self.headers
         )
-
+        print(response.json)
         assert response.status_code == 201
-        assert response.json["post"]["id"] == str(self.post_data.id)
-        assert response.json["user"]["id"] == str(self.user_data.id)
-        assert "liked_at" in response.json
+        assert response.json["post"] == str(self.post_data.id)
+        assert response.json["user"] == str(self.user_data.id)
+        assert "created_at" in response.json
 
     def test_unlike_post(self):
         """Test unliking a previously liked post."""
@@ -141,6 +143,7 @@ class TestPostLikeApi:
             f'/api/posts/{self.post_data.id}/like/',
             headers=self.headers
         )
+        print(response.json)
         assert response.status_code == 200
         assert "likes_count" in response.json
         assert response.json["items"][0]["post"] == str(self.post_data.id)

@@ -58,24 +58,9 @@ class PostLikeAPi(MethodView):
             db.session.commit()
 
         # get a post data to the like response
-        post_data = {
-            "id": post.id,
-            "title": post.title,
-
-        }
+        
         like_data:dict = self.like_schema.dump(like)
 
-        # get a user data to the comment
-        user = User.query.filter_by(id = self.current_user_id).first()
-        user_data = {
-            "id": user.id,
-            "username": user.username,
-            "profile_pic": user.profile_pic if user.profile_pic else None,
-        }
-        # added a post and user data to the response
-        like_data["post"] = post_data
-        like_data["user"] = user_data
-        like_data["liked_at"] = like.created_at.isoformat()
 
         return jsonify(like_data), 201
 

@@ -1,6 +1,6 @@
 from flask import Blueprint
 from app.views.comment_view import CommentApi,CommentListApi
-from app.views.comment_reply_view import ReplyCommentApi
+
 
 comment_api = Blueprint("comment_api", __name__)
 
@@ -14,6 +14,4 @@ comment_api.add_url_rule(
 comment_api.add_url_rule(
     "/posts/<post_id>/comments/", view_func=CommentListApi.as_view("list_comment"), methods=["GET"]
 )
-
-
 

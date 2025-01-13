@@ -133,7 +133,7 @@ def error_handler(app):
     @app.errorhandler(NotFoundError)
     def handle_not_found_error(error):
         """Handle BadRequest error and return a structured response."""
-        return jsonify({"error": str(error)}), 400
+        return jsonify({"error": str(error)}), 404
 
 
 

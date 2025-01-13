@@ -28,11 +28,30 @@ def user_data(app):
 
 
 @pytest.fixture
+def another_user_data(app):
+    """Fixture to create a sample user for testing."""
+    user = User(
+        username="test_user1",
+        email="user1@example.com",
+        password=generate_password_hash("Bhole057p@1"),
+        is_verified=True,
+        is_deleted=False,
+        is_active=True
+    )
+    with app.app_context():
+        db.session.add(user)
+        db.session.commit()
+        db.session.refresh(user)
+    return user
+
+
+@pytest.fixture
 def story_data(app, user_data):
     """Fixture to create a sample story for testing."""
     story = Story(
         content="bhole.jpg",
         is_deleted=False,
+        story_owner = user_data.id
     )
     with app.app_context():
         db.session.add(story)
@@ -70,12 +89,12 @@ class TestStoryLikeApi:
     """Class-based tests for Post Like API operations."""
 
     @pytest.fixture(autouse=True)
-    def setup(self, client, user_data, story_data):
+    def setup(self, client, user_data,another_user_data, story_data):
         """Setup for each test."""
         self.client = client
-        self.user_data = user_data
+        self.another_user_data = another_user_data
         self.story_data = story_data
-        self.access_token = create_access_token(identity=self.user_data.id)
+        self.access_token = create_access_token(identity=self.another_user_data.id)
         self.headers = {"Authorization": f"Bearer {self.access_token}"}
 
     def test_like_story(self):
@@ -87,6 +106,7 @@ class TestStoryLikeApi:
             json=data,
             headers=self.headers
         )
+        print(response.json)
 
         assert response.status_code == 201
         assert response.json["story_id"] == str(self.story_data.id)
@@ -113,7 +133,7 @@ class TestStoryLikeApi:
         )
 
         assert response.status_code == 400
-        assert response.json["error"] == "Invalid UUID format"
+        assert response.json["error"] == "Invalid uuid format"
 
     def test_story_not_exist(self):
         """Test liking a post that does not exist."""
@@ -143,7 +163,7 @@ class TestStoryLikeApi:
             headers=self.headers
         )
         assert response.status_code == 400
-        assert response.json["error"] == "Invalid UUID format"
+        assert response.json["error"] == "Invalid uuid format"
 
     def test_get_likes_nonexistent_story(self):
         """Test fetching likes for a non-existent post."""
