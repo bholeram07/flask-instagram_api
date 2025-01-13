@@ -30,7 +30,7 @@ class Comment(BaseModel,db.Model):
 
         # Soft delete related comments
         for like in self.likes:
-            like.soft_delete()
+            db.session.delete(like)
 
         db.session.commit()
 

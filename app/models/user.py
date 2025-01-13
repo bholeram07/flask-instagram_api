@@ -36,6 +36,7 @@ class User(BaseModel,db.Model):
     )
     story = relationship(
         "Story", backref="user_story", lazy="dynamic", viewonly=True)
+    
 
     following = db.relationship(
         "Follow",
@@ -53,10 +54,6 @@ class User(BaseModel,db.Model):
         cascade="all, delete-orphan",
     )
     
-    __table_args__ = (
-        db.Index('idx_id', 'id'),
-        db.Index('idx_is_verified_active', 'is_verified', 'is_active'),
-    )
 
     #method that check the password with existing password by check password hash
     def check_password(self, raw_password):
@@ -75,7 +72,10 @@ class User(BaseModel,db.Model):
 
         # Soft delete related likes
         for like in self.likes:
-            like.soft_delete()
+            db.session.delete(like)
+        
+        for story in self.story:
+            story.soft_delete()
         
         for follower in self.followers:
             db.session.delete(follower)

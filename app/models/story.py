@@ -3,6 +3,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from app.models.base import BaseModel
 from datetime import datetime,timezone
 from app.models.user import User
+from app.utils.ist_time import current_time_ist
 import uuid
 
 class Story(BaseModel,db.Model):
@@ -13,28 +14,40 @@ class Story(BaseModel,db.Model):
     story_owner = db.Column(UUID(as_uuid=True), db.ForeignKey("user.id", ondelete="CASCADE"))
     content = db.Column(db.Text,nullable  = False)
     
-    user = db.relationship("User", backref="user_story", viewonly= True)
+    user = db.relationship("User", backref="stories", viewonly= True)
+    story_view = db.relationship("StoryView", backref="story", viewonly=True)
+    
+    def soft_delete(self):
+        super().soft_delete()  # Soft delete the user
+
+        for story in self.story_view :
+            db.session.delete(story)
+        db.session.commit()
 
     
     #represantation method
     def __str__(self):
         return f"story {self.content} posted by {self.story_owner}"
     
-    #method to get the username of the story owner
-    @staticmethod
-    def get_username(story_owner):
-        user = User.query.filter_by(id = story_owner).first()
-        return f"{user.username}"
+  
         
     
 
 
-class StoryView(BaseModel,db.Model):
+class StoryView(db.Model):
     __tablename__ = "story_view"
+    id = db.Column(UUID(as_uuid=True), primary_key=True,
+                                               default=uuid.uuid4, unique=True, nullable=False)
+    
     story_id = db.Column(UUID(as_uuid=True),db.ForeignKey("story.id",ondelete = "CASCADE"),nullable = False)
     viewer_id = db.Column(UUID(as_uuid=True),db.ForeignKey("user.id",ondelete = "CASCADE"), nullable = False)
+    viewed_at = db.Column(
+        db.DateTime(timezone=True), default=current_time_ist)
     story_owner = db.Column(UUID(as_uuid=True),db.ForeignKey("user.id",ondelete = "CASCADE"), nullable = False)
     
+    story_obj = db.relationship("Story", backref="stories_view", viewonly=True)
+
+        
     def __str__(self):
         return f"story {self.story_id} viewed by {self.viewer_id}"
     
@@ -43,10 +56,7 @@ class StoryView(BaseModel,db.Model):
         user = User.query.filter_by(id = viewer_id).first()
         return f"{user.username}"
     
-    @staticmethod
-    def get_content(story_id):
-        story = Story.query.filter_by(id = story_id).first()
-        return f"{story.content}"
+
         
         
     

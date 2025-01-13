@@ -45,7 +45,7 @@ class Post(BaseModel,db.Model):
 
         # Soft delete related likes
         for like in self.likes:
-            like.soft_delete()
+            db.session.delete(like)
         
         db.session.commit()
 

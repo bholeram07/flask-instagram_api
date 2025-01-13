@@ -87,7 +87,6 @@ class UserStory(MethodView):
         if str(story.story_owner) != str(self.current_user_id):
             # Add a view record if the story is viewed by someone else
             try:
-                print("someone is view my story")
                 story_view : Optional[StoryView]= StoryView.query.filter_by(
                     viewer_id=self.current_user_id).first()
                 if not story_view:
@@ -109,7 +108,7 @@ class UserStory(MethodView):
             "id": story.id,
             "content": story.content,
             "owner": {
-                "username": Story.get_username(story.story_owner),
+                "username": story.user.username,
                 "user_id": story.story_owner
             }
         }
@@ -134,9 +133,7 @@ class UserStory(MethodView):
         # atomic transactions
         try:
             # Delete the story from the database
-           
-            story.is_deleted = True
-            story.deleted_at = current_time_ist()
+            story.soft_delete()
             db.session.commit()
             return jsonify(), 204
         except Exception as e:
@@ -189,8 +186,9 @@ class GetStoryView(MethodView):
         story_view_data = [
             {
                 "viewer_id": view.viewer_id,
-                "viewer_name": StoryView.get_username(view.viewer_id),
-                "content": StoryView.get_content(view.story_id)
+                "viewer_name": view.get_username(view.viewer_id),
+                "content": view.story_obj.content,
+                "viewd_at":view.viewed_at
             }
             for view in story_views
         ]
