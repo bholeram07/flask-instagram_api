@@ -22,6 +22,7 @@ from app.utils.get_limit_offset import get_limit_offset
 from app.utils.ist_time import current_time_ist
 from app.helper.comments import create_reply, create_comment, get_replies_data
 from app.utils.get_validate_user import get_post_or_404, get_comment_or_404
+from app.models.likes import Like
 
 
 class CommentApi(MethodView):
@@ -64,8 +65,12 @@ class CommentApi(MethodView):
 
         reply_count: int = Comment.query.filter_by(
             parent=comment_id, is_deleted=False).count()
+
+        likes_count: int = Like.query.filter_by(comment=comment_id).count()
         comment_data: dict = self.comment_schema.dump(comment)
         comment_data["reply_count"] = reply_count
+        comment_data["like_count"] = likes_count
+            
 
         replies = Comment.query.filter_by(
             parent=comment_id, is_deleted=False).all()
@@ -102,21 +107,36 @@ class CommentApi(MethodView):
         """
         Delete a comment by its ID.
         """
-        comment: Comment = get_comment_or_404(comment_id)
-        post: Post = get_post_or_404(comment.post_id)
+        comment = get_comment_or_404(comment_id)
+        if comment.post:
+            post = get_post_or_404(comment.post_id)
 
-        if comment.user_id != UUID(self.current_user_id) and post.user != UUID(self.current_user_id):
-            return jsonify({"error": "You do not have permission to delete this comment"}), 403
-
+            if comment.user_id != UUID(self.current_user_id) and post.user != UUID(self.current_user_id):
+                return jsonify({"error": "You do not have permission to delete this comment"}), 403
+        else:
+            if comment.user_id !=UUID(self.current_user_id):
+                return jsonify({"error": "You do not have permission to delete this comment"}), 403
+                
         try:
+            # Soft delete the parent comment
             comment.is_deleted = True
             comment.deleted_at = current_time_ist()
-            db.session.commit()
-        except:
-            db.session.rollback()
-            return jsonify({"error": "Some error occurred while deleting the comment"}), 500
 
-        return jsonify(), 204
+            # Soft delete all child replies
+            replies = Comment.query.filter_by(
+                parent=comment.id, is_deleted=False).all()
+            for reply in replies:
+                reply.is_deleted = True
+                reply.deleted_at = current_time_ist()
+
+            db.session.commit()
+            
+            return jsonify(),204
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.info(e)
+            return jsonify({"error": f"Some error occurred while deleting the comment: {str(e)}"}), 500
+
 
 
 class CommentListApi(MethodView):

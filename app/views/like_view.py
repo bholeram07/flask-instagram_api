@@ -16,6 +16,7 @@ from app.permissions.permissions import Permission
 from app.utils.get_limit_offset import get_limit_offset
 from typing import Tuple, Union, Dict, Optional, List
 from app.utils.get_validate_user import get_post_or_404,get_comment_or_404
+from uuid import UUID
 
 class PostLikeAPi(MethodView):
     like_schema = LikeSchema()
@@ -215,7 +216,7 @@ class StorylikeApi(MethodView):
             return jsonify({"error": "story not exist"}), 404
 
         # if user like his own story
-        if str(story.story_owner) == str(self.current_user_id):
+        if str(story.owner) == str(self.current_user_id):
             return jsonify({"error": "You can't like your own story"}), 400
 
         # check the like of the user on the story
@@ -239,7 +240,7 @@ class StorylikeApi(MethodView):
         result = {
             "story_id": story_id,
             "content": story.content,
-            "story_owner": story.story_owner,
+            "story_owner": story.owner,
             "liked_by": like.user,
 
         }
@@ -256,7 +257,11 @@ class StorylikeApi(MethodView):
             id=story_id).first()
         if not story:
             return jsonify({"error": "Story not exist"}), 404
-
+        
+         # Check if the current user is the owner of the story
+        if story.owner != UUID(self.current_user_id):
+            return jsonify({"error": "You do not have permission to view likes on this story"}),403
+        
         # get the page size and page_number given by the user
         page_number, offset, page_size = get_limit_offset()
 

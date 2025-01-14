@@ -12,7 +12,7 @@ def validate_and_load(schema: Any, data: Dict[str, Any]) -> Tuple[Any, Dict[str,
     except ValidationError as err:
         # Format errors to handle password field differently
         formatted_errors = {
-            field: messages if field == "password" and len(
+            field: messages if field == "password" or field == "new_password" and len(
                 messages) > 1 else " ".join(messages)
             for field, messages in err.messages.items()
         }

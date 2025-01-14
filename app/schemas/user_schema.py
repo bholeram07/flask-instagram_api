@@ -89,7 +89,7 @@ class ResetPasswordSchema(Schema):
     
         errors = validate_password_rules(new_password)
         if errors:
-            return ValidationError(errors)
+            raise ValidationError(errors)
             
 
         return new_password

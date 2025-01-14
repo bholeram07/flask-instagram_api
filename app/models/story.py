@@ -11,7 +11,7 @@ class Story(BaseModel,db.Model):
     A story model that creates a story table in the databases
     """
     __tablename__ = "story"
-    story_owner = db.Column(UUID(as_uuid=True), db.ForeignKey("user.id", ondelete="CASCADE"))
+    owner = db.Column(UUID(as_uuid=True), db.ForeignKey("user.id", ondelete="CASCADE"))
     content = db.Column(db.Text,nullable  = False)
     
     user = db.relationship("User", backref="stories", viewonly= True)

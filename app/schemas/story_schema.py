@@ -3,7 +3,7 @@ from marshmallow import validates,ValidationError,fields,Schema
 class StorySchema(Schema):
     """A schema class to serialize and deserialize the story data using marshmallow"""
     id = fields.UUID(dump_only=True)
-    story_owner = fields.UUID(dump_only=True)
+    owner = fields.UUID(dump_only=True)
     content = fields.String(required=True)
     created_at = fields.DateTime(dump_only=True)
     

@@ -57,7 +57,7 @@ def create_comment(post_id: str, content: str, data: dict, current_user_id, comm
     if not post:
         return jsonify({"error": "Post does not exist"}), 404
     if not post.is_enable_comment:
-        return jsonify({"error": "Post owner disabled comments on this post"}), 404
+        return jsonify({"error": "Post owner disabled comments on this post"}), 403
 
     comment_data, error = validate_and_load(comment_schema, data)
     if error:

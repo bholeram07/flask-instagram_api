@@ -15,6 +15,7 @@ from app.permissions.permissions import Permission
 from app.utils.ist_time import current_time_ist
 from typing import Tuple, Union, Dict, Optional, List
 from app.utils.get_limit_offset import get_limit_offset
+from uuid import UUID
 
 class UserStory(MethodView):
     """An API for uploading a story if content is provided"""
@@ -29,7 +30,7 @@ class UserStory(MethodView):
         """Story creation function"""
         # Create a story instance with the current user as the owner
         story  = Story(
-            story_owner=self.current_user_id,
+            owner=self.current_user_id,
         )
         # Get the file data from the request
         file = request.files
@@ -84,7 +85,7 @@ class UserStory(MethodView):
             # Handle case where the story doesn't exist
             return jsonify({"error": "Story does not exist"}), 404
 
-        if str(story.story_owner) != str(self.current_user_id):
+        if str(story.owner) != str(self.current_user_id):
             # Add a view record if the story is viewed by someone else
             try:
                 story_view : Optional[StoryView]= StoryView.query.filter_by(
@@ -93,7 +94,7 @@ class UserStory(MethodView):
                     story_view = StoryView(
                         story_id=story.id,
                         viewer_id=self.current_user_id,
-                        story_owner=story.story_owner
+                        story_owner=story.owner
                     )
                     db.session.add(story_view)
                     db.session.commit()
@@ -109,7 +110,7 @@ class UserStory(MethodView):
             "content": story.content,
             "owner": {
                 "username": story.user.username,
-                "user_id": story.story_owner
+                "user_id": story.owner
             }
         }
         return jsonify(story_data), 200
@@ -125,7 +126,7 @@ class UserStory(MethodView):
 
         # Retrieve the story by ID
         story: Optional[story] = Story.query.filter_by(
-            id=story_id, is_deleted=False, story_owner=self.current_user_id).first()
+            id=story_id, is_deleted=False, owner=self.current_user_id).first()
         if not story:
             # Handle case where the story doesn't exist
             return jsonify({"error": "Story does not exist"}), 404
@@ -170,7 +171,7 @@ class GetStoryView(MethodView):
         
         
         story : Optional[Story] = Story.query.filter_by(
-            id=story_id, is_deleted=False, story_owner=self.current_user_id).first()
+            id=story_id, is_deleted=False).first()
         
 
         # if story not exist
@@ -181,6 +182,9 @@ class GetStoryView(MethodView):
         # Retrieve the views for the story
         story_views: Optional[StoryView] = StoryView.query.filter_by(
             story_owner=self.current_user_id, story_id=story_id).offset(offset).limit(page_size).all()
+        
+        if story.owner != UUID(self.current_user_id):
+            return jsonify({"error" : "You do not have permission for this action"}),403
         
         # Serialize the story view data
         story_view_data = [

@@ -62,7 +62,7 @@ def get_story_user(story_id):
     if not is_valid_uuid(story_id):
         raise BadRequest("Invalid uuid format")
     story = Story.query.options(joinedload(Story.user)).filter(
-        Story.id == story_id, Story.is_deleted == False).join(User, User.id == Story.story_owner).filter(User.is_active == True, User.is_verified == True, User.is_deleted == False).first()
+        Story.id == story_id, Story.is_deleted == False).join(User, User.id == Story.owner).filter(User.is_active == True, User.is_verified == True, User.is_deleted == False).first()
     
     
     if not story:
@@ -100,6 +100,7 @@ def get_comment_or_404(comment_id, user_id=None):
     - If `user_id` is provided, retrieve all posts by the user.
     """
     if not is_valid_uuid(comment_id):
+        
         raise BadRequest("Invalid uuid format")
     comment = None
     if comment_id:
