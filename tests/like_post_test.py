@@ -84,7 +84,7 @@ class TestPostLikeApi:
     def test_like_post(self):
         """Test liking a post."""
         data = {"post_id": str(self.post_data.id)}
-        print(self.post_data.id)
+     
 
         response = self.client.post(
             '/api/posts/toggle-like/',
@@ -143,7 +143,6 @@ class TestPostLikeApi:
             f'/api/posts/{self.post_data.id}/like/',
             headers=self.headers
         )
-        print(response.json)
         assert response.status_code == 200
         assert "likes_count" in response.json
         assert response.json["items"][0]["post"] == str(self.post_data.id)

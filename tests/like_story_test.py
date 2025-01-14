@@ -106,7 +106,6 @@ class TestStoryLikeApi:
             json=data,
             headers=self.headers
         )
-        print(response.json)
 
         assert response.status_code == 201
         assert response.json["story_id"] == str(self.story_data.id)

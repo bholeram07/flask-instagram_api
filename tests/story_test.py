@@ -122,7 +122,7 @@ class TestStoryApi:
             f'/api/story/{story_id}/',
             headers=self.headers
         )
-        print(response.json)
+       
         assert response.status_code == 404
         assert response.json["error"] == "Story does not exist"
 
