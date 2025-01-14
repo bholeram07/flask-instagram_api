@@ -63,27 +63,33 @@ class User(BaseModel,db.Model):
         super().soft_delete()  # Soft delete the user
 
         # Soft delete related posts
-        for post in self.posts:
-            post.soft_delete()
+        try:
+            for post in self.posts:
+                post.soft_delete()
 
-        # Soft delete related comments
-        for comment in self.comments:
-            comment.soft_delete()
+            # Soft delete related comments
+            for comment in self.comments:
+                comment.soft_delete()
 
-        # Soft delete related likes
-        for like in self.likes:
-            db.session.delete(like)
-        
-        for story in self.story:
-            story.soft_delete()
-        
-        for follower in self.followers:
-            db.session.delete(follower)
+            # Soft delete related likes
+            for like in self.likes:
+                db.session.delete(like)
             
-        for following in self.following:
-            db.session.delete(following)
-        
-        db.session.commit()
+            for story in self.story:
+                story.soft_delete()
+            
+            for follower in self.followers:
+                db.session.delete(follower)
+                
+            for following in self.following:
+                db.session.delete(following)
+            
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            
+            
+       
 
     def set_password(self, raw_password):
         """method to set the password of the user in hash"""

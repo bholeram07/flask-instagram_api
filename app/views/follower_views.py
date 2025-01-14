@@ -101,8 +101,12 @@ class FollowApi(MethodView):
 
             # if follow request already exist than withdraw the follow request
             if follow_request:
-                db.session.delete(follow_request)
-                db.session.commit()
+                try:
+                    db.session.delete(follow_request)
+                    db.session.commit()
+                except Exception as e:
+                    db.session.rollback()
+                    return jsonify({"error" : "some error occured in deletion try again later"}),400
 
             # send the follow request
             else:
@@ -111,9 +115,14 @@ class FollowApi(MethodView):
 
             # if user follow the user already than not send the request
                 if follow_relationship:
-                    db.session.delete(follow_relationship)
-                    db.session.commit()
-                    return jsonify({"message": "Unfollowed"}), 200
+                    try:
+                        db.session.delete(follow_relationship)
+                        db.session.commit()
+                        return jsonify({"message": "Unfollowed"}), 200
+                    except Exception as e:
+                        db.session.rollback()
+                        return jsonify({"error": "some error occured in deletion try again later"}), 500
+                        
 
                 # send the follow request
                 else:
@@ -121,9 +130,16 @@ class FollowApi(MethodView):
                         follower_id=self.current_user_id, following_id=user_id)
 
                     # database operation
-                    db.session.add(follow_request)
-                    db.session.commit()
-                    return jsonify({"message": f"follow request sent to the user"}), 200
+                    try:
+                        db.session.add(follow_request)
+                        db.session.commit()
+                        return jsonify({"message": f"follow request sent to the user"}), 200
+                    
+                    except Exception as e:
+                        db.session.rollback()
+                        return jsonify({"error": "some error occured in sent follow request try again later"}), 500
+                        
+
             # return statement
             return jsonify({"message": f"follow request withdraw from the {user_id}"}), 200
 
@@ -133,19 +149,30 @@ class FollowApi(MethodView):
 
         # if user already follower of user than unfollow the user
         if follow_relationship:
-            db.session.delete(follow_relationship)
-            db.session.commit()
-            return jsonify({"message": "Unfollowed"}), 200
+            try:
+                db.session.delete(follow_relationship)
+                db.session.commit()
+                return jsonify({"message": "Unfollowed"}), 200
+            except Exception as e:
+                db.session.rollback()
+                return jsonify({"error": "some error occured in sent follow request try again later"}), 500
+
+                
 
         # follow the user
         follow = Follow(
             follower_id=self.current_user_id,
             following_id=user_to_follow.id,
         )
-        db.session.add(follow)
-        db.session.commit()
+        try:
+            db.session.add(follow)
+            db.session.commit()
 
-        return jsonify({"message": f"You are now following {user_to_follow.username}"}), 201
+            return jsonify({"message": f"You are now following {user_to_follow.username}"}), 201
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({"error": "some error occured in sent follow request try again later"}),500
+
 
 
 class FollowingApi(MethodView):

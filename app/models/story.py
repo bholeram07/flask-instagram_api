@@ -26,13 +26,17 @@ class Story(BaseModel,db.Model):
     
     def soft_delete(self):
         super().soft_delete()  # Soft delete the user
+        
+        try:
 
-        for view in self.story_view :
-            db.session.delete(view)
-            
-        for likes in self.likes:
-            db.session.delete(likes)
-        db.session.commit()
+            for view in self.story_view :
+                db.session.delete(view)
+                
+            for likes in self.likes:
+                db.session.delete(likes)
+            db.session.commit()
+        except:
+            db.session.rollback()
 
     
     #represantation method

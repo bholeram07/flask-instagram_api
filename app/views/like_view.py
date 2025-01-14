@@ -46,9 +46,13 @@ class PostLikeAPi(MethodView):
 
         # for dislike
         if like:
-            db.session.delete(like)
-            db.session.commit()
-            return jsonify({"message": "Post unliked"}), 200
+            try:
+                db.session.delete(like)
+                db.session.commit()
+                return jsonify({"message": "Post unliked"}), 200
+            except:
+                db.session.rollback()
+                return jsonify({"error" : "Some error occured"}),500
 
         # for like
         else:
@@ -131,9 +135,14 @@ class CommentLikeApi(MethodView):
 
         # for dislike
         if like:
-            db.session.delete(like)
-            db.session.commit()
-            return jsonify({"message": "Comment unliked"}), 200
+            try:
+                db.session.delete(like)
+                db.session.commit()
+                return jsonify({"message": "Comment unliked"}), 200
+            except:
+                db.session.rollback()
+                return jsonify({"error" : "Some error occured in unlike the comment"}),500
+
 
         # for like
         else:
@@ -141,8 +150,12 @@ class CommentLikeApi(MethodView):
                 comment=comment_id,
                 user=self.current_user_id
             )
-            db.session.add(like)
-            db.session.commit()
+            try:
+                db.session.add(like)
+                db.session.commit()
+            except:
+                db.session.rollback()
+                return jsonify({"error" : "Some error occured in like the comment"}),500
 
         # serialize the response
         result = {
@@ -225,9 +238,13 @@ class StorylikeApi(MethodView):
 
         # for dislike
         if like:
-            db.session.delete(like)
-            db.session.commit()
-            return jsonify({"message": "Story unliked"}), 200
+            try:
+                db.session.delete(like)
+                db.session.commit()
+                return jsonify({"message": "Story unliked"}), 200
+            except Exception as e:
+                db.session.rollback()
+                return jsonify({"error": "error occured in like the story"}), 500
 
         # for like
         else:
@@ -235,8 +252,12 @@ class StorylikeApi(MethodView):
                 story=story_id,
                 user=self.current_user_id
             )
-            db.session.add(like)
-            db.session.commit()
+            try:
+                db.session.add(like)
+                db.session.commit()
+            except Exception as e:
+                db.session.rollback()
+                return jsonify({"error" :"error occured in like the story"}),500
         result = {
             "story_id": story_id,
             "content": story.content,

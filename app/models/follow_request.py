@@ -10,18 +10,16 @@ import uuid
 class FollowRequest(db.Model):
     __tablename__ = 'follow_request'
 
-
     id = db.Column(UUID(as_uuid=True), primary_key=True,
                default=uuid.uuid4, unique=True, nullable=False)
     follower_id  = db.Column(
         UUID(as_uuid=True), db.ForeignKey("user.id", ondelete="CASCADE"))
     following_id  = db.Column(
         UUID(as_uuid=True), db.ForeignKey("user.id", ondelete="CASCADE"))
-   
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    # Soft delete columns
-    
 
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    
     # Relationships
     follower = db.relationship('User', foreign_keys=[follower_id])
     following = db.relationship('User', foreign_keys=[following_id])

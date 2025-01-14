@@ -29,10 +29,13 @@ class Comment(BaseModel,db.Model):
         super().soft_delete()  # Soft delete the user
 
         # Soft delete related comments
-        for like in self.likes:
-            db.session.delete(like)
+        try:
+            for like in self.likes:
+                db.session.delete(like)
 
-        db.session.commit()
+            db.session.commit()
+        except:
+            db.session.rollback()
 
     def __str__(self):
         return f"{self.content} by {self.user_id}"

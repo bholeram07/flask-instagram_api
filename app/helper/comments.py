@@ -29,8 +29,12 @@ def create_reply( parent_comment_id: str, content: str, data: dict, current_user
 
     reply_comment: Optional[Comment] = Comment(
         parent=parent_comment_id, content=content, user_id=current_user_id)
-    db.session.add(reply_comment)
-    db.session.commit()
+    try:
+        db.session.add(reply_comment)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error" : "some error occured during creating reply"}),400
 
     response = {
         "id": reply_comment.id,
@@ -65,8 +69,12 @@ def create_comment(post_id: str, content: str, data: dict, current_user_id, comm
 
     comment: Optional[Comment] = Comment(
         post_id=post_id, user_id=current_user_id, content=content)
-    db.session.add(comment)
-    db.session.commit()
+    try:
+        db.session.add(comment)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error" : "some error occured during creating comment"}),400
     response = {
         "id": comment.id,
         "content": comment.content,

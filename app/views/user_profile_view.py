@@ -114,10 +114,7 @@ class UserProfile(MethodView):
             if isinstance(is_private, bool):
                 user.is_private = is_private
                 process_follow_requests.delay(self.current_user_id)
-                
-                
-                
-
+                        
         # Update `other_social` field if provided
         if "other_social" in data:
             other_social = data.get("other_social")

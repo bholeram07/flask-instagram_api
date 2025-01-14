@@ -40,14 +40,17 @@ class Post(BaseModel,db.Model):
         super().soft_delete()  # Soft delete the user
 
         # Soft delete related comments
-        for comment in self.comments:
-            comment.soft_delete()
+        try:
+            for comment in self.comments:
+                comment.soft_delete()
 
-        # Soft delete related likes
-        for like in self.likes:
-            db.session.delete(like)
-        
-        db.session.commit()
+            # Soft delete related likes
+            for like in self.likes:
+                db.session.delete(like)
+            
+            db.session.commit()
+        except:
+            db.session.rollback()
 
     def __str__(self):
         return f"{self.caption} by {self.user}"

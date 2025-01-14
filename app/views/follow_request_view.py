@@ -10,6 +10,7 @@ from app.extensions import db
 from app.utils.get_validate_user import get_user
 from app.pagination_response import paginate_and_serialize
 from app.utils.get_limit_offset import get_limit_offset
+from flask import current_app
 
 
 class FollowRequestWithdraw(MethodView):
@@ -37,8 +38,12 @@ class FollowRequestWithdraw(MethodView):
             return jsonify({"error": "you not send  any follow request to this user"}), 400
 
         # database operation to delete the follow request
-        db.session.delete(follow_request)
-        db.session.commit()
+        try:
+            db.session.delete(follow_request)
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({"error": "Could not add follower due to database error"}), 500
 
 
 class FollowrequestAccept(MethodView):
@@ -75,9 +80,12 @@ class FollowrequestAccept(MethodView):
                 following_id=self.current_user_id, follower_id=user_id).first()
             if not followrequest:
                 return jsonify({"error": "Follow request not found"}), 404
-
-            db.session.delete(followrequest)
-            db.session.commit()
+            try:
+                db.session.delete(followrequest)
+                db.session.commit()
+            except Exception as e:
+                db.session.rollback()
+                return jsonify({"error": "Could not add follower due to database error"}), 500
 
             # Check if follow relationship already exists
             existing_follow = Follow.query.filter_by(
@@ -106,23 +114,29 @@ class FollowrequestAccept(MethodView):
                 following_id=self.current_user_id, follower_id=user_id).first()
             if not followrequest:
                 return jsonify({"error": "Follow request not found"}), 404
-            db.session.delete(followrequest)
-            db.session.commit()
-            return jsonify({"message": "Follow request rejected"}), 200
+            
+            try:
+                db.session.delete(followrequest)
+                db.session.commit()
+                return jsonify({"message": "Follow request rejected"}), 200
+            except Exception as e:
+                db.session.rollback()
+                return jsonify({"error": "error occured during rejection"}), 200
+                
 
         return jsonify({"error": "Invalid action"}), 400
 
     def get(self):
         """A function to get the follow request"""
-        
+
         user = User.query.get(self.current_user_id)
         if not user.is_private:
-            return jsonify({"error":"You can not implement this request as your account is public"}),400
+            return jsonify({"error": "You can not implement this request as your account is public"}), 400
         # page_number,offset,page_size
         page_number, offset, page_size = get_limit_offset()
 
         # fetch the follow request
-        
+
         followrequest = FollowRequest.query.filter_by(
             following_id=self.current_user_id).offset(offset).limit(page_size).all()
         # serialize the follow request
@@ -130,8 +144,8 @@ class FollowrequestAccept(MethodView):
         result = [
             {
                 "sender_id": req.follower.id,
-                "username" : req.follower.username,
-                "profile_pic" : req.follower.profile_pic
+                "username": req.follower.username,
+                "profile_pic": req.follower.profile_pic
 
             } for req in followrequest
         ]

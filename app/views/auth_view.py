@@ -97,10 +97,8 @@ class Signup(MethodView):
             # Rollback the transaction if any exception occurs
             db.session.rollback()
             current_app.logger.error(f"Database error during signup: {str(e)}")
-            return {"error": "An error occurred during signup. Please try again later."}, 500
-        except Exception as e:
-            current_app.logger.error(f"Error during signup: {str(e)}")
-            return {"error": "An unexpected error occurred during signup. Please try again later."}, 500
+            return jsonify({"errors": "some error occured during signup"}),400
+      
 
 
 class Login(MethodView):
@@ -350,11 +348,10 @@ class DeleteAccount(MethodView):
         try:
 
             blacklist_jwt_token()
-            user.is_deleted = True
-            user.deleted_at = datetime.now()
             user.soft_delete()
             db.session.commit()
             return jsonify(), 204
+        
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(
