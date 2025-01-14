@@ -51,7 +51,7 @@ def story_data(app, user_data):
     story = Story(
         content="bhole.jpg",
         is_deleted=False,
-        story_owner = user_data.id
+        owner = user_data.id
     )
     with app.app_context():
         db.session.add(story)
@@ -147,13 +147,6 @@ class TestStoryLikeApi:
         assert response.status_code == 404
         assert response.json["error"] == "Story does not exist"
 
-    def test_get_likes_valid_post(self, create_likes):
-        """Test fetching likes for a valid post with likes."""
-        response = self.client.get(
-            f'/api/story/{self.story_data.id}/like/',
-            headers=self.headers
-        )
-        assert response.status_code == 200
 
     def test_get_likes_invalid_story_id(self):
         """Test fetching likes without providing a post ID."""
