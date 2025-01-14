@@ -76,9 +76,6 @@ def hard_delete_old_posts():
                 post, post.image_or_video, post.user)
             post_image_video_obj.delete_image_or_video()
             
-            likes = Like.query.filter_by(post_id=post.id).all()
-            for like in likes:
-                db.session.delete(like)
             db.session.delete(post)  
 
         # Commit the changes
@@ -107,9 +104,7 @@ def hard_delete_story():
         for story in old_story:
             # Assuming you have a delete() method in your model
             delete_story_from_s3(story)
-            likes = Like.query.filter_by(story_id=story.id).all()
-            for like in likes:
-                db.session.delete(like)
+            db.session.delete(like)
             db.session.delete(story)
 
         # Commit the changes
@@ -136,9 +131,6 @@ def hard_delete_story_by_user():
         for stories in old_story:
             # Assuming you have a delete() method in your model
             delete_story_from_s3(story)
-            likes = Like.query.filter_by(story_id=story.id).all()
-            for like in likes:
-                db.session.delete(like)
             db.session.delete(story)
 
         # Commit the changes

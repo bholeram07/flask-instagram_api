@@ -17,7 +17,7 @@ class FollowRequest(db.Model):
         UUID(as_uuid=True), db.ForeignKey("user.id", ondelete="CASCADE"))
     following_id  = db.Column(
         UUID(as_uuid=True), db.ForeignKey("user.id", ondelete="CASCADE"))
-    # 'pending', 'accepted', 'rejected'
+   
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     # Soft delete columns
     
