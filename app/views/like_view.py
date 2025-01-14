@@ -296,7 +296,7 @@ class StorylikeApi(MethodView):
         for like in likes:
             like_data.append({
                 "story_id": story_id,
-                "owner": story.story_owner,
+                "owner": story.owner,
                 "content": story.content
             })
         # apply the pagination

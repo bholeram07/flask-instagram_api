@@ -64,7 +64,7 @@ def hard_delete_old_posts():
         utc_now = datetime.now(pytz.utc)
 
         # Set the threshold date (1 minute before current time)
-        threshold_date = utc_now - timedelta(days = 30)
+        threshold_date = utc_now - timedelta(minutes= 1)
 
         # Fetch posts marked as "soft deleted" and older than 1 minute
         old_posts = Post.query.filter(
@@ -93,7 +93,7 @@ def hard_delete_story():
         utc_now = datetime.now(pytz.utc)
 
         # Set the threshold date (1 minute before current time)
-        threshold_date = utc_now - timedelta(hours=24)
+        threshold_date = utc_now - timedelta(minutes=1)
 
         # Fetch posts marked as "soft deleted" and older than 1 minute
         old_story = Story.query.filter(Story.created_at < threshold_date).all() 
@@ -122,13 +122,14 @@ def hard_delete_story_by_user():
         utc_now = datetime.now(pytz.utc)
 
         # Set the threshold date (1 minute before current time)
-        threshold_date = utc_now - timedelta(minutes=5)
+        threshold_date = utc_now - timedelta(minutes=2)
 
         # Fetch posts marked as "soft deleted" and older than 1 minute
-        old_story = Story.query.filter_by(is_deleted = False).all()
+        old_story = Story.query.filter(Story.is_deleted == True).all()
+
 
         # Hard delete the posts
-        for stories in old_story:
+        for story in old_story:
             # Assuming you have a delete() method in your model
             delete_story_from_s3(story)
             db.session.delete(story)
@@ -147,7 +148,7 @@ def hard_delete_user():
         utc_now = datetime.now(pytz.utc)
 
         # Set the threshold date (1 minute before current time)
-        threshold_date = utc_now - timedelta(days=30)
+        threshold_date = utc_now - timedelta(minutes=1)
 
         # Fetch posts marked as "soft deleted" and older than 1 minute
         deleted_user = User.query.filter(User.deleted_at < threshold_date).all()
@@ -173,7 +174,7 @@ def hard_delete_comments():
         utc_now = datetime.now(pytz.utc)
 
         # Set the threshold date (1 minute before current time)
-        threshold_date = utc_now - timedelta(days= 30)
+        threshold_date = utc_now - timedelta(minutes=1)
 
         # Fetch posts marked as "soft deleted" and older than 1 minute
         deleted_comments = Comment.query.filter(
@@ -198,11 +199,9 @@ def hard_delete_non_verified_user():
         # Get the current time in UTC
         utc_now = datetime.now(pytz.utc)
 
-        # Set the threshold date (1 minute before current time)
-        threshold_date = utc_now - timedelta(hours=24)
-
         # Fetch posts marked as "soft deleted" and older than 1 minute
-        non_verified_user = User.query.filter_by(is_verified = False).all()
+        threshold_date = utc_now - timedelta(minutes=1)
+        non_verified_user = User.query.filter(User.is_verified == False, User.created_at < threshold_date).all()
 
         # Hard delete the posts
         for user in non_verified_user:
